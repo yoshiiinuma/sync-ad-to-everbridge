@@ -1,0 +1,1 @@
+# sync-ad-to-everbridge
