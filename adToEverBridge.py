@@ -94,30 +94,53 @@ def post_EverbridgeGroups(username,password,org,groupData,groupName):
         everSession.delete('https://api.everbridge.net/rest/contactFilters/' + org + '/' + str(filterId))
     #Inserts New User to Everbridge if GroupData is not empty
     for contact in groupData:
-        path = []
+        #Add Email as a delivery method
+        paths = [
+          {
+            "waitTime": 0,
+            "status": "A",
+            "pathId": 241901148045316,
+            "countryCode": "US",
+            "value": contact["mail"],
+            "skipValidation": "false"
+          }
+        ]
+        if len(contact["businessPhones"]) > 0:
+            #Add phone number if phone number array isn't empty
+            phoneString = contact["businessPhones"][0].replace(" ","").replace("-","")
+            paths.append({
+                "waitTime": 0,
+                "status": "A",
+                "pathId": 241901148045319,
+                "countryCode": "US",
+                "value": phoneString,
+                "skipValidation": "false"
+            })
         newContact = {
             "firstName": contact["givenName"],
             "lastName": contact["surname"],
             "externalId": contact["mail"],
             "recordTypeId": 892807736729062,
-            "groups":[
-                8105621194807886
-            ]
+            "paths":paths
         }
-        everSession.post('https://api.everbridge.net/rest/contacts/' + org + '/',json.dumps(newContact))
-    #Inserts users to group
-    everSession.post('https://api.everbridge.net/rest/groups/' + org + '/contacts?byType=name&groupName=' + groupName + '&idType=id',json.dumps(contactList)).json()
+        newUser = everSession.post('https://api.everbridge.net/rest/contacts/' + org + '/',json.dumps(newContact)).json()
+        contactList.append(newUser["id"])
     #Deletes extra users in group
+    #Get all current users in group
     everGroup = everSession.get('https://api.everbridge.net/rest/contacts/groups/' + org + '?byType=name&groupName=' + groupName + '&pageSize=100&pageNumber=1').json()
+    #Removes users not in the AD Group
     dataArray = everGroup["page"]["data"]
     for group in groupBackup:
         for contact in dataArray:
             if contact["firstName"] + contact["lastName"] == group["givenName"] + group["surname"]:
                 dataArray.remove(contact)
-    contactList = []
+    deleteList = []
+    #Deletes users in Everbridge Group
     for contact in dataArray:
-        contactList.append(contact["id"])
-    requests.delete('https://api.everbridge.net/rest/groups/' + org + '/contacts?byType=name&groupName=' + groupName + '&idType=name',data=json.dumps(contactList),headers=header)
+        deleteList.append(contact["id"])
+    deleteRequests = requests.delete('https://api.everbridge.net/rest/groups/' + org + '/contacts?byType=name&groupName=' + groupName + '&idType=id',data=json.dumps(deleteList),headers=header)
+    #Inserts users to group
+    addContacts = everSession.post('https://api.everbridge.net/rest/groups/' + org + '/contacts?byType=name&groupName=' + groupName + '&idType=id',json.dumps(contactList)).json()    
     
 if __name__ == '__main__':
     args = get_argparser().parse_args()
