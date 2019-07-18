@@ -139,6 +139,7 @@ def get_EverContacts(filterString, header, org):
     #Get a list of contacts from Everbridge
     return get_EverBridge('https://api.everbridge.net/rest/contacts/'+ org + '/?sortBy="lastName"&searchType=OR'+ filterString,header,None)
 def post_EverbridgeGroups(username,password,org,groupData,groupName):
+    print(len(groupData))
     if len(groupData) < 1 or len(username) < 1 or len(password) < 1:
         return None
     #Convert username and password to base64
@@ -189,8 +190,10 @@ def post_EverbridgeGroups(username,password,org,groupData,groupName):
         #Deletes users in Everbridge Group
         for contact in dataArray:
             deleteList.append(contact["id"])
-        deleteRequests = delete_Everbridge('https://api.everbridge.net/rest/groups/' + org + '/contacts?byType=name&groupName=' + groupName + '&idType=id',header,deleteList)
+        if(len(deleteList) > 0):
+            deleteRequests = delete_Everbridge('https://api.everbridge.net/rest/groups/' + org + '/contacts?byType=name&groupName=' + groupName + '&idType=id',header,deleteList)
     #Inserts users to group
+    print(len(contactList))
     addContacts = post_Everbridge('https://api.everbridge.net/rest/groups/' + org + '/contacts?byType=name&groupName=' + groupName + '&idType=id',header,contactList)   
 if __name__ == '__main__':
     args = get_argparser().parse_args()
