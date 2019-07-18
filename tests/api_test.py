@@ -26,5 +26,3 @@ def test_AzureCorrectGroupFinderId():
     data = get_AzureGroups("https://login.microsoftonline.com/",
             config["adTenant"],config["clientId"],config["clientSecret"], "https://graph.microsoft.com/","v1.0/groups/","",config["adGroupId"])
     assert(len(data) > 0)
-def test_EverbridgeFailLogin():
-    
