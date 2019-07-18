@@ -3,14 +3,14 @@ Reads a Azure AD Group and inserts Everbridge Contacts into the selected Everbri
 Requires a Azure Application that has permissions to read Groups(Requires Admin Consent)
 
 # How to install
-pip -r requirements.txt
-
+pip -r requirements.txt <br/>
+mkdir logs
 # How to test
 cd tests <br/>
 pytest
 
 # How to run
-python /sync_ad_to_everbridge/sync_ad_to_everbridge.py /config/config.json
+python sync_ad_to_everbridge/sync_ad_to_everbridge.py config/config.json
 # config.json format
 { <br/>
 	"clientId":"", <br/>

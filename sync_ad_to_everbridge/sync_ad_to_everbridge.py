@@ -5,9 +5,10 @@ import json
 import base64
 import argparse
 import logging
+import os
 from datetime import datetime
 from requests.exceptions import HTTPError
-LOG_FILENAME = datetime.now().strftime('../logs/logfile_%d_%m_%Y_%H_%M_%S.log')
+LOG_FILENAME = datetime.now().strftime(os.getcwd() + '/logs/logfile_%H_%M_%S_%d_%m_%Y.log')
 for handler in logging.root.handlers[:]:
     logging.root.removeHandler(handler)
 logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO)    
