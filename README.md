@@ -5,11 +5,11 @@ Requires a Azure Application that has permissions to read Groups(Requires Admin 
 # How to install
 pip -r requirements.txt
 
-#How to test
+# How to test
 cd tests
 pytest
 
-#config.json format
+# config.json format
 {
 	"clientId":"",
 	"clientSecret":"",
