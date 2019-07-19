@@ -2,15 +2,29 @@
 Reads a Azure AD Group and inserts Everbridge Contacts into the selected Everbridge Group <br/>
 Requires a Azure Application that has permissions to read Groups(Requires Admin Consent)
 # How to install
-pip -r requirements.txt <br/>
-mkdir logs <br/>
-mkdir config <br/>
-touch config/config.json <br/>
+```bash
+$ pip -r requirements.txt <br/>
+$ mkdir logs <br/>
+$ mkdir config <br/>
+$ touch config/config.json <br/>
+```
+# How to install (new)
+```bash
+$ pip install pipenv
+$ cd sync-ad-to-everbridge
+$ pipenv install
+```
 # How to test
-pytest<br/>
+```bash
+$ pytest
+```
 # How to run
-python bin/main.py config/config.json
+```bash
+$ pipenv shell
+$ python bin/main.py config/config.json
+```
 # config.json format
+```json
 { <br/>
 	"clientId":"", <br/>
 	"clientSecret":"", <br/>
@@ -23,3 +37,4 @@ python bin/main.py config/config.json
 	"adGroupName":"", <br/>
 	"logFileName":""
 }
+```
