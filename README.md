@@ -1,18 +1,15 @@
 # sync-ad-to-everbridge
 Reads a Azure AD Group and inserts Everbridge Contacts into the selected Everbridge Group <br/>
 Requires a Azure Application that has permissions to read Groups(Requires Admin Consent)
-
 # How to install
 pip -r requirements.txt <br/>
 mkdir logs <br/>
 mkdir config <br/>
 touch config/config.json <br/>
 # How to test
-cd tests <br/>
-pytest
-
+pytest<br/>
 # How to run
-python sync_ad_to_everbridge/sync_ad_to_everbridge.py config/config.json
+python bin/main.py config/config.json
 # config.json format
 { <br/>
 	"clientId":"", <br/>
@@ -23,5 +20,6 @@ python sync_ad_to_everbridge/sync_ad_to_everbridge.py config/config.json
 	"everbridgeGroup":"", <br/>
 	"adTenant":"", <br/>
 	"adGroupId":"", <br/>
-	"adGroupName":"" <br/>
+	"adGroupName":"", <br/>
+	"logFileName":""
 }
