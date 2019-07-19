@@ -4,7 +4,9 @@ Requires a Azure Application that has permissions to read Groups(Requires Admin 
 
 # How to install
 pip -r requirements.txt <br/>
-mkdir logs
+mkdir logs <br/>
+mkdir config <br/>
+touch config/config.json <br/>
 # How to test
 cd tests <br/>
 pytest
