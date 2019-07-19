@@ -7,11 +7,7 @@ import argparse
 import logging
 import os
 from datetime import datetime
-from requests.exceptions import HTTPError
-LOG_FILENAME = datetime.now().strftime(os.getcwd() + '/logs/logfile_%H_%M_%S_%d_%m_%Y.log')
-for handler in logging.root.handlers[:]:
-    logging.root.removeHandler(handler)
-logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO)    
+from requests.exceptions import HTTPError 
 def get_Argparser():
     #Build argument parser.
     parser = argparse.ArgumentParser(description="Sync AD Group with Everbridge Group")
@@ -223,6 +219,10 @@ def sync_EverbridgeGroups(username,password,org,groupData,groupName):
     #Inserts users to group
     add_contacts(org,groupName,header,contactList)
 if __name__ == '__main__':
+    LOG_FILENAME = datetime.now().strftime(os.getcwd() + '/logs/logfile_%H_%M_%S_%d_%m_%Y.log')
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+    logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO)   
     args = get_Argparser().parse_args()
     logging.info("Program Start")
     config = json.load(open(args.filename))
