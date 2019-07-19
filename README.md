@@ -1,13 +1,10 @@
 # sync-ad-to-everbridge
-Reads a Azure AD Group and inserts Everbridge Contacts into the selected Everbridge Group <br/>
+Reads a Azure AD Group and inserts Everbridge Contacts into the selected Everbridge Group 
 Requires a Azure Application that has permissions to read Groups(Requires Admin Consent)
 
 # How to install
 ```bash
-$ pip -r requirements.txt <br/>
-$ mkdir logs <br/>
-$ mkdir config <br/>
-$ touch config/config.json <br/>
+$ pip -r requirements.txt 
 ```
 # How to install (new)
 ```bash
@@ -31,16 +28,16 @@ $ pylint path-to-file
 ```
 # config.json format
 ```json
-{ <br/>
-	"clientId":"", <br/>
-	"clientSecret":"", <br/>
-	"everbridgeUsername":"", <br/>
-	"everbridgePassword":"", <br/>
-	"everbridgeOrg":"", <br/>
-	"everbridgeGroup":"", <br/>
-	"adTenant":"", <br/>
-	"adGroupId":"", <br/>
-	"adGroupName":"", <br/>
+{ 
+	"clientId":"", 
+	"clientSecret":"", 
+	"everbridgeUsername":"", 
+	"everbridgePassword":"", 
+	"everbridgeOrg":"", 
+	"everbridgeGroup":"", 
+	"adTenant":"", 
+	"adGroupId":"", 
+	"adGroupName":"", 
 	"logFileName":""
 }
 ```

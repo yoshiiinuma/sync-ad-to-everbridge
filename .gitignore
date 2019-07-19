@@ -2,3 +2,6 @@ __pycache__
 /tests/testConfig.json
 /tests/__pycache__
 config/*
+!config/sampleConfig.json
+logs/*
+!logs/.keep
