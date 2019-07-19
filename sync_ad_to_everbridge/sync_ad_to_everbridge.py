@@ -6,6 +6,7 @@ import base64
 import argparse
 import logging
 import os
+import sys
 from datetime import datetime
 from requests.exceptions import HTTPError 
 def get_Argparser():
@@ -189,7 +190,7 @@ def delete_EverContacts(org,groupName,header,groupBackup):
         deleteList = []
         #Deletes users in Everbridge Group
         for contact in dataArray:
-            logging.info("Deleting contact " + contact["firstName"] + " " + contact["lastName"] + "from Everbridge Group " + groupName)
+            logging.info("Deleting contact " + contact["firstName"] + " " + contact["lastName"] + " from Everbridge Group " + groupName)
             deleteList.append(contact["id"])
         if(len(deleteList) > 0):
             deleteRequests = delete_Everbridge('https://api.everbridge.net/rest/groups/' + org + '/contacts?byType=name&groupName=' + groupName + '&idType=id',header,deleteList)
@@ -219,13 +220,17 @@ def sync_EverbridgeGroups(username,password,org,groupData,groupName):
     #Inserts users to group
     add_contacts(org,groupName,header,contactList)
 if __name__ == '__main__':
-    LOG_FILENAME = datetime.now().strftime(os.getcwd() + '/logs/logfile_%H_%M_%S_%d_%m_%Y.log')
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
-    logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO)   
     args = get_Argparser().parse_args()
-    logging.info("Program Start")
+    LOG_FILENAME = datetime.now().strftime(os.getcwd() + '/logs/logfile_%H_%M_%S_%d_%m_%Y.log')
+    
     config = json.load(open(args.filename))
+    if len(config["logFileName"]) > 0:
+        LOG_FILENAME = config["logFileName"]
+    logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO)   
+    logging.info("Program Start")
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     data = get_AzureGroups("https://login.microsoftonline.com/",
         config["adTenant"],config["clientId"],config["clientSecret"], "https://graph.microsoft.com/","v1.0/groups/",config["adGroupName"],config["adGroupId"])
     sync_EverbridgeGroups(config["everbridgeUsername"],config["everbridgePassword"],config["everbridgeOrg"],data,config["everbridgeGroup"])
