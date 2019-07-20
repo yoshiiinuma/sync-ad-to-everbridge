@@ -1,0 +1,12 @@
+{
+  "clientId":"Azure AD Client ID",
+  "clientSecret":"Azure AD Client Secret",
+  "everbridgeUsername":"EverBridge User Name",
+  "everbridgePassword":"EverBridge Password",
+  "everbridgeOrg":"EverBridge Org",
+  "everbridgeGroup":"EverBridge Group",
+  "adTenant":"Azure AD Tenant",
+  "adGroupId":"Azure AD Group ID",
+  "adGroupName":"Azure AD Group Name"
+}
+
