@@ -141,7 +141,7 @@ def delete_EverContacts(org,groupName,header,groupBackup):
             deleteRequests = delete_Everbridge('https://api.everbridge.net/rest/groups/' + org + '/contacts?byType=name&groupName=' + groupName + '&idType=id',header,deleteList)
 def add_contacts(org,groupName,header,contactList):
     post_Everbridge('https://api.everbridge.net/rest/groups/' + org + '/contacts?byType=name&groupName=' + groupName + '&idType=id',header,contactList)   
-def sync_EverbridgeGroups(username,password,org,groupData,groupName):
+def sync_everbridgegroups(username,password,org,groupData,groupName):
     if len(groupData) < 1 or len(username) < 10 or len(password) < 8 or len(org) < 10 or len(groupName) < 1:
         return None
     #Convert username and password to base64
