@@ -39,13 +39,13 @@ def get_everbridge(url, header, data):
     resp = requests.get(url, data=json.dumps(data), headers=header)
     resp.raise_for_status()
     return resp.json()
-def create_filter(firstName, lastName, url, header):
+def create_filter(first_name, last_name, url, header):
     """
     Create New Filter that will have the contact's full name as the criteria
     """
-    logging.info("Creating search filter for " + firstName + " " + lastName)
+    logging.info("Creating search filter for " + first_name + " " + last_name)
     new_filter = {
-        "name":firstName + " " + lastName + "Filter",
+        "name":first_name + " " + last_name + "Filter",
         #Inserts 2 rules that matches on the contacts firstName and lastName
         "contactFilterRules":[
             {
@@ -55,7 +55,7 @@ def create_filter(firstName, lastName, url, header):
                 "dataType": "STRING",
                 "columnName": "firstName",
                 "contactFilterOption": "LIKE",
-                "columnValue":firstName
+                "columnValue":first_name
             },
             {
                 "contactFieldId": 2,
@@ -64,17 +64,17 @@ def create_filter(firstName, lastName, url, header):
                 "dataType": "STRING",
                 "columnName": "lastName",
                 "contactFilterOption": "LIKE",
-                "columnValue": lastName
+                "columnValue": last_name
             }
         ]
     }
     #Create POST Request to insert new Filter
     return post_everbridge(url, header, new_filter)
-def create_user(firstName, lastName, phone, email, url, header):
+def create_user(first_name, last_name, phone, email, url, header):
     """
     Create New EverBridge Contact with Email Delivery and Phone Delivery if available
     """
-    logging.info("Creating new Everbridge Contact for " + firstName + " " + lastName)
+    logging.info("Creating new Everbridge Contact for " + first_name + " " + last_name)
     paths = [
         #Add Email to Delivery Method
         {
@@ -101,8 +101,8 @@ def create_user(firstName, lastName, phone, email, url, header):
                 })
     #Base info for Contact
     new_contact = {
-        "firstName": firstName,
-        "lastName": lastName,
+        "firstName": first_name,
+        "lastName": last_name,
         "externalId": email,
         "recordTypeId": 892807736729062,
         "paths":paths
@@ -113,7 +113,9 @@ def get_evercontacts(filter_string, header, org):
     """
     Get a list of contacts from Everbridge
     """
-    return get_everbridge('https://api.everbridge.net/rest/contacts/'+ org + '/?sortBy="lastName"&searchType=OR'+ filter_string,header,None)
+    return get_everbridge('https://api.everbridge.net/rest/contacts/'+ org
+                          +'/?sortBy="lastName"&searchType=OR'+ filter_string,
+                          header, None)
 def create_query(filter_array, group_data, org, header):
     """
     Create query using multiple contact filters
@@ -127,14 +129,19 @@ def create_query(filter_array, group_data, org, header):
         filter_string += "&contactFilterIds=" + str(filter_data["id"])
         filter_array.append(filter_data["id"])
     return filter_string
-def create_evercontacts(contact_list, contact_check, group_data, group_backup, ever_data, org, header):
+def create_evercontacts(contact_list,
+                        contact_check,
+                        group_data,
+                        group_backup,
+                        ever_data,
+                        org,
+                        header):
     """
     Updates Everbridge group
     """
     #Adds contact ID to Group Contact List
     for contact in ever_data["page"]["data"]:
-        logging.info("Adding " + contact["firstName"]
-                     + " " + contact["lastName"] + "to Everbridge group")
+        logging.info("Adding %s %s to Everbridge group", contact["firstName"], contact["lastName"])
         contact_list.append(contact["id"])
         contact_check.append({"name":contact["firstName"]
                                      + " " + contact["lastName"], "Id":contact["id"]})
@@ -194,7 +201,7 @@ def sync_everbridgegroups(username, password, org, group_data, group_name):
     """
     Main Function
     """
-    if group_data is None or username is None or password is None  or org is None  or group_name is None:
+    if (group_data, username, password, org, group_name) is None:
         return None
     #Convert username and password to base64
     header = create_authheader(username, password)
@@ -215,7 +222,11 @@ def sync_everbridgegroups(username, password, org, group_data, group_name):
     contact_check = []
     group_backup = []
     #Create new contacts
-    create_evercontacts(contact_list, contact_check, group_data, group_backup, ever_data, org, header)
+    create_evercontacts(contact_list,
+                        contact_check,
+                        group_data,
+                        group_backup,
+                        ever_data, org, header)
     #Delete extra users in group
     #Inserts users to group
     add_contacts(org, group_name, header, contact_list)
