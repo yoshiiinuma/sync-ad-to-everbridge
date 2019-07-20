@@ -4,10 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-<<<<<<< HEAD
-=======
 pylint = "*"
->>>>>>> 1780907905a44dd0c9abf785ad50c8af5c9ec01e
 
 [packages]
 adal = "*"
@@ -15,8 +12,4 @@ pytest = "*"
 mock = "*"
 
 [requires]
-<<<<<<< HEAD
 python_version = "3.7"
-=======
-python_version = "3.6"
->>>>>>> 1780907905a44dd0c9abf785ad50c8af5c9ec01e
