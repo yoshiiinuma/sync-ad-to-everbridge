@@ -5,3 +5,4 @@ config/*
 !config/sampleConfig.json
 logs/*
 !logs/.keep
+.vscode

@@ -35,7 +35,6 @@ def get_everbridge(url, header, data):
     """
     GET HTTP Call for Everbridge
     """
-    print(url)
     resp = requests.get(url, data=json.dumps(data), headers=header)
     resp.raise_for_status()
     return resp.json()
@@ -210,7 +209,6 @@ def sync_everbridgegroups(username, password, org, group_data, group_name):
     filter_string = create_query(filter_array, group_data, org, header)
     #Grabs the contacts from Everbridge with the given contact filters
     ever_data = get_evercontacts(filter_string, header, org)
-    print(ever_data["page"]["totalCount"])
     #Delete Filters once they have been used
     logging.info("Deleting Search Filters")
 

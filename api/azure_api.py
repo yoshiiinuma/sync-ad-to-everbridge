@@ -4,13 +4,14 @@ Requests Client Crediential Token and then performs API call to get Login Events
 import logging
 import requests
 import adal
-def get_token(client_id, secret, authority, url):
+def get_token(client_id, secret, authority):
     """
     Get Azure AD Token
     """
     logging.info("Getting authority token")
     context = adal.AuthenticationContext(authority)
-    token = context.acquire_token_with_client_credentials("https://graph.microsoft.com/", client_id, secret)
+    token = context.acquire_token_with_client_credentials("https://graph.microsoft.com/",
+                                                          client_id, secret)
     return token
 def get_azuregroups(tenant, client_id, secret, url, group_name):
     """
@@ -18,7 +19,7 @@ def get_azuregroups(tenant, client_id, secret, url, group_name):
     """
     authority = "https://login.microsoftonline.com/" + tenant
     #Request Token
-    token = get_token(client_id, secret, authority, url)
+    token = get_token(client_id, secret, authority)
     #Create Rest session
     logging.info("Getting Azure groups")
     session = requests.session()
