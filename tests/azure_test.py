@@ -6,6 +6,7 @@ import os
 import json
 import inspect
 import pytest
+import mock
 from adal import AdalError
 CURRENTDIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 PARENTDIR = os.path.dirname(CURRENTDIR)

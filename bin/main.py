@@ -36,7 +36,6 @@ def main():
                         level=logging.INFO,
                         format='%(asctime)s %(message)s',
                         datefmt='%m/%d/%Y %I:%M:%S %p')
-    logging.info("Program Start")
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     data = api.azure_api.get_azuregroups(config["adTenant"],
                                          config["clientId"],

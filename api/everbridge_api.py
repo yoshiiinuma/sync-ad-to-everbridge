@@ -4,7 +4,29 @@ Requests Client Crediential Token and then performs API call to get Login Events
 import json
 import base64
 import logging
+import sys
 import requests
+#Counts of the update
+class STATEMENT:
+    """
+    Counter for the end program statement
+    """
+    def __init__(self, new, delete, update):
+        self.new = new
+        self.delete = delete
+        self.update = update
+    def statement(self):
+        """
+        Return statement string
+        """
+        return self.update + self.delete + self.new
+    def reset(self):
+        """
+        Reset counter
+        """
+        self.new = 0
+        self.update = 0
+        self.delete = 0
 def create_authheader(username, password):
     """
     Creates Header for HTTP CALLS, Creates base64 encode for auth
@@ -21,28 +43,36 @@ def delete_everbridge(url, header, data):
     """
     Delete HTTP Call for everbridge
     """
-    resp = requests.delete(url, data=json.dumps(data), headers=header)
-    resp.raise_for_status()
-    return resp.json()
+    try:
+        resp = requests.delete(url, data=json.dumps(data), headers=header)
+        return resp.json()
+    except requests.exceptions.RequestException as error:  # This is the correct syntax
+        logging.error(error)
+        sys.exit(1)
 def post_everbridge(url, header, data):
     """
     POST HTTP Call for Everbridge
     """
-    resp = requests.post(url, data=json.dumps(data), headers=header)
-    resp.raise_for_status()
-    return resp.json()
+    try:
+        resp = requests.post(url, data=json.dumps(data), headers=header)
+        return resp.json()
+    except requests.exceptions.RequestException as error:  # This is the correct syntax
+        logging.error(error)
+        sys.exit(1)
 def get_everbridge(url, header, data):
     """
     GET HTTP Call for Everbridge
     """
-    resp = requests.get(url, data=json.dumps(data), headers=header)
-    resp.raise_for_status()
-    return resp.json()
+    try:
+        resp = requests.get(url, data=json.dumps(data), headers=header)
+        return resp.json()
+    except requests.exceptions.RequestException as error:  # This is the correct syntax
+        logging.error(error)
+        sys.exit(1)
 def create_filter(first_name, last_name, url, header):
     """
     Create New Filter that will have the contact's full name as the criteria
     """
-    logging.info("Creating search filter for " + first_name + " " + last_name)
     new_filter = {
         "name":first_name + " " + last_name + "Filter",
         #Inserts 2 rules that matches on the contacts firstName and lastName
@@ -69,11 +99,11 @@ def create_filter(first_name, last_name, url, header):
     }
     #Create POST Request to insert new Filter
     return post_everbridge(url, header, new_filter)
-def create_user(first_name, last_name, phone, email, url, header):
+def create_user(first_name, last_name, phone, email, url, header, counter):
     """
     Create New EverBridge Contact with Email Delivery and Phone Delivery if available
     """
-    logging.info("Creating new Everbridge Contact for " + first_name + " " + last_name)
+    counter.new = counter.new + 1
     paths = [
         #Add Email to Delivery Method
         {
@@ -134,14 +164,15 @@ def create_evercontacts(contact_list,
                         group_backup,
                         ever_data,
                         org,
-                        header):
+                        header,
+                        counter):
     """
     Updates Everbridge group
     """
     #Adds contact ID to Group Contact List
     for contact in ever_data["page"]["data"]:
-        logging.info("Adding %s %s to Everbridge group", contact["firstName"], contact["lastName"])
         contact_list.append(contact["id"])
+        counter.update = counter.update + 1
         contact_check.append({"name":contact["firstName"]
                                      + " " + contact["lastName"], "Id":contact["id"]})
     #Checks if a user in AD has not been added in Everbridge
@@ -156,9 +187,9 @@ def create_evercontacts(contact_list,
                                contact["surname"],
                                contact["businessPhones"],
                                contact["mail"],
-                               'https://api.everbridge.net/rest/contacts/' + org + '/', header)
+                               'https://api.everbridge.net/rest/contacts/' + org + '/', header, counter)
         contact_list.append(new_user["id"])
-def delete_evercontacts(org, group_name, header, group_backup):
+def delete_evercontacts(org, group_name, header, group_backup, counter):
     """
     Deletes extra users in group
     """
@@ -178,12 +209,7 @@ def delete_evercontacts(org, group_name, header, group_backup):
         delete_list = []
         #Deletes users in Everbridge Group
         for contact in data_array:
-            logging.info("Deleting contact "
-                         + contact["firstName"]
-                         + " "
-                         + contact["lastName"]
-                         + " from Everbridge Group "
-                         + group_name)
+            counter.delete = counter.delete + 1
             delete_list.append(contact["id"])
         if delete_list:
             delete_everbridge('https://api.everbridge.net/rest/groups/'
@@ -200,6 +226,7 @@ def sync_everbridgegroups(username, password, org, group_data, group_name):
     """
     Main Function
     """
+    counter = STATEMENT(0, 0, 0)
     if (group_data, username, password, org, group_name) is None:
         return None
     #Convert username and password to base64
@@ -210,12 +237,9 @@ def sync_everbridgegroups(username, password, org, group_data, group_name):
     #Grabs the contacts from Everbridge with the given contact filters
     ever_data = get_evercontacts(filter_string, header, org)
     #Delete Filters once they have been used
-    logging.info("Deleting Search Filters")
-
     for filter_id in filter_array:
         delete_everbridge('https://api.everbridge.net/rest/contactFilters/' + org
                           + '/' + str(filter_id), header, None)
-    logging.info("Done Deleting Search Filters")
     contact_list = []
     contact_check = []
     group_backup = []
@@ -224,9 +248,11 @@ def sync_everbridgegroups(username, password, org, group_data, group_name):
                         contact_check,
                         group_data,
                         group_backup,
-                        ever_data, org, header)
+                        ever_data, org, header,
+                        counter)
     #Delete extra users in group
     #Inserts users to group
     add_contacts(org, group_name, header, contact_list)
-    delete_evercontacts(org, group_name, header, group_backup)
+    delete_evercontacts(org, group_name, header, group_backup, counter)
+    logging.info("%s contacts have been created,%s users have been removed from the group, %s users have been upserted to the group", counter.new, counter.delete, counter.update)
     return group_name + " has been synced"
