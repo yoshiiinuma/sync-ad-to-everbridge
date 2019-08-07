@@ -89,7 +89,7 @@ def create_filter(first_name, last_name, url, header):
             {
                 "contactFieldId": 2,
                 "type": "SYSTEM",
-                "operator": "NLIKE",
+                "operator": "LIKE",
                 "dataType": "STRING",
                 "columnName": "lastName",
                 "contactFilterOption": "LIKE",
