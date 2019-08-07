@@ -18,7 +18,7 @@ def get_token(client_id, secret, authority):
     except HTTPError as error:
         logging.error(error)
         sys.exit(1)
-def get_azuregroups(tenant, client_id, secret, url, group_name):
+def get_azuregroups(tenant, client_id, secret, url):
     """
     Fetch Azure AD Group with Adal
     """
@@ -34,15 +34,10 @@ def get_azuregroups(tenant, client_id, secret, url, group_name):
     #Will manually search through all groups if Group ID is empty
     try:
         response = session.get(url)
-        data = response.json()["value"]
-        for group in data:
-            if group["displayName"] == group_name:
-                inquiry = group["id"] + "/members"
-                group_response = session.get(url + inquiry)
-                if group_response.status_code == 200:
-                    return group_response.json()["value"]
-        logging.error("No group name found")
-        return None
+        if response.status_code == 200:
+            return response.json()["value"]
+        else:
+            return None
     except requests.exceptions.RequestException as error:
         logging.error(error)
         sys.exit(1)

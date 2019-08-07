@@ -65,26 +65,28 @@ def test_invalidcontact():
     """
     header = api.everbridge_api.create_authheader(CONFIG["everbridgeUsername"],
                                                   CONFIG["everbridgePassword"])
-    with pytest.raises(HTTPError):
-        api.everbridge_api.create_user("Invalid",
-                                       "PhoneTest",
-                                       ["8081234567"],
-                                       "PythonTest@hawallig.gov",
-                                       'https://api.everbridge.net/rest/contacts/'
-                                       + CONFIG["everbridgeOrg"]
-                                       + '/', header)
+    counter = api.everbridge_api.STATEMENT(0,0,0)
+    user = api.everbridge_api.create_user("Invalid",
+                                    "PhoneTest",
+                                    ["808-1111-1111"],
+                                    "PythonTest@hawallig.gov",
+                                    'https://api.everbridge.net/rest/contacts/'
+                                    + CONFIG["everbridgeOrg"]
+                                    + '/', header, counter)
+    assert user["message"] ==  'Phone number format invalid for selected country.'
 def test_insertanddeletecontact():
     """
     Expected: Will return a ok message as the new contact will be created then deleted
     """
     header = api.everbridge_api.create_authheader(CONFIG["everbridgeUsername"],
                                                   CONFIG["everbridgePassword"])
+    counter = api.everbridge_api.STATEMENT(0,0,0)
     newuser = api.everbridge_api.create_user("Invalid",
                                              "PhoneTest",
                                              ["8087278435"],
                                              "PythonTest@hawaii.gov",
                                              'https://api.everbridge.net/rest/contacts/'
-                                             + CONFIG["everbridgeOrg"] + '/', header)
+                                             + CONFIG["everbridgeOrg"] + '/', header, counter)
     infouser = api.everbridge_api.get_everbridge('https://api.everbridge.net/rest/contacts/'
                                                  + CONFIG["everbridgeOrg"] + '/'
                                                  + str(newuser["id"]), header, None)
@@ -99,10 +101,11 @@ def test_addandremovefromgroup():
     """
     header = api.everbridge_api.create_authheader(CONFIG["everbridgeUsername"],
                                                   CONFIG["everbridgePassword"])
+    counter = api.everbridge_api.STATEMENT(0,0,0)
     newuser = api.everbridge_api.create_user("TestTest", "Automated", ["8087278435"],
                                              "NewTest@hawaii.gov",
                                              'https://api.everbridge.net/rest/contacts/'
-                                             + CONFIG["everbridgeOrg"] + '/', header)
+                                             + CONFIG["everbridgeOrg"] + '/', header, counter)
     evergroup = api.everbridge_api.get_everbridge('https://api.everbridge.net/rest/contacts/groups/'
                                                   + CONFIG["everbridgeOrg"]
                                                   + '?byType=name&groupName='

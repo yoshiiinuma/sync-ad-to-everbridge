@@ -6,6 +6,7 @@ import base64
 import logging
 import sys
 import requests
+from requests import HTTPError
 #Counts of the update
 class STATEMENT:
     """
@@ -117,17 +118,18 @@ def create_user(first_name, last_name, phone, email, url, header, counter):
     ]
     if phone:
         for phone_number in phone:
-            #Add phone number if phone number array isn't empty
-            phone_string = phone_number.replace(" ", "").replace("-", "")
-            paths.append(
-                {
-                    "waitTime": 0,
-                    "status": "A",
-                    "pathId": 241901148045319,
-                    "countryCode": "US",
-                    "value": phone_string,
-                    "skipValidation": "false"
-                })
+            if len(phone_number) >= 10:
+                #Add phone number if phone number array isn't empty
+                phone_string = phone_number.replace(" ", "").replace("-", "")
+                paths.append(
+                    {
+                        "waitTime": 0,
+                        "status": "A",
+                        "pathId": 241901148045319,
+                        "countryCode": "US",
+                        "value": phone_string,
+                        "skipValidation": "false"
+                    })
     #Base info for Contact
     new_contact = {
         "firstName": first_name,
@@ -188,6 +190,7 @@ def create_evercontacts(contact_list,
                                contact["businessPhones"],
                                contact["mail"],
                                'https://api.everbridge.net/rest/contacts/' + org + '/', header, counter)
+        print(new_user)
         contact_list.append(new_user["id"])
 def delete_evercontacts(org, group_name, header, group_backup, counter):
     """
@@ -251,8 +254,8 @@ def sync_everbridgegroups(username, password, org, group_data, group_name):
                         ever_data, org, header,
                         counter)
     #Delete extra users in group
+    delete_evercontacts(org, group_name, header, group_backup, counter)
     #Inserts users to group
     add_contacts(org, group_name, header, contact_list)
-    delete_evercontacts(org, group_name, header, group_backup, counter)
     logging.info("%s contacts have been created,%s users have been removed from the group, %s users have been upserted to the group", counter.new, counter.delete, counter.update)
     return group_name + " has been synced"

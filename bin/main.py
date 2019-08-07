@@ -40,12 +40,13 @@ def main():
     data = api.azure_api.get_azuregroups(config["adTenant"],
                                          config["clientId"],
                                          config["clientSecret"],
-                                         "https://graph.microsoft.com/v1.0/groups/",
-                                         config["adGroupName"])
-    api.everbridge_api.sync_everbridgegroups(config["everbridgeUsername"],
-                                             config["everbridgePassword"],
-                                             config["everbridgeOrg"],
-                                             data,
-                                             config["everbridgeGroup"])
+                                         "https://graph.microsoft.com/v1.0/groups/" + config["adGroupId"] + "/members",
+                                         )
+    if data is not None:
+        api.everbridge_api.sync_everbridgegroups(config["everbridgeUsername"],
+                                                config["everbridgePassword"],
+                                                config["everbridgeOrg"],
+                                                data,
+                                                config["everbridgeGroup"])
 if __name__ == '__main__':
     main()

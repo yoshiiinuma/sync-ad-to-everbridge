@@ -22,8 +22,7 @@ def test_azurefailcredientials():
         api.azure_api.get_azuregroups(CONFIG["adTenant"],
                                       CONFIG["clientId"],
                                       "",
-                                      "https://graph.microsoft.com/v1.0/groups/",
-                                      CONFIG["adGroupName"])
+                                      "https://graph.microsoft.com/v1.0/groups/")
 def test_azurefailgroupfinder():
     """
     Expected: Will return None because there is no group with matching name
@@ -31,8 +30,7 @@ def test_azurefailgroupfinder():
     data = api.azure_api.get_azuregroups(CONFIG["adTenant"],
                                          CONFIG["clientId"],
                                          CONFIG["clientSecret"],
-                                         "https://graph.microsoft.com/v1.0/groups/",
-                                         "")
+                                         "https://graph.microsoft.com/v1.0/groups/" + "ABC" + "/members")
     assert data is None
 def test_azurecorrectgroupfinder():
     """
@@ -41,6 +39,5 @@ def test_azurecorrectgroupfinder():
     data = api.azure_api.get_azuregroups(CONFIG["adTenant"],
                                          CONFIG["clientId"],
                                          CONFIG["clientSecret"],
-                                         "https://graph.microsoft.com/v1.0/groups/",
-                                         CONFIG["adGroupName"])
+                                         "https://graph.microsoft.com/v1.0/groups/" + CONFIG["adGroupId"] + "/members")
     assert data
