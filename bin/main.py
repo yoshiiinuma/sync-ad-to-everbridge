@@ -13,6 +13,10 @@ PARENTDIR = os.path.dirname(CURRENTDIR)
 sys.path.insert(0, PARENTDIR)
 import api.azure_api
 import api.everbridge_api
+logging.basicConfig(stream=sys.stdout,
+                        level=logging.INFO,
+                        format='%(asctime)s %(message)s',
+                        datefmt='%m/%d/%Y %I:%M:%S %p')
 def get_argparser():
     """
     Build Argument Parser
@@ -25,18 +29,16 @@ def main():
     """
     Main Function
     """
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
     args = get_argparser().parse_args()
-    log_filename = datetime.now().strftime(os.getcwd() + '/logs/logfile_%H_%M_%S_%d_%m_%Y.log')
     config = json.load(open(args.filename))
     if config["logFileName"]:
         log_filename = os.getcwd() + '/logs/' + config["logFileName"]
-    logging.basicConfig(filename=log_filename,
-                        level=logging.INFO,
-                        format='%(asctime)s %(message)s',
-                        datefmt='%m/%d/%Y %I:%M:%S %p')
-    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+        for handler in logging.root.handlers[:]:
+            logging.root.removeHandler(handler)
+        logging.basicConfig(filename=log_filename,
+                            level=logging.INFO,
+                            format='%(asctime)s %(message)s',
+                            datefmt='%m/%d/%Y %I:%M:%S %p')
     data = api.azure_api.get_azuregroups(config["adTenant"],
                                          config["clientId"],
                                          config["clientSecret"],
