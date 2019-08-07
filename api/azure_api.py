@@ -36,8 +36,7 @@ def get_azuregroups(tenant, client_id, secret, url):
         response = session.get(url)
         if response.status_code == 200:
             return response.json()["value"]
-        else:
-            return None
+        return None
     except requests.exceptions.RequestException as error:
         logging.error(error)
         sys.exit(1)

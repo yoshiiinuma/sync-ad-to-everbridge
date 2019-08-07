@@ -6,7 +6,6 @@ import base64
 import logging
 import sys
 import requests
-from requests import HTTPError
 #Counts of the update
 class STATEMENT:
     """
@@ -100,7 +99,7 @@ def create_filter(first_name, last_name, url, header):
     }
     #Create POST Request to insert new Filter
     return post_everbridge(url, header, new_filter)
-def create_user(first_name, last_name, phone, email, url, header, counter):
+def create_user(contact, url, header, counter):
     """
     Create New EverBridge Contact with Email Delivery and Phone Delivery if available
     """
@@ -112,12 +111,12 @@ def create_user(first_name, last_name, phone, email, url, header, counter):
             "status": "A",
             "pathId": 241901148045316,
             "countryCode": "US",
-            "value": email,
+            "value": contact["mail"],
             "skipValidation": "false"
         }
     ]
-    if phone:
-        for phone_number in phone:
+    if contact["businessPhones"]:
+        for phone_number in contact["businessPhones"]:
             if len(phone_number) >= 10:
                 #Add phone number if phone number array isn't empty
                 phone_string = phone_number.replace(" ", "").replace("-", "")
@@ -132,9 +131,9 @@ def create_user(first_name, last_name, phone, email, url, header, counter):
                     })
     #Base info for Contact
     new_contact = {
-        "firstName": first_name,
-        "lastName": last_name,
-        "externalId": email,
+        "firstName": contact["givenName"],
+        "lastName": contact["surname"],
+        "externalId": contact["mail"],
         "recordTypeId": 892807736729062,
         "paths":paths
     }
@@ -160,10 +159,7 @@ def create_query(filter_array, group_data, org, header):
         filter_string += "&contactFilterIds=" + str(filter_data["id"])
         filter_array.append(filter_data["id"])
     return filter_string
-def create_evercontacts(contact_list,
-                        contact_check,
-                        group_data,
-                        group_backup,
+def create_evercontacts(group_data,
                         ever_data,
                         org,
                         header,
@@ -172,26 +168,28 @@ def create_evercontacts(contact_list,
     Updates Everbridge group
     """
     #Adds contact ID to Group Contact List
+    update_list = {"contact_list":[],
+                   "contact_check":[],
+                   "group_backup":[]}
     for contact in ever_data["page"]["data"]:
-        contact_list.append(contact["id"])
+        update_list["contact_list"].append(contact["id"])
         counter.update = counter.update + 1
-        contact_check.append({"name":contact["firstName"]
-                                     + " " + contact["lastName"], "Id":contact["id"]})
+        update_list["contact_check"].append({"name":contact["firstName"]
+                                                    + " " + contact["lastName"],
+                                             "Id":contact["id"]})
     #Checks if a user in AD has not been added in Everbridge
-    for check in contact_check:
+    for check in update_list["contact_check"]:
         for contact in group_data:
             if check["name"] == contact["givenName"] + " " + contact["surname"]:
                 group_data.remove(contact)
-                group_backup.append(contact)
+                update_list["group_backup"].append(contact)
     #Inserts New User to Everbridge if group_data is not empty
     for contact in group_data:
-        new_user = create_user(contact["givenName"],
-                               contact["surname"],
-                               contact["businessPhones"],
-                               contact["mail"],
-                               'https://api.everbridge.net/rest/contacts/' + org + '/', header, counter)
-        print(new_user)
-        contact_list.append(new_user["id"])
+        new_user = create_user(contact,
+                               'https://api.everbridge.net/rest/contacts/'
+                               + org + '/', header, counter)
+        update_list["contact_list"].append(new_user["id"])
+    return update_list
 def delete_evercontacts(org, group_name, header, group_backup, counter):
     """
     Deletes extra users in group
@@ -243,19 +241,16 @@ def sync_everbridgegroups(username, password, org, group_data, group_name):
     for filter_id in filter_array:
         delete_everbridge('https://api.everbridge.net/rest/contactFilters/' + org
                           + '/' + str(filter_id), header, None)
-    contact_list = []
-    contact_check = []
-    group_backup = []
     #Create new contacts
-    create_evercontacts(contact_list,
-                        contact_check,
-                        group_data,
-                        group_backup,
-                        ever_data, org, header,
-                        counter)
+    update_list = create_evercontacts(group_data,
+                                      ever_data, org, header,
+                                      counter)
     #Delete extra users in group
-    delete_evercontacts(org, group_name, header, group_backup, counter)
+    delete_evercontacts(org, group_name, header, update_list["group_backup"], counter)
     #Inserts users to group
-    add_contacts(org, group_name, header, contact_list)
-    logging.info("%s contacts have been created,%s users have been removed from the group, %s users have been upserted to the group", counter.new, counter.delete, counter.update)
+    add_contacts(org, group_name, header, update_list["contact_list"])
+    logging.info("%s contacts created,%s users removed from group, %s users upserted to the group",
+                 counter.new,
+                 counter.delete,
+                 counter.update)
     return group_name + " has been synced"
