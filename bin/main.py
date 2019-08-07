@@ -7,16 +7,11 @@ import logging
 import os
 import sys
 import inspect
-from datetime import datetime
 CURRENTDIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 PARENTDIR = os.path.dirname(CURRENTDIR)
 sys.path.insert(0, PARENTDIR)
 import api.azure_api
 import api.everbridge_api
-logging.basicConfig(stream=sys.stdout,
-                        level=logging.INFO,
-                        format='%(asctime)s %(message)s',
-                        datefmt='%m/%d/%Y %I:%M:%S %p')
 def get_argparser():
     """
     Build Argument Parser
@@ -25,30 +20,34 @@ def get_argparser():
     #Get Filename or Location
     parser.add_argument('filename', help="filename to parse")
     return parser
+logging.basicConfig(stream=sys.stdout,
+                    level=logging.INFO,
+                    format='%(asctime)s %(message)s',
+                    datefmt='%m/%d/%Y %I:%M:%S %p')
+ARGS = get_argparser().parse_args()
+CONFIG = json.load(open(ARGS.filename))
+if CONFIG["logFileName"]:
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+    logging.basicConfig(filename=os.getcwd() + '/logs/' + CONFIG["logFileName"],
+                        level=logging.INFO,
+                        format='%(asctime)s %(message)s',
+                        datefmt='%m/%d/%Y %I:%M:%S %p')
 def main():
     """
     Main Function
     """
-    args = get_argparser().parse_args()
-    config = json.load(open(args.filename))
-    if config["logFileName"]:
-        log_filename = os.getcwd() + '/logs/' + config["logFileName"]
-        for handler in logging.root.handlers[:]:
-            logging.root.removeHandler(handler)
-        logging.basicConfig(filename=log_filename,
-                            level=logging.INFO,
-                            format='%(asctime)s %(message)s',
-                            datefmt='%m/%d/%Y %I:%M:%S %p')
-    data = api.azure_api.get_azuregroups(config["adTenant"],
-                                         config["clientId"],
-                                         config["clientSecret"],
-                                         "https://graph.microsoft.com/v1.0/groups/" + config["adGroupId"] + "/members",
-                                         )
+    data = api.azure_api.get_azuregroups(CONFIG["adTenant"],
+                                         CONFIG["clientId"],
+                                         CONFIG["clientSecret"],
+                                         "https://graph.microsoft.com/v1.0/groups/"
+                                         + CONFIG["adGroupId"]
+                                         + "/members")
     if data is not None:
-        api.everbridge_api.sync_everbridgegroups(config["everbridgeUsername"],
-                                                config["everbridgePassword"],
-                                                config["everbridgeOrg"],
-                                                data,
-                                                config["everbridgeGroup"])
+        api.everbridge_api.sync_everbridgegroups(CONFIG["everbridgeUsername"],
+                                                 CONFIG["everbridgePassword"],
+                                                 CONFIG["everbridgeOrg"],
+                                                 data,
+                                                 CONFIG["everbridgeGroup"])
 if __name__ == '__main__':
     main()
