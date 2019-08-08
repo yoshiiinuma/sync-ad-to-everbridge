@@ -137,15 +137,39 @@ def create_user(contact, url, header, counter):
             if len(phone_number) >= 10:
                 #Add phone number if phone number array isn't empty
                 phone_string = phone_number.replace(" ", "").replace("-", "")
+                #Work Desk Phone Path
                 paths.append(
                     {
                         "waitTime": 0,
                         "status": "A",
-                        "pathId": 241901148045319,
+                        "pathId": 241901148045321,
                         "countryCode": "US",
                         "value": phone_string,
                         "skipValidation": "false"
                     })
+    #Adds Cell phone to paths if mobile phone number is present
+    if contact["mobilePhone"] is not None:
+        phone_string = contact["mobilePhone"].replace(" ", "").replace("-", "")
+        #Work Cell Path
+        paths.append(
+            {
+                "waitTime": 0,
+                "status": "A",
+                "pathId": 241901148045319,
+                "countryCode": "US",
+                "value": phone_string,
+                "skipValidation": "false"
+            })
+        #Work Cell SMS Path
+        paths.append(
+            {
+                "waitTime": 0,
+                "status": "A",
+                "pathId": 241901148045324,
+                "countryCode": "US",
+                "value": phone_string,
+                "skipValidation": "false"
+            })
     #Base info for Contact
     new_contact = {
         "firstName": contact["givenName"],
@@ -234,7 +258,6 @@ def create_evercontacts(group_data,
         new_user = create_user(contact,
                                'https://api.everbridge.net/rest/contacts/'
                                + org + '/', header, counter)
-        print(new_user)
         update_list["contact_list"].append(new_user["id"])
     return update_list
 def delete_evercontacts(org, group_name, header, group_backup, counter):
