@@ -104,8 +104,21 @@ def create_user(contact, url, header, counter):
     Create New EverBridge Contact with Email Delivery and Phone Delivery if available
     """
     counter.new = counter.new + 1
+    if contact.get("givenName") is None:
+        first = "first"
+        last = "last"
+        space_array = contact["displayName"].split(" ")
+        if(len(space_array) > 1):
+            first = space_array[0]
+            space_array.pop(0)
+            last = "".join(str(x) for x in space_array)
+        else:
+            first = contact["displayName"]
+            last = "None"
+        contact["givenName"] = first
+        contact["surname"] = last
     if contact["mail"] is None:
-        contact["mail"] = "missingmail@hawaii.gov"
+        contact["mail"] = "missingmail" + contact["givenName"] +"@hawaii.gov"
     if contact.get("businessPhones") is None:
         contact["businessPhones"] = []
     paths = [
@@ -141,27 +154,7 @@ def create_user(contact, url, header, counter):
         "recordTypeId": 892807736729062,
         "paths":paths
     }
-    if contact.get("givenName") is None:
-        first = "first"
-        last = "last"
-        space_array = contact["displayName"].split(" ")
-        if(len(space_array) > 1):
-            first = space_array[0]
-            space_array.pop(0)
-            last = "".join(str(x) for x in space_array)
-        else:
-            first = contact["displayName"]
-            last = "None"
-        
-        new_contact = {
-            "firstName": first,
-            "lastName": last,
-            "externalId": contact["mail"],
-            "recordTypeId": 892807736729062,
-            "paths":paths
-        }
     #Do POST Request to insert User
-    print(new_contact)
     return post_everbridge(url, header, new_contact)
 def get_evercontacts(filter_string, header, org):
     """
@@ -205,21 +198,37 @@ def create_evercontacts(group_data,
     """
     #Adds contact ID to Group Contact List
     update_list = {"contact_list":[],
-                   "contact_check":[],
-                   "group_backup":[]}
-    if(ever_data.get("data") is not None):
+                   "contact_check":{},
+                   "group_backup":{}}
+    if(ever_data["page"].get("data") is not None):
         for contact in ever_data["page"]["data"]:
+            key_name = str(contact["firstName"]) + str(contact["lastName"])
             update_list["contact_list"].append(contact["id"])
             counter.update = counter.update + 1
-            update_list["contact_check"].append({"name":contact["firstName"]
+            update_list["contact_check"][key_name] = {"name":contact["firstName"]
                                                         + " " + contact["lastName"],
-                                                "Id":contact["id"]})
+                                                "Id":contact["id"]}
     #Checks if a user in AD has not been added in Everbridge
-    for check in update_list["contact_check"]:
-        for contact in group_data:
-            if check["name"] == contact["givenName"] + " " + contact["surname"]:
+    copy_list = group_data.copy()
+    for contact in copy_list:
+        if contact.get("givenName") is None:
+            first = "first"
+            last = "last"
+            space_array = contact["displayName"].split(" ")
+            if(len(space_array) > 1):
+                first = space_array[0]
+                space_array.pop(0)
+                last = "".join(str(x) for x in space_array)
+            else:
+                first = contact["displayName"]
+                last = "None"
+            if update_list["contact_check"].get(first + last) is not None:
                 group_data.remove(contact)
-                update_list["group_backup"].append(contact)
+                update_list["group_backup"][first + last] = contact
+        else:
+            if update_list["contact_check"].get(str(contact["givenName"]) + str(contact["surname"])) is not None:
+                group_data.remove(contact)
+                update_list["group_backup"][str(contact["givenName"]) + str(contact["surname"])] = contact
     #Inserts New User to Everbridge if group_data is not empty
     for contact in group_data:
         new_user = create_user(contact,
@@ -240,11 +249,10 @@ def delete_evercontacts(org, group_name, header, group_backup, counter):
     #Removes users not in the AD Group
     if ever_group["page"]["totalCount"] > 0:
         data_array = ever_group["page"]["data"]
-        for group in group_backup:
-            for contact in data_array:
-                full_name = contact["firstName"] + contact["lastName"]
-                if full_name == group["givenName"] + group["surname"]:
-                    data_array.remove(contact)
+        for contact in data_array:
+            full_name = contact["firstName"] + contact["lastName"]
+            if group_backup.get(full_name) is not None:
+                data_array.remove(contact)
         delete_list = []
         #Deletes users in Everbridge Group
         for contact in data_array:
@@ -271,8 +279,9 @@ def sync_everbridgegroups(username, password, org, group_data, group_name):
     #Convert username and password to base64
     header = create_authheader(username, password)
     #Create the search query for the group Everbridge Contacts
-    filter_string = create_query(group_data, org, header)
+    #filter_string = create_query(group_data, org, header)
     #Grabs the contacts from Everbridge with the given contact filters
+    filter_string = "&contactFilterIds=350903123051033&contactFilterIds=350765684097592&contactFilterIds=350628245144126&contactFilterIds=350765684097593&contactFilterIds=351040562004613&contactFilterIds=351040562004614&contactFilterIds=351178000958043&contactFilterIds=350765684097594&contactFilterIds=350903123051034&contactFilterIds=350490806190563&contactFilterIds=350628245144127&contactFilterIds=350903123051035&contactFilterIds=350765684097595&contactFilterIds=351178000958044&contactFilterIds=351178000958045&contactFilterIds=351040562004615&contactFilterIds=350765684097596&contactFilterIds=351178000958046&contactFilterIds=350628245144128&contactFilterIds=350765684097597&contactFilterIds=350628245144129&contactFilterIds=350903123051036&contactFilterIds=350490806190564&contactFilterIds=351040562004616&contactFilterIds=350628245144130&contactFilterIds=350490806190565&contactFilterIds=350765684097598&contactFilterIds=350903123051037&contactFilterIds=350765684097599&contactFilterIds=351178000958047&contactFilterIds=351040562004617&contactFilterIds=350490806190566&contactFilterIds=351178000958048&contactFilterIds=350903123051038&contactFilterIds=350903123051039&contactFilterIds=351040562004618&contactFilterIds=350765684097600&contactFilterIds=350903123051040&contactFilterIds=351040562004619&contactFilterIds=350490806190567&contactFilterIds=350628245144131&contactFilterIds=351040562004620&contactFilterIds=350628245144132&contactFilterIds=351040562004621&contactFilterIds=350765684097601&contactFilterIds=350490806190568&contactFilterIds=350628245144133&contactFilterIds=351178000958049&contactFilterIds=350765684097602&contactFilterIds=350628245144134&contactFilterIds=351040562004622&contactFilterIds=351178000958050&contactFilterIds=350903123051041&contactFilterIds=350765684097603&contactFilterIds=351040562004623&contactFilterIds=350628245144135&contactFilterIds=350628245144136&contactFilterIds=351178000958051&contactFilterIds=351040562004624&contactFilterIds=350628245144137&contactFilterIds=351178000958052&contactFilterIds=350903123051042&contactFilterIds=350765684097604&contactFilterIds=350628245144138&contactFilterIds=351178000958053&contactFilterIds=350490806190569&contactFilterIds=351040562004625&contactFilterIds=351178000958054&contactFilterIds=351040562004626&contactFilterIds=350490806190570&contactFilterIds=350765684097606"
     ever_data = get_evercontacts(filter_string, header, org)
     #Create new contacts
     update_list = create_evercontacts(group_data,
