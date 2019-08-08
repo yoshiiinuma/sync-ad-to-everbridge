@@ -200,7 +200,7 @@ def delete_evercontacts(org, group_name, header, group_backup, counter):
                                 + group_name + '&pageSize=100&pageNumber=1',
                                 header, None)
     #Removes users not in the AD Group
-    if ever_group["page"]["totalCount"] is not None:
+    if ever_group["page"]["totalCount"] > 0:
         data_array = ever_group["page"]["data"]
         for group in group_backup:
             for contact in data_array:
