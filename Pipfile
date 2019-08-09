@@ -9,7 +9,6 @@ pylint = "*"
 [packages]
 adal = "*"
 pytest = "*"
-mock = "*"
 
 [requires]
 python_version = "3.7"
