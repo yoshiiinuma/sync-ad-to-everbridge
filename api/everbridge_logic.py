@@ -120,7 +120,8 @@ def create_evercontacts(group_data,
     #Adds contact ID to Group Contact List
     update_list = {"contact_list":[],
                    "contact_check":{},
-                   "group_backup":{}}
+                   "group_backup":{},
+                   "new_users":0}
     if ever_data["page"].get("data") is not None:
         for contact in ever_data["page"]["data"]:
             key_name = str(contact["firstName"]) + str(contact["lastName"])
@@ -161,6 +162,7 @@ def create_evercontacts(group_data,
             batch_insert.append(new_user)
         insert_new_contacts(batch_insert, org, header)
         new_contacts = get_filtered_contacts(new_query, header, org)
+        update_list["new_users"] = len(group_data)
         for contact in new_contacts["page"]["data"]:
             update_list["contact_list"].append(contact["id"])
     return update_list
@@ -168,6 +170,7 @@ def delete_evercontacts(org, group_name, header, group_backup):
     """
     Deletes extra users in group
     """
+    delete_count = 0
     #Get all current users in group
     ever_group = get_everbridge_group(org, group_name, header)
     #Removes users not in the AD Group
@@ -182,6 +185,8 @@ def delete_evercontacts(org, group_name, header, group_backup):
         #Deletes users in Everbridge Group
         if len(delete_list) > 0:
             delete_contacts_from_group(org, group_name, header, delete_list)
+            delete_count = len(delete_list)
+    return delete_count
 def sync_everbridgegroups(username, password, org, group_data, group_name):
     """
     Main Function
@@ -198,7 +203,11 @@ def sync_everbridgegroups(username, password, org, group_data, group_name):
     update_list = create_evercontacts(group_data,
                                       ever_data, org, header)
     #Delete extra users in group
-    delete_evercontacts(org, group_name, header, update_list["group_backup"])
+    delete_count = delete_evercontacts(org, group_name, header, update_list["group_backup"])
     #Inserts users to group
     add_contacts_to_group(org, group_name, header, update_list["contact_list"])
+    logging.info("%s contacts created,%s users removed from group, %s users upserted to the group",
+                 update_list["new_users"],
+                 delete_count,
+                 len(update_list["contact_list"]))
     return group_name + " has been synced"
