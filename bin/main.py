@@ -12,6 +12,7 @@ PARENTDIR = os.path.dirname(CURRENTDIR)
 sys.path.insert(0, PARENTDIR)
 import api.azure_api
 import api.everbridge_api
+import api.everbridge_logic
 def get_argparser():
     """
     Build Argument Parser
@@ -37,17 +38,20 @@ def main():
     """
     Main Function
     """
-    data = api.azure_api.get_azuregroups(CONFIG["adTenant"],
-                                         CONFIG["clientId"],
-                                         CONFIG["clientSecret"],
-                                         "https://graph.microsoft.com/v1.0/groups/"
-                                         + CONFIG["adGroupId"]
-                                         + "/members")
-    if data is not None:
-        api.everbridge_api.sync_everbridgegroups(CONFIG["everbridgeUsername"],
-                                                 CONFIG["everbridgePassword"],
-                                                 CONFIG["everbridgeOrg"],
-                                                 data,
-                                                 CONFIG["everbridgeGroup"])
+    #Function will not run if number of ADGroups does not match Evergroups
+    if len(CONFIG["adGroupId"]) == len(CONFIG["everbridgeGroup"]):
+        for group in CONFIG["adGroupId"]:
+            data = api.azure_api.get_azuregroups(CONFIG["adTenant"],
+                                                    CONFIG["clientId"],
+                                                    CONFIG["clientSecret"],
+                                                    "https://graph.microsoft.com/v1.0/groups/"
+                                                    + group
+                                                    + "/members")
+            if data is not None:
+                api.everbridge_logic.sync_everbridgegroups(CONFIG["everbridgeUsername"],
+                                                            CONFIG["everbridgePassword"],
+                                                            CONFIG["everbridgeOrg"],
+                                                            data,
+                                                            CONFIG["everbridgeGroup"][CONFIG["adGroupId"].index(group)])
 if __name__ == '__main__':
     main()
