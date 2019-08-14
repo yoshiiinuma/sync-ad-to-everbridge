@@ -82,6 +82,12 @@ def delete_contacts_from_group(org, group_name, header, delete_list):
     delete_everbridge('https://api.everbridge.net/rest/groups/'
                       + org + '/contacts?byType=name&groupName='
                       + group_name + '&idType=id', header, delete_list)
+def delete_contacts_from_org(org, group_name, header, remove_list):
+    """
+    Deletes users from the org if they don't belong in a group
+    """
+    delete_everbridge('https://api.everbridge.net/rest/contacts/'
+                        + org + '/batch', header, remove_list)
 def add_contacts_to_group(org, group_name, header, contact_list):
     """
     Inserts contacts into everbridge group

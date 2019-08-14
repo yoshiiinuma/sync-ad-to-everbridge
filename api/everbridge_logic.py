@@ -3,7 +3,7 @@ Logic to handle the Everbridge Contacts
 """
 import base64
 import logging
-from .everbridge_api import get_filtered_contacts, insert_new_contacts, get_everbridge_group, delete_contacts_from_group, add_contacts_to_group, update_contacts
+from .everbridge_api import get_filtered_contacts, insert_new_contacts, get_everbridge_group, delete_contacts_from_group, add_contacts_to_group, update_contacts, delete_contacts_from_org
 def create_authheader(username, password):
     """
     Creates Header for HTTP CALLS, Creates base64 encode for auth
@@ -112,6 +112,7 @@ def create_contact(contact, ever_id):
         "recordTypeId": 892807736729062,
         "paths":paths
     }
+    #For Creating Put Request Contact
     if ever_id is not None:
         new_contact["id"] = ever_id
     #Do POST Request to insert User
@@ -236,17 +237,24 @@ def delete_evercontacts(org, group_name, header, group_backup):
     ever_group = get_everbridge_group(org, group_name, header)
     #Removes users not in the AD Group
     if ever_group["page"]["totalCount"] > 0:
+        remove_list = []
         data_array = ever_group["page"]["data"]
         copy_array = data_array.copy()
         for contact in copy_array:
             full_name = contact["firstName"] + contact["lastName"]
             if group_backup.get(full_name) is not None:
                 data_array.remove(contact)
+            else:
+                if len(contact["paths"]) == 1:
+                    remove_list.append(contact["id"])
+                    data_array.remove(contact)
         delete_list = data_array
         #Deletes users in Everbridge Group
         if delete_list:
             delete_contacts_from_group(org, group_name, header, delete_list)
             delete_count = len(delete_list)
+        if remove_list:
+            delete_contacts_from_org(org,group_name,header, remove_list)
     return delete_count
 def sync_everbridgegroups(username, password, org, group_data, group_name):
     """
