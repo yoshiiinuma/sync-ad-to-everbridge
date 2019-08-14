@@ -60,7 +60,7 @@ def test_invalidcontact():
     user = api.everbridge_logic.create_contact({"givenName":"Invalid",
                                            "surname":"PhoneTest",
                                            "mail":"PythonTest@hawaii.gov",
-                                           "businessPhones":["8081234567"], "mobilePhone":None})
+                                           "businessPhones":["8081234567"], "mobilePhone":None}, None)
     resp = api.everbridge_api.insert_new_contacts([user], CONFIG["everbridgeOrg"], header)
     assert resp["data"][0] ==  'The [1] Phone number format invalid for selected country.'
 def test_insertanddeletecontact():
@@ -73,7 +73,7 @@ def test_insertanddeletecontact():
     newuser = api.everbridge_logic.create_contact({"givenName":"Invalid",
                                               "surname":"PhoneTest",
                                               "mail":"PythonTest@hawaii.gov",
-                                              "businessPhones":["8087278435"],"mobilePhone":None})
+                                              "businessPhones":["8087278435"],"mobilePhone":None}, None)
     api.everbridge_api.insert_new_contacts([newuser], CONFIG["everbridgeOrg"], header)
     infouser = api.everbridge_api.get_filtered_contacts("&externalIds=PythonTest@hawaii.gov", header, CONFIG["everbridgeOrg"])
     assert infouser["page"]["data"][0]["firstName"] == "Invalid"
@@ -90,7 +90,7 @@ def test_addandremovefromgroup():
     newuser = api.everbridge_logic.create_contact({"givenName":"TestTest",
                                               "surname":"Automated",
                                               "mail":"NewTest@hawaii.gov",
-                                              "businessPhones":["8087278435"], "mobilePhone":None})
+                                              "businessPhones":["8087278435"], "mobilePhone":None}, None)
     api.everbridge_api.insert_new_contacts([newuser], CONFIG["everbridgeOrg"], header)
     infouser = api.everbridge_api.get_filtered_contacts("&externalIds=NewTest@hawaii.gov", header, CONFIG["everbridgeOrg"])
     evergroup = api.everbridge_api.get_everbridge('https://api.everbridge.net/rest/contacts/groups/'
