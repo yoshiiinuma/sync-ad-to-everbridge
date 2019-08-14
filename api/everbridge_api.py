@@ -50,7 +50,7 @@ def update_contacts(update_list, header, org):
     Update contacts paths
     """
     return put_everbridge('https://api.everbridge.net/rest/contacts/'+ org
-                          +"/batch?version=1",
+                          +"/batch?idType=id&updateType=partial",
                           header, update_list)
 def get_filtered_contacts(filter_string, header, org):
     """
@@ -82,6 +82,12 @@ def delete_contacts_from_group(org, group_name, header, delete_list):
     delete_everbridge('https://api.everbridge.net/rest/groups/'
                       + org + '/contacts?byType=name&groupName='
                       + group_name + '&idType=id', header, delete_list)
+def delete_contacts_from_org(org, group_name, header, remove_list):
+    """
+    Deletes users from the org if they don't belong in a group
+    """
+    delete_everbridge('https://api.everbridge.net/rest/contacts/'
+                        + org + '/batch', header, remove_list)
 def add_contacts_to_group(org, group_name, header, contact_list):
     """
     Inserts contacts into everbridge group
