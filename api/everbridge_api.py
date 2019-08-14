@@ -50,7 +50,7 @@ def update_contacts(update_list, header, org):
     Update contacts paths
     """
     return put_everbridge('https://api.everbridge.net/rest/contacts/'+ org
-                          +"/batch?version=1",
+                          +"/batch?idType=id&updateType=partial",
                           header, update_list)
 def get_filtered_contacts(filter_string, header, org):
     """
