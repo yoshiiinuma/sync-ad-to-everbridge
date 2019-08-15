@@ -3,7 +3,8 @@ Logic to handle the Everbridge Contacts
 """
 import base64
 import logging
-from .everbridge_api import get_filtered_contacts, insert_new_contacts, get_everbridge_group, delete_contacts_from_group, add_contacts_to_group, update_contacts, delete_contacts_from_org
+from .everbridge_api import get_filtered_contacts, add_contacts_to_group, update_contacts, delete_contacts_from_org
+from .everbridge_api import insert_new_contacts, get_everbridge_group, delete_contacts_from_group
 def create_authheader(username, password):
     """
     Creates Header for HTTP CALLS, Creates base64 encode for auth
@@ -57,7 +58,6 @@ def create_contact(contact, ever_id):
             "waitTime": 0,
             "status": "A",
             "pathId": 241901148045316,
-            "countryCode": "US",
             "value": contact["mail"],
             "skipValidation": "false"
         }
@@ -148,7 +148,6 @@ def create_query(group_data):
         fill_contact(contact)
         filter_string += "&externalIds=" + contact["mail"]
     return filter_string
-
 def parse_ad_data(group_data, update_list):
     """
     Checks AD group against Everbrige dictionary to add in new contacts
@@ -156,31 +155,14 @@ def parse_ad_data(group_data, update_list):
     #Checks if a user in AD has not been added in Everbridge
     copy_list = group_data.copy()
     for contact in copy_list:
-        #Special case if contact has no first or last name
-        if contact.get("givenName") is None:
-            first = "first"
-            last = "last"
-            space_array = contact["displayName"].split(" ")
-            if len(space_array) > 1:
-                first = space_array[0]
-                space_array.pop(0)
-                last = "".join(str(x) for x in space_array)
-            else:
-                first = contact["displayName"]
-                last = "None"
-            if update_list["contact_check"].get(first + last) is not None:
-                #Updates contacts that have different properties from their AD infromation
-                check_contact(contact, update_list, first, last)
-                group_data.remove(contact)
-                update_list["group_backup"][first + last] = contact
-        else:
-            if update_list["contact_check"].get(str(contact["givenName"])
-                                                + str(contact["surname"])) is not None:
-                #Updates contacts that have different properties from their AD infromation
-                check_contact(contact, update_list, contact["givenName"], contact["surname"])
-                group_data.remove(contact)
-                update_list["group_backup"][str(contact["givenName"])
-                                            + str(contact["surname"])] = contact
+        fill_contact(contact)
+        if update_list["contact_check"].get(str(contact["givenName"])
+                                            + str(contact["surname"])) is not None:
+            #Updates contacts that have different properties from their AD infromation
+            check_contact(contact, update_list, contact["givenName"], contact["surname"])
+            group_data.remove(contact)
+            update_list["group_backup"][str(contact["givenName"])
+                                        + str(contact["surname"])] = contact
 def parse_ever_data(ever_data, update_list):
     """
     Add everbridge ids to group batch insert and check dictionary
