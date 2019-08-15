@@ -81,7 +81,7 @@ def get_filtered_contacts(filter_string, header, org):
     """
     Get a list of contacts from Everbridge
     """
-    return get_everbridge(URL.contacts_url(org,'?sortBy="lastName"&searchType=OR'),
+    return get_everbridge(URL.contacts_url(org,'?sortBy="lastName"&searchType=OR' + filter_string),
                           header, None)
 def insert_new_contacts(batch_insert, org, header):
     """

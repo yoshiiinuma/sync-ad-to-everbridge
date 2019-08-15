@@ -79,3 +79,23 @@ class RequestsMock(BaseMock):
             session.get = MagicMock(side_effect=rtnval)
         requests.session = MagicMock(return_value=session)
         self.save(requests.session, orig_func)
+class GetMock(BaseMock):
+    """
+    Handles requests session mock
+    """
+    def setup(self, rtnval, code=None):
+        """
+        Sets up mocks
+        """
+        orig_func = requests.get
+        if code:
+            # If code is provided, session.get returns Response that contains rtnval
+            res = Response()
+            res.status_code = code
+            res.json = MagicMock(return_value=rtnval)
+            requests.get = MagicMock(return_value=res)
+            self.register('requests.get', requests.get)
+        else:
+            # Without code, session.get returns side_effect
+            requests.get = MagicMock(side_effect=rtnval)
+        self.save(requests.get, orig_func)

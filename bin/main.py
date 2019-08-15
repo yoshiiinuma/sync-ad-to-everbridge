@@ -44,7 +44,7 @@ def main():
         for group in CONFIG["adGroupId"]:
             data = api.azure.get_group_members(group, token)
             if data is not None:
-                api.everbridge_logic.sync_everbridgegroups(CONFIG["everbridgeUsername"],
+                api.everbridge_logic.sync_everbridge_group(CONFIG["everbridgeUsername"],
                                                             CONFIG["everbridgePassword"],
                                                             CONFIG["everbridgeOrg"],
                                                             data,

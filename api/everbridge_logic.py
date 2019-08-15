@@ -238,12 +238,13 @@ def delete_evercontacts(org, group_name, header, group_backup):
         if remove_list:
             delete_contacts_from_org(org,group_name,header, remove_list)
     return delete_count
-def sync_everbridgegroups(username, password, org, group_data, group_name):
+def sync_everbridge_group(username, password, org, group_data, group_name):
     """
     Main Function
     """
-    if (group_data, username, password, org, group_name) is None:
-        return None
+    if (username, password, org, group_name) is None or not group_data:
+        logging.error('sync_everbridge_group: Invalid Parameter')
+        raise Exception('Async_everbridge_group: Invalid parameter')
     #Convert username and password to base64
     header = create_authheader(username, password)
     #Create the search query for the group Everbridge Contacts
