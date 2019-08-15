@@ -10,7 +10,7 @@ import inspect
 CURRENTDIR = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 PARENTDIR = os.path.dirname(CURRENTDIR)
 sys.path.insert(0, PARENTDIR)
-import api.azure_api
+import api.azure
 import api.everbridge_api
 import api.everbridge_logic
 def get_argparser():
@@ -40,13 +40,9 @@ def main():
     """
     #Function will not run if number of ADGroups does not match Evergroups
     if len(CONFIG["adGroupId"]) == len(CONFIG["everbridgeGroup"]):
+        token = api.azure.get_token(CONFIG["clientId"], CONFIG["clientSecret"], CONFIG["adTenant"])
         for group in CONFIG["adGroupId"]:
-            data = api.azure_api.get_azuregroups(CONFIG["adTenant"],
-                                                    CONFIG["clientId"],
-                                                    CONFIG["clientSecret"],
-                                                    "https://graph.microsoft.com/v1.0/groups/"
-                                                    + group
-                                                    + "/members")
+            data = api.azure.get_group_members(group, token)
             if data is not None:
                 api.everbridge_logic.sync_everbridgegroups(CONFIG["everbridgeUsername"],
                                                             CONFIG["everbridgePassword"],
