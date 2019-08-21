@@ -227,7 +227,7 @@ def delete_evercontacts(org, group_name, header, group_backup):
             if group_backup.get(full_name) is not None:
                 data_array.remove(contact)
             else:
-                if len(contact["paths"]) == 1:
+                if len(contact["groups"]) == 1:
                     remove_list.append(contact["id"])
                     data_array.remove(contact)
         delete_list = data_array
