@@ -2,6 +2,7 @@
 Logic to handle the Everbridge Contacts
 """
 import base64
+import re
 import logging
 from .everbridge_api import get_filtered_contacts, add_contacts_to_group, update_contacts, delete_contacts_from_org
 from .everbridge_api import insert_new_contacts, get_everbridge_group, delete_contacts_from_group
@@ -24,9 +25,9 @@ def check_contact(contact, update_list, first, last):
     need_to_update = 0
     # Checks Work Desk Phone
     if contact["businessPhones"]:
+       
         phone_string = contact["businessPhones"][0]
-        for sub in ((" ", ""), ("-", ""), ("(", ""), (")", ""), ("+1", "")):
-            phone_string = phone_string.replace(*sub)
+        phone_string = re.sub(r'-|\s|\(|\)|\+1', '', phone_string)
         if len(phone_string) == 7:
             phone_string = "808" + phone_string
         if (update_list["contact_check"][first + last]["workPhone"] == '' or
@@ -38,11 +39,12 @@ def check_contact(contact, update_list, first, last):
     if contact["mail"] != update_list["contact_check"][first + last]["mail"]:
         need_to_update = 1
     #Checks Mobile Phone
+    
     if ((contact.get("mobilePhone") is not None and
          update_list["contact_check"][first + last]["mobilePhone"] == '') or
             contact.get("mobilePhone") is not None and
-                contact["mobilePhone"].replace("-", "").replace("+1", "").replace(" ", "")
-                != update_list["contact_check"][first + last]["mobilePhone"]["value"]):
+                re.sub(r'-|\s|\(|\)|\+1', '', contact["mobilePhone"]) != 
+                    update_list["contact_check"][first + last]["mobilePhone"]["value"]):
         need_to_update = 1
     #Creates Contact Object to be sent
     if need_to_update == 1:
@@ -52,8 +54,15 @@ def create_contact(contact, ever_id):
     """
     Create New EverBridge Contact with Email Delivery and Phone Delivery if available
     """
+
+    """
+    Contact Paths are the delivery methods for notifications in Everbridge. 
+    Contact Paths can not be created or deleted through the API.
+    To view paths in the org, go to Settings -> Notifications -> Delivery Methods
+    https://api.everbridge.net/rest/contactPaths/org
+    """
     paths = [
-        #Add Email to Delivery Method
+        #Add Email Contact Path to the new contact
         {
             "waitTime": 0,
             "status": "A",
@@ -65,13 +74,12 @@ def create_contact(contact, ever_id):
     if contact["businessPhones"]:
         for phone_number in contact["businessPhones"]:
             phone_string = phone_number
-            for sub in ((" ", ""), ("-", ""), ("(", ""), (")", ""), ("+1", "")):
-                phone_string = phone_string.replace(*sub)
+            re.sub(r'-|\s|\(|\)|\+1', '', phone_string)
             if len(phone_string) == 7:
                 phone_string = "808" + phone_string
             if len(phone_string) >= 10:
                 #Add phone number if phone number array isn't empty
-                #Work Desk Phone Path
+                #Adds Work Desk Phone Path to contact
                 paths.append(
                     {
                         "waitTime": 0,
@@ -81,10 +89,9 @@ def create_contact(contact, ever_id):
                         "value": phone_string,
                         "skipValidation": "false"
                     })
-    #Adds Cell phone to paths if mobile phone number is present
+    #Adds Work Cell Path to contact if mobile phone number is present
     if contact["mobilePhone"] is not None:
         phone_string = contact["mobilePhone"].replace(" ", "").replace("-", "")
-        #Work Cell Path
         paths.append(
             {
                 "waitTime": 0,
@@ -94,7 +101,7 @@ def create_contact(contact, ever_id):
                 "value": phone_string,
                 "skipValidation": "false"
             })
-        #Work Cell SMS Path
+        #Adds Work Cell SMS Path to contact
         paths.append(
             {
                 "waitTime": 0,
@@ -105,6 +112,14 @@ def create_contact(contact, ever_id):
                 "skipValidation": "false"
             })
     #Base info for Contact
+    """
+    Record Types are required for contact creation.
+    Record Types allow the org to categorize employees.
+    The static Record Type Id is the default "Employee" record type.
+    There is only 1 record type in the org but more can be added.
+    To manage Record Types, go to Settings -> Contacts and Groups-> Contact Record Types.
+    """
+    # https://api.everbridge.net/rest/recordTypes/org
     new_contact = {
         "firstName": contact["givenName"],
         "lastName": contact["surname"],
