@@ -36,7 +36,7 @@ def check_contact(contact, update_list, first, last):
                  int(update_list["contact_check"][first + last]["workPhone"]["value"]))):
             need_to_update = 1
     #Checks External ID
-    if contact["mail"] != update_list["contact_check"][first + last]["mail"]:
+    if contact["userPrincipalName"] != update_list["contact_check"][first + last]["mail"]:
         need_to_update = 1
     #Checks Mobile Phone
     
@@ -67,7 +67,7 @@ def create_contact(contact, ever_id):
             "waitTime": 0,
             "status": "A",
             "pathId": 241901148045316,
-            "value": contact["mail"],
+            "value": contact["userPrincipalName"],
             "skipValidation": "false"
         }
     ]
@@ -123,7 +123,7 @@ def create_contact(contact, ever_id):
     new_contact = {
         "firstName": contact["givenName"],
         "lastName": contact["surname"],
-        "externalId": contact["mail"],
+        "externalId": contact["userPrincipalName"],
         "recordTypeId": 892807736729062,
         "paths":paths
     }
@@ -140,6 +140,7 @@ def fill_contact(contact):
         first = "first"
         last = "last"
         space_array = contact["displayName"].split(" ")
+        logging.warning(contact["displayName"] + "has no first/last name. Adding in placeholder")
         if len(space_array) > 1:
             first = space_array[0]
             space_array.pop(0)
@@ -149,9 +150,13 @@ def fill_contact(contact):
             last = "None"
         contact["givenName"] = first
         contact["surname"] = last
-    if contact["mail"] is None:
-        contact["mail"] = "missingmail" + contact["givenName"] +"@hawaii.gov"
+    if contact.get("userPrincipalName") is None and contact["mail"] is None:
+        logging.warning(contact["displayName"] + " has no email. Adding in placeholder")
+        contact["userPrincipalName"] = "missingmail" + contact["givenName"] +"@hawaii.gov"
+    elif contact.get("userPrincipalName") is None and contact["mail"] is not None:
+        contact["userPrincipalName"] = contact["mail"]
     if contact.get("businessPhones") is None:
+        logging.warning(contact["displayName"] + "has no phone")
         contact["businessPhones"] = []
 def create_query(group_data):
     """
@@ -161,7 +166,7 @@ def create_query(group_data):
     #Fills in missing fields in the Microsoft AD Member info
     for contact in group_data:
         fill_contact(contact)
-        filter_string += "&externalIds=" + contact["mail"]
+        filter_string += "&externalIds=" + contact["userPrincipalName"]
     return filter_string
 def parse_ad_data(group_data, update_list):
     """
