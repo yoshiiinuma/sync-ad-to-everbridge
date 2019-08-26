@@ -4,8 +4,7 @@ Logic to handle the Everbridge Contacts
 import base64
 import re
 import logging
-from .everbridge_api import get_filtered_contacts, add_contacts_to_group, update_contacts, delete_contacts_from_org
-from .everbridge_api import insert_new_contacts, get_everbridge_group, delete_contacts_from_group, SESSION
+from .everbridge_api import SESSION
 def create_authheader(username, password):
     """
     Creates Header for HTTP CALLS, Creates base64 encode for auth
