@@ -24,93 +24,99 @@ class URL():
         """
         Returns authority URL for authentication context
         """
-        return URL.LOGIN + URL.API_CONTACTS +  org + '/' + param
+        return URL.LOGIN + URL.API_GROUPS +  org + '/' + param
     @staticmethod
     def contacts_groups_url(org, param):
         """
         Returns authority URL for authentication context
         """
         return URL.LOGIN + URL.API_CONTACTS_GROUPS +  org + '/' + param
-def delete_everbridge(url, header, data):
+class SESSION:
     """
-    Delete HTTP Call for everbridge
+    Session for Everbridge
     """
-    try:
-        resp = requests.delete(url, data=json.dumps(data), headers=header)
-        return resp.json()
-    except requests.exceptions.RequestException as error:  # This is the correct syntax
-        logging.error(error)
-        raise error
-def post_everbridge(url, header, data):
-    """
-    POST HTTP Call for Everbridge
-    """
-    try:
-        resp = requests.post(url, data=json.dumps(data), headers=header)
-        return resp.json()
-    except requests.exceptions.RequestException as error:  # This is the correct syntax
-        logging.error(error)
-        raise error
-def get_everbridge(url, header, data):
-    """
-    GET HTTP Call for Everbridge
-    """
-    try:
-        resp = requests.get(url, data=json.dumps(data), headers=header)
-        return resp.json()
-    except requests.exceptions.RequestException as error:  # This is the correct syntax
-        logging.error(error)
-        raise error
-def put_everbridge(url, header, data):
-    """
-    PUT HTTP Call for Everbridge
-    """
-    try:
-        resp = requests.put(url, data=json.dumps(data), headers=header)
-        return resp.json()
-    except requests.exceptions.RequestException as error:  # This is the correct syntax
-        logging.error(error)
-        raise error
-def update_contacts(update_list, header, org):
-    """
-    Update contacts paths
-    """
-    return put_everbridge(URL.contacts_url(org,"batch?idType=id&updateType=partial"),
-                          header, update_list)
-def get_filtered_contacts(filter_string, header, org):
-    """
-    Get a list of contacts from Everbridge
-    """
-    return get_everbridge(URL.contacts_url(org,'?sortBy="lastName"&searchType=OR'),
-                          header, None)
-def insert_new_contacts(batch_insert, org, header):
-    """
-    Inserts new contacts to everbridge org
-    """
-    return post_everbridge(URL.contacts_url(org, "batch?version=1"),
-                    header,
-                    batch_insert)
-def get_everbridge_group(org, group_name, header):
-    """
-    Gets Everbridge group contact
-    """
-    group_data = get_everbridge(URL.contacts_groups_url(org, '?byType=name&groupName='+ group_name + '&pageSize=100&pageNumber=1'),
-                                header, None)
-    return group_data
-def delete_contacts_from_group(org, group_name, header, delete_list):
-    """
-    Deletes extra users in group
-    """
-    delete_everbridge(URL.groups_url(org,'contacts?byType=name&groupName=' + group_name + '&idType=id'),
-                      header, delete_list)
-def delete_contacts_from_org(org, group_name, header, remove_list):
-    """
-    Deletes users from the org if they don't belong in a group
-    """
-    delete_everbridge(URL.contacts_url(org, "batch"), header, remove_list)
-def add_contacts_to_group(org, group_name, header, contact_list):
-    """
-    Inserts contacts into everbridge group
-    """
-    return post_everbridge(URL.groups_url(org,'contacts?byType=name&groupName=' + group_name+ '&idType=id'),
-                           header, contact_list)
+    def __init__(self,org,header):
+        self.headers = header
+        self.s = requests.Session()
+        self.s.headers.update(header)
+        self.org = org
+    def post(self,url,data):
+        """
+        Post HTTP Call for everbridge
+        """
+        try:
+            resp = requests.post(url, json=data, headers=self.headers)
+            return resp.json()
+        except requests.exceptions.RequestException as error: 
+            logging.error(error)
+            raise error
+    def delete(self,url,data):
+        """
+        Delete HTTP Call for everbridge
+        """
+        try:
+            resp = self.s.delete(url, json=json.dumps(data))
+            return resp.json()
+        except requests.exceptions.RequestException as error: 
+            logging.error(error)
+            raise error
+    def get(self,url,data):
+        """
+        GET HTTP Call for everbridge
+        """
+        try:
+            resp = self.s.get(url, json=json.dumps(data))
+            return resp.json()
+        except requests.exceptions.RequestException as error: 
+            logging.error(error)
+            raise error
+    def put(self,url,data):
+        """
+        PUT HTTP Call for everbridge
+        """
+        try:
+            resp = self.s.put(url, json=json.dumps(data))
+            return resp.json()
+        except requests.exceptions.RequestException as error: 
+            logging.error(error)
+            raise error
+    def update_contacts(self,update_list):
+        """
+        Update contacts paths
+        """
+        return self.put(URL.contacts_url(self.org,"batch?idType=id&updateType=partial"),
+                        update_list)
+    def get_filtered_contacts(self,filter_string):
+        """
+        Get a list of contacts from Everbridge
+        """
+        return self.get(URL.contacts_url(self.org,'?sortBy="lastName"&searchType=OR' + filter_string),
+                          None)
+    def insert_new_contacts(self,batch_insert):
+        """
+        Inserts new contacts to everbridge org
+        """
+        return self.post(URL.contacts_url(self.org, "batch?version=1"),
+                         batch_insert)
+    def get_everbridge_group(self, group_name):
+        """
+        Gets Everbridge group contact
+        """
+        return self.get(URL.contacts_groups_url(self.org, '?byType=name&groupName='+ group_name + '&pageSize=100&pageNumber=1'), None)
+    def delete_contacts_from_group(self, group_name, delete_list):
+        """
+        Deletes extra users in group
+        """
+        return self.delete(URL.groups_url(self.org,'contacts?byType=name&groupName=' + group_name + '&idType=id'),
+                           delete_list)
+    def delete_contacts_from_org(self, remove_list):
+        """
+        Deletes users from the org if they don't belong in a group
+        """
+        return self.delete(URL.contacts_url(self.org, "batch"), remove_list)
+    def add_contacts_to_group(self, group_name, contact_list):
+        """
+        Inserts contacts into everbridge group
+        """
+        return self.s.post(URL.groups_url(self.org,'contacts?byType=name&groupName=' + group_name+ '&idType=id'),
+                            data=json.dumps(contact_list)).json()
