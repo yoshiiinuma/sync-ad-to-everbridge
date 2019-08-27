@@ -17,7 +17,7 @@ def create_authheader(username, password):
               'Content-Type': 'application/json',
               'return-client-request-id': 'true'}
     return header
-def check_contact(contact, update_list, first, last):
+def check_contact(contact, content_check):
     """
     Checks AD contact data with everbridge contact data and updates if mismatched
     """
@@ -29,26 +29,24 @@ def check_contact(contact, update_list, first, last):
         phone_string = re.sub(r'-|\s|\(|\)|\+1', '', phone_string)
         if len(phone_string) == 7:
             phone_string = "808" + phone_string
-        if (update_list["contact_check"][first + last]["workPhone"] == '' or
-                (update_list["contact_check"][first + last]["workPhone"] != '' and
-                 int(phone_string) !=
-                 int(update_list["contact_check"][first + last]["workPhone"]["value"]))):
+        if (content_check["workPhone"] == '' or
+                (content_check["workPhone"] != '' and
+                int(phone_string) !=
+                int(content_check["workPhone"]["value"]))):
             need_to_update = 1
     #Checks External ID
-    if contact["userPrincipalName"] != update_list["contact_check"][first + last]["mail"]:
+    if contact["userPrincipalName"] != content_check["mail"]:
         need_to_update = 1
     #Checks Mobile Phone
     
     if ((contact.get("mobilePhone") is not None and
-         update_list["contact_check"][first + last]["mobilePhone"] == '') or
+        content_check["mobilePhone"] == '') or
             contact.get("mobilePhone") is not None and
                 re.sub(r'-|\s|\(|\)|\+1', '', contact["mobilePhone"]) != 
-                    update_list["contact_check"][first + last]["mobilePhone"]["value"]):
+                    content_check["mobilePhone"]["value"]):
         need_to_update = 1
     #Creates Contact Object to be sent
-    if need_to_update == 1:
-        updated_contact = create_contact(contact, update_list["contact_check"][first + last]["Id"])
-        update_list["updated_users"].append(updated_contact)
+    return need_to_update
 def create_contact(contact, ever_id):
     """
     Create New EverBridge Contact with Email Delivery and Phone Delivery if available
@@ -167,27 +165,32 @@ def create_query(group_data):
         fill_contact(contact)
         filter_string += "&externalIds=" + contact["userPrincipalName"]
     return filter_string
-def parse_ad_data(group_data, update_list):
+def parse_ad_data(group_data, contact_check, update_list):
     """
     Checks AD group against Everbrige dictionary to add in new contacts
     """
     #Checks if a user in AD has not been added in Everbridge
     copy_list = group_data.copy()
+    group_backup = {}
     for contact in copy_list:
         fill_contact(contact)
-        if update_list["contact_check"].get(str(contact["givenName"])
+        if contact_check.get(str(contact["givenName"])
                                             + str(contact["surname"])) is not None:
             #Updates contacts that have different properties from their AD infromation
-            check_contact(contact, update_list, contact["givenName"], contact["surname"])
+            if check_contact(contact, contact_check[str(contact["givenName"]) + str(contact["surname"])]) == 1:
+                contact_updater = create_contact(contact, contact_check[str(contact["givenName"]) + str(contact["surname"])]["Id"])
+                update_list.append(contact_updater)
             group_data.remove(contact)
-            update_list["group_backup"][str(contact["givenName"])
+            group_backup[str(contact["givenName"])
                                         + str(contact["surname"])] = contact
-def parse_ever_data(ever_data, update_list):
+    return group_backup
+def parse_ever_data(ever_data, contact_list):
     """
     Add everbridge ids to group batch insert and check dictionary
     """
+    contact_check = {}
     for contact in ever_data["page"]["data"]:
-        update_list["contact_list"].append(contact["id"])
+        contact_list.append(contact["id"])
         ever_contact = {"name":contact["firstName"]
                                + " " + contact["lastName"],
                         "Id":contact["id"],
@@ -198,25 +201,18 @@ def parse_ever_data(ever_data, update_list):
             ever_contact["workPhone"] = contact["paths"][1]
         if len(contact["paths"]) > 2:
             ever_contact["mobilePhone"] = contact["paths"][2]
-        update_list["contact_check"][str(contact["firstName"])
-                                     + str(contact["lastName"])] = ever_contact
+        contact_check[str(contact["firstName"]) + str(contact["lastName"])] = ever_contact
+    return contact_check
 def create_evercontacts(group_data,
-                        ever_data,
+                        contact_list,
                         Session):
     """
     Checks AD group against filtered query and adds new contacts
     """
     #Adds contact ID to Group Contact List
-    update_list = {"contact_list":[],
-                   "contact_check":{},
-                   "group_backup":{},
-                   "new_users":0,
-                   "updated_users":[]}
-    if ever_data["page"].get("data") is not None:
-        parse_ever_data(ever_data, update_list)
-    parse_ad_data(group_data, update_list)
     #Inserts New User to Everbridge if group_data is not empty
     batch_insert = []
+    count = 0
     if group_data:
         new_query = create_query(group_data)
         for contact in group_data:
@@ -224,10 +220,10 @@ def create_evercontacts(group_data,
             batch_insert.append(new_user)
         Session.insert_new_contacts(batch_insert)
         new_contacts = Session.get_filtered_contacts(new_query)
-        update_list["new_users"] = len(group_data)
         for contact in new_contacts["page"]["data"]:
-            update_list["contact_list"].append(contact["id"])
-    return update_list
+            contact_list.append(contact["id"])
+        count = len(new_contacts)
+    return count
 def delete_evercontacts(group_name,group_backup, Session):
     """
     Deletes extra users in group
@@ -264,24 +260,30 @@ def sync_everbridge_group(username, password, org, group_data, group_name):
         logging.error('sync_everbridge_group: Invalid Parameter')
         raise Exception('Async_everbridge_group: Invalid parameter')
     #Convert username and password to base64
+    contact_list = []
+    contact_check = {}
+    update_list = []
     header = create_authheader(username, password)
     Session = SESSION(org,header)
     #Create the search query for the group Everbridge Contacts
     filter_string = create_query(group_data)
     #Grabs the contacts from Everbridge with the given contact filters
     ever_data = Session.get_filtered_contacts(filter_string)
+    #Parse Everbridge Data to 
+    if ever_data["page"].get("data") is not None:
+        contact_check = parse_ever_data(ever_data, contact_list)
+    group_backup = parse_ad_data(group_data,contact_check, update_list)
     #Create new contacts
-    update_list = create_evercontacts(group_data,
-                                      ever_data, Session)
+    insert_count = create_evercontacts(group_data, contact_list, Session)
     #Delete extra users in group
-    delete_count = delete_evercontacts(group_name, update_list["group_backup"], Session)
+    delete_count = delete_evercontacts(group_name, group_backup, Session)
     #Updates Everbridge Contacts
-    if update_list["updated_users"]:
-        Session.update_contacts(update_list["updated_users"])
+    if update_list:
+        Session.update_contacts(update_list)
     #Inserts users to group
-    Session.add_contacts_to_group(group_name,update_list["contact_list"])
+    Session.add_contacts_to_group(group_name,contact_list)
     logging.info("%s contacts created,%s users removed from group, %s users upserted to the group",
-                 update_list["new_users"],
+                 insert_count,
                  delete_count,
-                 len(update_list["contact_list"]))
+                 len(contact_list))
     return group_name + " has been synced"

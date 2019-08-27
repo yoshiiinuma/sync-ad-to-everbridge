@@ -75,7 +75,7 @@ class SESSION:
         PUT HTTP Call for everbridge
         """
         try:
-            resp = self.s.put(url, json=json.dumps(data))
+            resp = self.s.put(url, json=data)
             return resp.json()
         except requests.exceptions.RequestException as error: 
             logging.error(error)
