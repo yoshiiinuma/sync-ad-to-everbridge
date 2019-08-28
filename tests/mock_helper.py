@@ -1,10 +1,11 @@
 """
 Helps mock management in tests
 """
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 import requests
 from requests import Response
-import adal
+from api.everbridge_api import URL, SESSION
+import adal 
 
 class BaseMock:
     """
@@ -79,23 +80,26 @@ class RequestsMock(BaseMock):
             session.get = MagicMock(side_effect=rtnval)
         requests.session = MagicMock(return_value=session)
         self.save(requests.session, orig_func)
-class GetMock(BaseMock):
+
+class SessionMock(BaseMock):
     """
     Handles requests session mock
     """
-    def setup(self, rtnval, code=None):
+    def setup(self, org, url, header, rtnval, code=None):
         """
         Sets up mocks
         """
-        orig_func = requests.get
+        mock_session = SESSION(org, header)
         if code:
             # If code is provided, session.get returns Response that contains rtnval
             res = Response()
             res.status_code = code
             res.json = MagicMock(return_value=rtnval)
-            requests.get = MagicMock(return_value=res)
-            self.register('requests.get', requests.get)
+            mock_session.get_filtered_contacts = MagicMock(return_value=res)
+            self.register('get_filtered_contacts', mock_session.get_filtered_contacts)
+            value = mock_session.get_filtered_contacts(url)
+            mock_session.get_filtered_contacts.assert_called_with(url)
+            assert value.json() == rtnval
         else:
             # Without code, session.get returns side_effect
-            requests.get = MagicMock(side_effect=rtnval)
-        self.save(requests.get, orig_func)
+            mock_session.get_filtered_contacts = MagicMock(side_effect=rtnval)

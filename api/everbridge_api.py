@@ -40,6 +40,8 @@ class SESSION:
         self.s = requests.Session()
         self.s.headers.update(header)
         self.org = org
+    def update_header(self,header):
+        self.headers = header
     def post(self,url,data):
         """
         Post HTTP Call for everbridge
@@ -83,6 +85,8 @@ class SESSION:
     def update_contacts(self,update_list):
         """
         Update contacts paths
+        ?updateType determines to fully update all contact fields or certain feilds
+        ?idType determines to search by id or externalId
         """
         return self.put(URL.contacts_url(self.org,"batch?idType=id&updateType=partial"),
                         update_list)
@@ -95,17 +99,20 @@ class SESSION:
     def insert_new_contacts(self,batch_insert):
         """
         Inserts new contacts to everbridge org
+        ?Version determines the batch API for insertion values are 0 or 1
         """
         return self.post(URL.contacts_url(self.org, "batch?version=1"),
                          batch_insert)
     def get_everbridge_group(self, group_name):
         """
         Gets Everbridge group contact
+        ?idType determines to get the group by id or name
         """
         return self.get(URL.contacts_groups_url(self.org, '?byType=name&groupName='+ group_name + '&pageSize=100&pageNumber=1'), None)
     def delete_contacts_from_group(self, group_name, delete_list):
         """
         Deletes extra users in group
+        ?idType determines to delete by id or externalId
         """
         return self.delete(URL.groups_url(self.org,'contacts?byType=name&groupName=' + group_name + '&idType=id'),
                            delete_list)
@@ -117,6 +124,7 @@ class SESSION:
     def add_contacts_to_group(self, group_name, contact_list):
         """
         Inserts contacts into everbridge group
+        ?byType add everbridge contacts to group by name or id
         """
         return self.s.post(URL.groups_url(self.org,'contacts?byType=name&groupName=' + group_name+ '&idType=id'),
                             data=json.dumps(contact_list)).json()

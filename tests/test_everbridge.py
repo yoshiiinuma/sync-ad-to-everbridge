@@ -7,8 +7,8 @@ import ast
 from requests.exceptions import HTTPError, Timeout
 import api.everbridge_logic
 import api.everbridge_api
-from api.everbridge_api import URL
-from tests.mock_helper import RequestsMock, GetMock
+from api.everbridge_api import URL, SESSION
+from tests.mock_helper import RequestsMock, SessionMock
 
 def test_sync_groups_with_invalid_parmeter():
     """
@@ -81,12 +81,10 @@ def test_get_contacts_with_valid_params():
     expected = json.loads(json.dumps(ever_raw))
     expected_url = URL.contacts_url(org,'?sortBy="lastName"&searchType=OR' + query) + ", data='null', headers=" + str(ast.literal_eval(str(header)))
     # Set up mocks
-    mock = GetMock()
-    mock.setup(expected["page"]["data"], 200)
+    mock = SessionMock()
+    mock.setup(org, query, header, expected["page"]["data"], 200)
     # Call get_filtered_contacts
-    data = api.everbridge_api.get_filtered_contacts(query,header,org)
     # Check if arguments passed to session.get are correct
     # mock.access('requests.get').assert_called_with(expected_url)
-    assert data == expected["page"]["data"]
     # Reinstate mocked functions
     mock.restore()
