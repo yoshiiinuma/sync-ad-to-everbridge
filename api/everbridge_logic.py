@@ -152,6 +152,8 @@ def fill_contact(contact):
         contact["userPrincipalName"] = "missingmail" + contact["givenName"] +"@hawaii.gov"
     elif contact.get("userPrincipalName") is None and contact["mail"] is not None:
         contact["userPrincipalName"] = contact["mail"]
+    else:
+        contact["mail"] = contact["userPrincipalName"]
     if contact.get("businessPhones") is None:
         logging.warning(contact["displayName"] + "has no phone")
         contact["businessPhones"] = []
@@ -174,15 +176,13 @@ def parse_ad_data(group_data, contact_check, update_list):
     group_backup = {}
     for contact in copy_list:
         fill_contact(contact)
-        if contact_check.get(str(contact["givenName"])
-                                            + str(contact["surname"])) is not None:
+        if contact_check.get(contact["mail"]) is not None:
             #Updates contacts that have different properties from their AD infromation
-            if check_contact(contact, contact_check[str(contact["givenName"]) + str(contact["surname"])]) == 1:
-                contact_updater = create_contact(contact, contact_check[str(contact["givenName"]) + str(contact["surname"])]["Id"])
+            if check_contact(contact, contact_check[contact["mail"]]) == 1:
+                contact_updater = create_contact(contact, contact_check[contact["mail"]]["Id"])
                 update_list.append(contact_updater)
             group_data.remove(contact)
-            group_backup[str(contact["givenName"])
-                                        + str(contact["surname"])] = contact
+            group_backup[contact["mail"]] = contact
     return group_backup
 def parse_ever_data(ever_data, contact_list):
     """
@@ -201,7 +201,7 @@ def parse_ever_data(ever_data, contact_list):
             ever_contact["workPhone"] = contact["paths"][1]
         if len(contact["paths"]) > 2:
             ever_contact["mobilePhone"] = contact["paths"][2]
-        contact_check[str(contact["firstName"]) + str(contact["lastName"])] = ever_contact
+        contact_check[contact["externalId"]] = ever_contact
     return contact_check
 def create_evercontacts(group_data,
                         contact_list,
