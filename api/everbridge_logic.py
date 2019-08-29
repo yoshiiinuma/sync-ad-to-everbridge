@@ -17,6 +17,20 @@ def create_authheader(username, password):
               'Content-Type': 'application/json',
               'return-client-request-id': 'true'}
     return header
+def check_group(group_name, Session):
+    """
+    Checks if everbridge group exists and inserts new group if not
+    Raises error if invalid header or org id
+    """
+    group_info = Session.get_group_info(group_name)
+    if group_info["message"] == "OK":
+        if group_info["result"]["id"] == 0:
+            Session.add_group(group_name)
+            return False
+    elif group_info.get("status") is not None and group_info["status"] == 401:
+        logging.error(group_info["message"])
+        raise ValueError
+    return True
 def check_contact(contact, content_check):
     """
     Checks AD contact data with everbridge contact data and updates if mismatched
@@ -265,6 +279,7 @@ def sync_everbridge_group(username, password, org, group_data, group_name):
     update_list = []
     header = create_authheader(username, password)
     Session = SESSION(org,header)
+    check_group(group_name, Session)
     #Create the search query for the group Everbridge Contacts
     filter_string = create_query(group_data)
     #Grabs the contacts from Everbridge with the given contact filters

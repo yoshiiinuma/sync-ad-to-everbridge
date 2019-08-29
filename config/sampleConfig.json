@@ -4,7 +4,6 @@
   "everbridgeUsername":"EverBridge User Name",
   "everbridgePassword":"EverBridge Password",
   "everbridgeOrg":"EverBridge Org",
-  "everbridgeGroup":["EverBridge Group1","EverBridge Group2"],
   "adTenant":"Azure AD Tenant",
   "adGroupId":["Azure AD Group ID1","Azure AD Group ID2"],
   "adGroupName":"Azure AD Group Name"

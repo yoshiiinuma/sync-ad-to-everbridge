@@ -39,15 +39,15 @@ def main():
     Main Function
     """
     #Function will not run if number of ADGroups does not match Evergroups
-    if len(CONFIG["adGroupId"]) == len(CONFIG["everbridgeGroup"]):
-        token = api.azure.get_token(CONFIG["clientId"], CONFIG["clientSecret"], CONFIG["adTenant"])
-        for group in CONFIG["adGroupId"]:
-            data = api.azure.get_group_members(group, token)
-            if data is not None:
-                api.everbridge_logic.sync_everbridge_group(CONFIG["everbridgeUsername"],
-                                                            CONFIG["everbridgePassword"],
-                                                            CONFIG["everbridgeOrg"],
-                                                            data,
-                                                            CONFIG["everbridgeGroup"][CONFIG["adGroupId"].index(group)])
+    token = api.azure.get_token(CONFIG["clientId"], CONFIG["clientSecret"], CONFIG["adTenant"])
+    for group in CONFIG["adGroupId"]:
+        data = api.azure.get_group_members(group, token)
+        group_name = api.azure.get_group_name(group, token)
+        if data is not None:
+            api.everbridge_logic.sync_everbridge_group(CONFIG["everbridgeUsername"],
+                                                        CONFIG["everbridgePassword"],
+                                                        CONFIG["everbridgeOrg"],
+                                                        data,
+                                                        group_name)
 if __name__ == '__main__':
     main()

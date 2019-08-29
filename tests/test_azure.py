@@ -292,3 +292,73 @@ def test_get_group_members_with_timeout():
         api.azure.get_group_members(gid, token)
     # Reinstate mocked functions
     mock.restore()
+def test_get_group_name_with_invalid_groupid():
+    """
+    Should raise an exception with an empty parameter
+    """
+    with pytest.raises(Exception):
+        api.azure.get_group_name(None, {'accessToken':'XXXTOKENXXX'})
+    with pytest.raises(Exception):
+        api.azure.get_group_name('', {'accessToken':'XXXTOKENXXX'})
+
+def test_get_group_name_with_invalid_token():
+    """
+    Should raise an exception with an empty parameter
+    """
+    with pytest.raises(Exception):
+        api.azure.get_group_name('aaa', None)
+    with pytest.raises(Exception):
+        api.azure.get_group_name('aaa', {})
+    with pytest.raises(Exception):
+        api.azure.get_group_name('aaa', {'accessToken':None})
+
+def test_get_group_name_with_valid_params():
+    """
+    Should return group member data
+    """
+    gid = "000abcde-f123-56gh-i789-000000000jkl"
+    token = {'accessToken':'XXXTOKENXXX'}
+    raw = {
+        "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#groups/$entity",
+        "id": "111111111111111111111111111111",
+        "deletedDateTime": "",
+        "classification": "",
+        "createdDateTime": "2018-11-07T23:13:45Z",
+        "creationOptions": [],
+        "description": "Test",
+        "displayName": "ETest",
+        "groupTypes": [],
+        "mail": "Test",
+        "mailEnabled": "",
+        "mailNickname": "ets.it.coordinators",
+        "onPremisesLastSyncDateTime": "2019-08-28T02:45:05Z",
+        "onPremisesSecurityIdentifier": "",
+        "onPremisesSyncEnabled": "",
+        "preferredDataLocation": "",
+        "proxyAddresses": [
+        ],
+        "renewedDateTime": "2018-11-07T23:13:45Z",
+        "resourceBehaviorOptions": [],
+        "resourceProvisioningOptions": [],
+        "securityEnabled": "",
+        "visibility": "",
+        "onPremisesProvisioningErrors": []
+    }
+    expected = json.loads(json.dumps(raw))
+    expected_url = URL.group_url(gid)
+    # Set up mocks
+    mock = RequestsMock()
+    mock.setup(expected, 200)
+    # Call get_group_members
+    data = api.azure.get_group_name(gid, token)
+    # Check if arguments passed to session.get are correct
+    mock.access('session.get').assert_called_with(expected_url)
+    mock.access('session.headers.update').assert_called_with({
+        'Authorization': 'Bearer XXXTOKENXXX',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'return-client-request-id': 'true'
+    })
+    assert data == expected["displayName"]
+    # Reinstate mocked functions
+    mock.restore()

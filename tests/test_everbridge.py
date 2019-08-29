@@ -88,3 +88,104 @@ def test_get_contacts_with_valid_params():
     # mock.access('requests.get').assert_called_with(expected_url)
     # Reinstate mocked functions
     mock.restore()
+def test_get_group_with_empty_params():
+    """
+    Will return false because everbridge org does not have group
+    """
+    header = api.everbridge_logic.create_authheader("Test", "Pass")
+    org = "123456789101112"
+    empty_group = 	{
+    "message": "OK",
+    "result": {
+        "lastModifiedTime": 0,
+        "accountId": 0,
+        "resourceBundleId": 0,
+        "organizationId": 0,
+        "id": 0,
+        "parentId": 0,
+        "lastModifiedId": 0,
+        "createdId": 0,
+        "lastSynchronizedTime": 0,
+        "dirty": "false"
+        }
+    }
+    actual_group = {
+    "message": "OK",
+    "result": {
+        "createdName": "Test User",
+        "lastModifiedTime": 1567042081488,
+        "accountId": 0,
+        "status": "A",
+        "resourceBundleId": 0,
+        "organizationId": 1111111111111,
+        "id": 8105621194807886,
+        "parentId": -1,
+        "name": "TEST API",
+        "lastModifiedDate": 1563240460233,
+        "lastModifiedId": 351435698996023,
+        "createdId": 8104014056945179,
+        "createdDate": 1518292361877,
+        "lastSynchronizedTime": 1508148670428,
+        "lastModifiedName": "Test User",
+        "enableSequencedContact": "false",
+        "dirty": "false"
+        }
+    }
+    error_message = {
+        "status": 401,
+        "message":"error"
+    }
+    test_mock = SessionMock()
+    mock_session = test_mock.get_group_setup(org, header, empty_group, None)
+    no_group = api.everbridge_logic.check_group("Hello", mock_session)
+    assert no_group == False
+def test_get_group_with_valid_params():
+    """
+    Will return true because group exists within Everbridge
+    """
+    header = api.everbridge_logic.create_authheader("Test", "Pass")
+    org = "123456789101112"
+    actual_group = {
+    "message": "OK",
+    "result": {
+        "createdName": "Test User",
+        "lastModifiedTime": 1567042081488,
+        "accountId": 0,
+        "status": "A",
+        "resourceBundleId": 0,
+        "organizationId": 1111111111111,
+        "id": 8105621194807886,
+        "parentId": -1,
+        "name": "TEST API",
+        "lastModifiedDate": 1563240460233,
+        "lastModifiedId": 351435698996023,
+        "createdId": 8104014056945179,
+        "createdDate": 1518292361877,
+        "lastSynchronizedTime": 1508148670428,
+        "lastModifiedName": "Test User",
+        "enableSequencedContact": "false",
+        "dirty": "false"
+        }
+    }
+    error_message = {
+        "status": 401,
+        "message":"error"
+    }
+    test_mock = SessionMock()
+    mock_session = test_mock.get_group_setup(org, header, actual_group, None)
+    no_group = api.everbridge_logic.check_group("Hello", mock_session)
+    assert no_group == True
+def test_get_group_with_error_params():
+    """
+    Will raise error
+    """
+    header = api.everbridge_logic.create_authheader("Test", "Pass")
+    org = "123456789101112"
+    error_message = {
+        "status": 401,
+        "message":"error"
+    }
+    test_mock = SessionMock()
+    mock_session = test_mock.get_group_setup(org, header, error_message, None)
+    with pytest.raises(ValueError):
+        no_group = api.everbridge_logic.check_group("Hello", mock_session)

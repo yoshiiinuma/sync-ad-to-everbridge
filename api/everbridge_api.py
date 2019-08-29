@@ -128,3 +128,16 @@ class SESSION:
         """
         return self.s.post(URL.groups_url(self.org,'contacts?byType=name&groupName=' + group_name+ '&idType=id'),
                             data=json.dumps(contact_list)).json()
+    def add_group(self, group_name):
+        """
+        Inserts new group into everbridge 
+        """
+        return self.s.post(URL.groups_url(self.org,''),
+                           data=json.dumps({"name":group_name,
+                                            "organizationId":self.org})).json()
+    def get_group_info(self, group_name):
+        """
+        Gets Group Info from Everbidge
+        ?queryType searches by name or group Id
+        """
+        return self.s.get(URL.groups_url(self.org,group_name + "?queryType=name")).json()

@@ -87,7 +87,7 @@ class SessionMock(BaseMock):
     """
     def setup(self, org, url, header, rtnval, code=None):
         """
-        Sets up mocks
+        Sets  Get up mocks
         """
         mock_session = SESSION(org, header)
         if code:
@@ -103,3 +103,11 @@ class SessionMock(BaseMock):
         else:
             # Without code, session.get returns side_effect
             mock_session.get_filtered_contacts = MagicMock(side_effect=rtnval)
+    def get_group_setup(self, org, header, rtnval, code=None):
+        """
+        Sets group mocks
+        """
+        mock_session = SESSION(org, header)
+        mock_session.get_group_info =  MagicMock(return_value=rtnval)
+        mock_session.add_group = MagicMock(return_value={})
+        return mock_session
