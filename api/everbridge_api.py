@@ -57,7 +57,7 @@ class SESSION:
         Delete HTTP Call for everbridge
         """
         try:
-            resp = self.s.delete(url, json=json.dumps(data))
+            resp = self.s.delete(url, data=json.dumps(data))
             return resp.json()
         except requests.exceptions.RequestException as error: 
             logging.error(error)
@@ -103,30 +103,30 @@ class SESSION:
         """
         return self.post(URL.contacts_url(self.org, "batch?version=1"),
                          batch_insert)
-    def get_everbridge_group(self, group_name):
+    def get_everbridge_group(self, group_id):
         """
         Gets Everbridge group contact
         ?idType determines to get the group by id or name
         """
-        return self.get(URL.contacts_groups_url(self.org, '?byType=name&groupName='+ group_name + '&pageSize=100&pageNumber=1'), None)
-    def delete_contacts_from_group(self, group_name, delete_list):
+        return self.get(URL.contacts_groups_url(self.org, '?byType=id&groupId='+ str(group_id) + '&pageSize=100&pageNumber=1'), None)
+    def delete_contacts_from_group(self, group_id, delete_list):
         """
         Deletes extra users in group
         ?idType determines to delete by id or externalId
         """
-        return self.delete(URL.groups_url(self.org,'contacts?byType=name&groupName=' + group_name + '&idType=id'),
+        return self.delete(URL.groups_url(self.org,'contacts?byType=id&groupId=' + str(group_id) + '&idType=id'),
                            delete_list)
     def delete_contacts_from_org(self, remove_list):
         """
         Deletes users from the org if they don't belong in a group
         """
         return self.delete(URL.contacts_url(self.org, "batch"), remove_list)
-    def add_contacts_to_group(self, group_name, contact_list):
+    def add_contacts_to_group(self, group_id, contact_list):
         """
         Inserts contacts into everbridge group
         ?byType add everbridge contacts to group by name or id
         """
-        return self.s.post(URL.groups_url(self.org,'contacts?byType=name&groupName=' + group_name+ '&idType=id'),
+        return self.s.post(URL.groups_url(self.org,'contacts?byType=id&groupId=' + str(group_id)+ '&idType=id'),
                             data=json.dumps(contact_list)).json()
     def add_group(self, group_name):
         """
@@ -141,3 +141,9 @@ class SESSION:
         ?queryType searches by name or group Id
         """
         return self.s.get(URL.groups_url(self.org,group_name + "?queryType=name")).json()
+    def delete_group(self, group_id):
+        """
+        Deletes Group from Everbridge
+        ?queryType searches by name or group Id
+        """
+        return self.s.delete(URL.groups_url(self.org,str(group_id))).json()

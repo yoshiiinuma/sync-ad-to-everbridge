@@ -103,11 +103,21 @@ class SessionMock(BaseMock):
         else:
             # Without code, session.get returns side_effect
             mock_session.get_filtered_contacts = MagicMock(side_effect=rtnval)
-    def get_group_setup(self, org, header, rtnval, code=None):
+    def get_group_setup(self, org, header, rtnval, group_info):
         """
         Sets group mocks
         """
         mock_session = SESSION(org, header)
         mock_session.get_group_info =  MagicMock(return_value=rtnval)
-        mock_session.add_group = MagicMock(return_value={})
+        mock_session.add_group = MagicMock(return_value=group_info)
         return mock_session
+    def delete_setup(self, contact_value, group_value, group_delete):
+        """
+        Sets delete mocks
+        """
+        Session = SESSION("1234567", {})
+        Session.delete_group = MagicMock(return_value=group_delete)
+        Session.delete_contacts_from_org = MagicMock(return_value=contact_value)
+        Session.delete_contacts_from_group = MagicMock(return_value=contact_value)
+        Session.get_everbridge_group = MagicMock(return_value=group_value)
+        return Session

@@ -109,36 +109,16 @@ def test_get_group_with_empty_params():
         "dirty": "false"
         }
     }
-    actual_group = {
-    "message": "OK",
-    "result": {
-        "createdName": "Test User",
-        "lastModifiedTime": 1567042081488,
-        "accountId": 0,
-        "status": "A",
-        "resourceBundleId": 0,
-        "organizationId": 1111111111111,
-        "id": 8105621194807886,
-        "parentId": -1,
-        "name": "TEST API",
-        "lastModifiedDate": 1563240460233,
-        "lastModifiedId": 351435698996023,
-        "createdId": 8104014056945179,
-        "createdDate": 1518292361877,
-        "lastSynchronizedTime": 1508148670428,
-        "lastModifiedName": "Test User",
-        "enableSequencedContact": "false",
-        "dirty": "false"
-        }
-    }
-    error_message = {
-        "status": 401,
-        "message":"error"
+    new_group = {
+        "baseUri": "string",
+        "id": 132131313,
+        "instanceUri": "string",
+        "message": "string"
     }
     test_mock = SessionMock()
-    mock_session = test_mock.get_group_setup(org, header, empty_group, None)
-    no_group = api.everbridge_logic.check_group("Hello", mock_session)
-    assert no_group == False
+    mock_session = test_mock.get_group_setup(org, header, empty_group, new_group)
+    insert_group = api.everbridge_logic.check_group("Hello", mock_session)
+    assert insert_group == new_group["id"]
 def test_get_group_with_valid_params():
     """
     Will return true because group exists within Everbridge
@@ -167,17 +147,13 @@ def test_get_group_with_valid_params():
         "dirty": "false"
         }
     }
-    error_message = {
-        "status": 401,
-        "message":"error"
-    }
     test_mock = SessionMock()
     mock_session = test_mock.get_group_setup(org, header, actual_group, None)
     no_group = api.everbridge_logic.check_group("Hello", mock_session)
-    assert no_group == True
+    assert no_group == actual_group["result"]["id"]
 def test_get_group_with_error_params():
     """
-    Will raise error
+    Will raise error from status code
     """
     header = api.everbridge_logic.create_authheader("Test", "Pass")
     org = "123456789101112"
@@ -188,4 +164,66 @@ def test_get_group_with_error_params():
     test_mock = SessionMock()
     mock_session = test_mock.get_group_setup(org, header, error_message, None)
     with pytest.raises(ValueError):
-        no_group = api.everbridge_logic.check_group("Hello", mock_session)
+        api.everbridge_logic.check_group("Hello", mock_session)
+def test_delete_group():
+    """
+    Will assert that delete group has been called
+    """
+    delete_batch_return = {
+        "code": 200,
+        "data": [
+        "string"
+        ],
+        "message": "string"
+    }
+    delete_group_return = {
+        "baseUri": "string",
+        "id": 0,
+        "instanceUri": "string",
+        "message": "string"
+    }
+    group_return_value = {
+    "message": "OK",
+    "page": {
+        "currentPageNo": 0,
+        "data": [
+            {
+                "externalId": "string",
+                "firstName": "string",
+                "groups": [
+                    0
+                ],
+                "id": 0,
+                "lastName": "string",
+            },
+            {
+                "externalId": "string",
+                "firstName": "string",
+                "groups": [
+                    0
+                ],
+                "id": 0,
+                "lastName": "string",
+            },
+            {
+            "externalId": "string",
+            "firstName": "string",
+            "groups": [
+                0
+            ],
+            "id": 0,
+            "lastName": "string",
+            }
+        ],
+        "pageSize": 1,
+        "totalCount": 3,
+        "totalPageCount": 0
+    },
+    "previousPageUri": "string"
+    }
+    test_mock = SessionMock()
+    mock_session = test_mock.delete_setup(delete_group_return, group_return_value, delete_batch_return)
+    count = api.everbridge_logic.delete_evercontacts("123456",{},mock_session)
+    assert count == 3
+    assert mock_session.delete_group.assert_called_once
+

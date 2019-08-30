@@ -21,16 +21,18 @@ def check_group(group_name, Session):
     """
     Checks if everbridge group exists and inserts new group if not
     Raises error if invalid header or org id
+    Converts Group_name to Group_ID for group delete function
     """
     group_info = Session.get_group_info(group_name)
     if group_info["message"] == "OK":
         if group_info["result"]["id"] == 0:
-            Session.add_group(group_name)
-            return False
+            new_group = Session.add_group(group_name)
+            return new_group["id"]
+        else:
+            return group_info["result"]["id"]
     elif group_info.get("status") is not None and group_info["status"] == 401:
         logging.error(group_info["message"])
         raise ValueError
-    return True
 def check_contact(contact, content_check):
     """
     Checks AD contact data with everbridge contact data and updates if mismatched
@@ -238,31 +240,36 @@ def create_evercontacts(group_data,
             contact_list.append(contact["id"])
         count = len(new_contacts)
     return count
-def delete_evercontacts(group_name,group_backup, Session):
+def delete_evercontacts(group_id, group_backup, Session):
     """
     Deletes extra users in group
     """
     delete_count = 0
     #Get all current users in group
-    ever_group = Session.get_everbridge_group(group_name)
+    ever_group = Session.get_everbridge_group(group_id)
     #Removes users not in the AD Group
     if ever_group["page"]["totalCount"] > 0:
         remove_list = []
+        delete_list = []
         data_array = ever_group["page"]["data"]
         copy_array = data_array.copy()
         for contact in copy_array:
-            full_name = contact["firstName"] + contact["lastName"]
+            full_name = contact["externalId"]
             if group_backup.get(full_name) is not None:
                 data_array.remove(contact)
             else:
                 if len(contact["groups"]) == 1:
                     remove_list.append(contact["id"])
-                    data_array.remove(contact)
-        delete_list = data_array
+                delete_list.append(contact["id"])
         #Deletes users in Everbridge Group
         if delete_list:
-            Session.delete_contacts_from_group(group_name, delete_list)
+            Session.delete_contacts_from_group(group_id, delete_list)
             delete_count = len(delete_list)
+            #Deletes a group if there is no members in the group
+            if ever_group["page"]["totalCount"] - delete_count == 0:
+
+                print(Session.delete_group(group_id))
+        #Deletes users from the org if the user doesn't belong to the group
         if remove_list:
             Session.delete_contacts_from_org(remove_list)
     return delete_count
@@ -279,26 +286,27 @@ def sync_everbridge_group(username, password, org, group_data, group_name):
     update_list = []
     header = create_authheader(username, password)
     Session = SESSION(org,header)
-    check_group(group_name, Session)
+    #Checks to see if group exists in Everbridge Org
+    group_id = check_group(group_name, Session)
     #Create the search query for the group Everbridge Contacts
     filter_string = create_query(group_data)
     #Grabs the contacts from Everbridge with the given contact filters
     ever_data = Session.get_filtered_contacts(filter_string)
-    #Parse Everbridge Data to 
+    #Parse Everbridge Data to filter contacts
     if ever_data["page"].get("data") is not None:
         contact_check = parse_ever_data(ever_data, contact_list)
     group_backup = parse_ad_data(group_data,contact_check, update_list)
     #Create new contacts
     insert_count = create_evercontacts(group_data, contact_list, Session)
     #Delete extra users in group
-    delete_count = delete_evercontacts(group_name, group_backup, Session)
+    delete_count = delete_evercontacts( group_id, group_backup, Session)
     #Updates Everbridge Contacts
     if update_list:
         Session.update_contacts(update_list)
     #Inserts users to group
-    Session.add_contacts_to_group(group_name,contact_list)
+    Session.add_contacts_to_group( group_id,contact_list)
     logging.info("%s contacts created,%s users removed from group, %s users upserted to the group",
                  insert_count,
                  delete_count,
                  len(contact_list))
-    return group_name + " has been synced"
+    return str(group_id) + " has been synced"
