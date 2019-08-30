@@ -40,36 +40,31 @@ def check_contact(contact, content_check):
     need_to_update = 0
     # Checks Work Desk Phone
     if contact["businessPhones"]:
-       
         phone_string = contact["businessPhones"][0]
         phone_string = re.sub(r'-|\s|\(|\)|\+1', '', phone_string)
         if len(phone_string) == 7:
             phone_string = "808" + phone_string
         if (content_check["workPhone"] == '' or
                 (content_check["workPhone"] != '' and
-                int(phone_string) !=
-                int(content_check["workPhone"]["value"]))):
+                 int(phone_string) !=
+                 int(content_check["workPhone"]["value"]))):
             need_to_update = 1
     #Checks External ID
     if contact["userPrincipalName"] != content_check["mail"]:
         need_to_update = 1
     #Checks Mobile Phone
-    
     if ((contact.get("mobilePhone") is not None and
-        content_check["mobilePhone"] == '') or
+         content_check["mobilePhone"] == '') or
             contact.get("mobilePhone") is not None and
-                re.sub(r'-|\s|\(|\)|\+1', '', contact["mobilePhone"]) != 
-                    content_check["mobilePhone"]["value"]):
+                re.sub(r'-|\s|\(|\)|\+1', '', contact["mobilePhone"]) !=
+                content_check["mobilePhone"]["value"]):
         need_to_update = 1
     #Creates Contact Object to be sent
     return need_to_update
 def create_contact(contact, ever_id):
     """
     Create New EverBridge Contact with Email Delivery and Phone Delivery if available
-    """
-
-    """
-    Contact Paths are the delivery methods for notifications in Everbridge. 
+    Contact Paths are the delivery methods for notifications in Everbridge.
     Contact Paths can not be created or deleted through the API.
     To view paths in the org, go to Settings -> Notifications -> Delivery Methods
     https://api.everbridge.net/rest/contactPaths/org
@@ -131,8 +126,8 @@ def create_contact(contact, ever_id):
     The static Record Type Id is the default "Employee" record type.
     There is only 1 record type in the org but more can be added.
     To manage Record Types, go to Settings -> Contacts and Groups-> Contact Record Types.
+    https://api.everbridge.net/rest/recordTypes/org
     """
-    # https://api.everbridge.net/rest/recordTypes/org
     new_contact = {
         "firstName": contact["givenName"],
         "lastName": contact["surname"],
@@ -153,7 +148,7 @@ def fill_contact(contact):
         first = "first"
         last = "last"
         space_array = contact["displayName"].split(" ")
-        logging.warning(contact["displayName"] + "has no first/last name. Adding in placeholder")
+        logging.warning("%s has no first/last name. Adding in placeholder", contact["displayName"])
         if len(space_array) > 1:
             first = space_array[0]
             space_array.pop(0)
@@ -164,14 +159,14 @@ def fill_contact(contact):
         contact["givenName"] = first
         contact["surname"] = last
     if contact.get("userPrincipalName") is None and contact["mail"] is None:
-        logging.warning(contact["displayName"] + " has no email. Adding in placeholder")
+        logging.warning("%s has no email. Adding in placeholder", contact["displayName"])
         contact["userPrincipalName"] = "missingmail" + contact["givenName"] +"@hawaii.gov"
     elif contact.get("userPrincipalName") is None and contact["mail"] is not None:
         contact["userPrincipalName"] = contact["mail"]
     else:
         contact["mail"] = contact["userPrincipalName"]
     if contact.get("businessPhones") is None:
-        logging.warning(contact["displayName"] + "has no phone")
+        logging.warning("%s has no phone", contact["displayName"])
         contact["businessPhones"] = []
 def create_query(group_data):
     """
@@ -183,13 +178,14 @@ def create_query(group_data):
         fill_contact(contact)
         filter_string += "&externalIds=" + contact["userPrincipalName"]
     return filter_string
-def parse_ad_data(group_data, contact_check, update_list):
+def parse_ad_data(group_data, contact_check):
     """
     Checks AD group against Everbrige dictionary to add in new contacts
     """
     #Checks if a user in AD has not been added in Everbridge
     copy_list = group_data.copy()
     group_backup = {}
+    update_list = []
     for contact in copy_list:
         fill_contact(contact)
         if contact_check.get(contact["mail"]) is not None:
@@ -199,12 +195,13 @@ def parse_ad_data(group_data, contact_check, update_list):
                 update_list.append(contact_updater)
             group_data.remove(contact)
             group_backup[contact["mail"]] = contact
-    return group_backup
-def parse_ever_data(ever_data, contact_list):
+    return group_backup, update_list
+def parse_ever_data(ever_data):
     """
     Add everbridge ids to group batch insert and check dictionary
     """
     contact_check = {}
+    contact_list = []
     for contact in ever_data["page"]["data"]:
         contact_list.append(contact["id"])
         ever_contact = {"name":contact["firstName"]
@@ -218,7 +215,7 @@ def parse_ever_data(ever_data, contact_list):
         if len(contact["paths"]) > 2:
             ever_contact["mobilePhone"] = contact["paths"][2]
         contact_check[contact["externalId"]] = ever_contact
-    return contact_check
+    return contact_check, contact_list
 def create_evercontacts(group_data,
                         contact_list,
                         Session):
@@ -283,28 +280,29 @@ def sync_everbridge_group(username, password, org, group_data, group_name):
     #Convert username and password to base64
     contact_list = []
     contact_check = {}
-    update_list = []
     header = create_authheader(username, password)
-    Session = SESSION(org,header)
+    Session = SESSION(org, header)
     #Checks to see if group exists in Everbridge Org
     group_id = check_group(group_name, Session)
     #Create the search query for the group Everbridge Contacts
-    filter_string = create_query(group_data)
     #Grabs the contacts from Everbridge with the given contact filters
-    ever_data = Session.get_filtered_contacts(filter_string)
+    ever_data = Session.get_filtered_contacts(create_query(group_data))
     #Parse Everbridge Data to filter contacts
+    #Contact List = parse_ever_data[1]
     if ever_data["page"].get("data") is not None:
-        contact_check = parse_ever_data(ever_data, contact_list)
-    group_backup = parse_ad_data(group_data,contact_check, update_list)
+        contact_check = parse_ever_data(ever_data)[0]
+        contact_list = parse_ever_data(ever_data)[1]
+    group_backup = parse_ad_data(group_data, contact_check)[0]
+    update_list = parse_ad_data(group_data, contact_check)[1]
     #Create new contacts
     insert_count = create_evercontacts(group_data, contact_list, Session)
     #Delete extra users in group
-    delete_count = delete_evercontacts( group_id, group_backup, Session)
+    delete_count = delete_evercontacts(group_id, group_backup, Session)
     #Updates Everbridge Contacts
     if update_list:
         Session.update_contacts(update_list)
     #Inserts users to group
-    Session.add_contacts_to_group( group_id,contact_list)
+    Session.add_contacts_to_group(group_id, contact_list)
     logging.info("%s contacts created,%s users removed from group, %s users upserted to the group",
                  insert_count,
                  delete_count,
