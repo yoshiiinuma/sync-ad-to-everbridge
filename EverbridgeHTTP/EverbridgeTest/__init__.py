@@ -11,6 +11,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     token = azure.get_token(CONFIG["clientId"], CONFIG["clientSecret"], CONFIG["adTenant"])
     resultString = {}
     other_groups = req.params.get('groups')
+    count = 0
     if not other_groups:
         try:
             req_body = req.get_json()
@@ -20,8 +21,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             other_groups = req_body.get('groups')
 
     if other_groups:
+        logging.info("Manual Update called")
         group_split = other_groups.split(',')
         CONFIG["adGroupId"] = group_split
+        resultString["Input"] = group_split
     for group in CONFIG["adGroupId"]:
         data = azure.get_group_members(group, token)
         group_name = azure.get_group_name(group, token)
@@ -32,8 +35,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                                         data,
                                                         group_name)
         else:
-            resultString["group"] = "Error: No AD Group found"
-        return func.HttpResponse(
-             json.dumps(resultString),
-             status_code=200
-        )
+            logging.error("AD Group %s was not found", group)
+            resultString[group] = "Error: No AD Group found"
+    return func.HttpResponse(
+            json.dumps(resultString),
+            status_code=200
+    )
