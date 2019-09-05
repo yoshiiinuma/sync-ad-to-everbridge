@@ -7,3 +7,12 @@ logs/*
 !logs/.keep
 .vscode
 *.swp
+/EverbridgeHTTP/.python_packages
+/EverbridgeHTTP/.git
+/EverbridgeHTTP/.venv
+/EverbridgeHTTP/.vscode
+/EverbridgeHTTP/EverbridgeTest/config.json
+/EverbridgeHTTP/EverbridgeTest/azure.py
+/EverbridgeHTTP/EverbridgeTest/everbridge_api.py
+/EverbridgeHTTP/EverbridgeTest/everbridge_logic.py
+/EverbridgeHTTP/Pipfile.lock
