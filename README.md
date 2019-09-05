@@ -37,10 +37,8 @@ $ pylint path-to-file
 ```bash
 az login
 az group create --name <myResourceGroup> --location westus
-az storage account create --name <storage_name> --location westeus --resource-group <myResourceGroup> --sku Standard_LRS
-az functionapp create --resource-group <myResourceGroup> --os-type Linux \
---consumption-plan-location westus  --runtime python \
---name <APP_NAME> --storage-account  <storage_name>
+az storage account create --name <storage_name> --location westus --resource-group <myResourceGroup> --sku Standard_LRS
+az functionapp create --resource-group <myResourceGroup> --os-type Linux --consumption-plan-location westus  --runtime python --name <APP_NAME> --storage-account  <storage_name>
 func azure functionapp publish <APP_NAME> --build-native-deps --force
 ```
 
