@@ -17,4 +17,4 @@ logs/*
 /EverbridgeHTTP/EverbridgeTest/everbridge_logic.py
 /EverbridgeHTTP/Pipfile.lock
 .vscode/
-/EverbridgeHTTP/local.settings.json
+/EverbridgeHTTP/requirements.txt

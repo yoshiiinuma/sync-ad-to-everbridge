@@ -25,6 +25,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         group_split = other_groups.split(',')
         CONFIG["adGroupId"] = group_split
         resultString["Input"] = group_split
+        if len(group_split > 10):
+            return func.HttpResponse(
+                    "Too many cooks",
+                    status_code=400
+            )
     for group in CONFIG["adGroupId"]:
         data = azure.get_group_members(group, token)
         group_name = azure.get_group_name(group, token)
@@ -37,7 +42,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         else:
             logging.error("AD Group %s was not found", group)
             resultString[group] = "Error: No AD Group found"
-    return func.HttpResponse(
-            json.dumps(resultString),
-            status_code=200
-    )
+            count += 1
+    if count == 0:
+        return func.HttpResponse(
+                json.dumps(resultString),
+                status_code=200
+        )
+    elif count == len(CONFIG["adGroupId"]):
+        return func.HttpResponse(
+                json.dumps(resultString),
+                status_code=400
+        )
+    else:
+        return func.HttpResponse(
+                json.dumps(resultString),
+                status_code=409
+        )
