@@ -302,9 +302,9 @@ def sync_everbridge_group(username, password, org, group_data, group_name):
     if update_list:
         Session.update_contacts(update_list)
     #Inserts users to group
-    Session.add_contacts_to_group(group_id, contact_list)
+    
     logging.info("%s contacts created,%s users removed from group, %s users upserted to the group",
                  insert_count,
                  delete_count,
                  len(contact_list))
-    return str(group_id) + " has been synced"
+    return Session.add_contacts_to_group(group_id, contact_list)

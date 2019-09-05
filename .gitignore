@@ -5,7 +5,7 @@ config/*
 !config/sampleConfig.json
 logs/*
 !logs/.keep
-.vscode
+
 *.swp
 /EverbridgeHTTP/.python_packages
 /EverbridgeHTTP/.git
@@ -16,3 +16,5 @@ logs/*
 /EverbridgeHTTP/EverbridgeTest/everbridge_api.py
 /EverbridgeHTTP/EverbridgeTest/everbridge_logic.py
 /EverbridgeHTTP/Pipfile.lock
+.vscode/
+/EverbridgeHTTP/local.settings.json
