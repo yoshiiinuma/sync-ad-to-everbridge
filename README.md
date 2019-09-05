@@ -28,11 +28,17 @@ $ pylint path-to-file
 ```
 # How to deploy to Azure Functions
 1 - Install  Azure Functions Core Tools
+
 2 - Install Azure CLI
+
 3 - Get the Azure Free Subscription
+
 4 - Copy the pipfile.lock into the EverbridgeHttp Folder
+
 5 - Copy the api files into the EverbridgeTest Folder
+
 6 - Copy the config file into the EverbrideTest Folder
+
 7 - From your EverbridgeHttp folder, enter in these commands
 ```bash
 az login
