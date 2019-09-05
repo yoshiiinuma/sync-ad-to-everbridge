@@ -33,6 +33,8 @@ $ pylint path-to-file
 
 3 - Get the Azure Free Subscription
 
+4 - Install and run Docker
+
 4 - Copy the pipfile.lock into the EverbridgeHttp Folder
 
 5 - Copy the api files into the EverbridgeTest Folder
