@@ -8,6 +8,8 @@ from requests.exceptions import HTTPError, Timeout
 import api.azure
 from api.azure import URL
 from tests.mock_helper import AdalMock, RequestsMock
+# pylint: disable=unused-import
+import tests.log_helper
 
 #from os.path import dirname, abspath
 #ROOTDIR = dirname(dirname(abspath(__file__)))
