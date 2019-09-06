@@ -6,6 +6,7 @@
   "everbridgeOrg":"EverBridge Org",
   "adTenant":"Azure AD Tenant",
   "adGroupId":["Azure AD Group ID1","Azure AD Group ID2"],
-  "adGroupName":"Azure AD Group Name"
+  "logFileName":"test.log",
+  "logLevel":"DEBUG"
 }
 
