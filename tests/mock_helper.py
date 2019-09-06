@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import adal
 import requests
 from requests import Response
-from api.everbridge_api import SESSION
+from api.everbridge_api import Session
 
 class BaseMock:
     """
@@ -91,7 +91,7 @@ class SessionMock(BaseMock):
         """
         Sets  Get up mocks
         """
-        mock_session = SESSION(org, header)
+        mock_session = Session(org, header)
         if code:
             # If code is provided, session.get returns Response that contains rtnval
             res = Response()
@@ -109,7 +109,7 @@ class SessionMock(BaseMock):
         """
         Sets group mocks
         """
-        mock_session = SESSION(org, header)
+        mock_session = Session(org, header)
         mock_session.get_group_info = MagicMock(return_value=rtnval)
         mock_session.add_group = MagicMock(return_value=group_info)
         return mock_session
@@ -117,12 +117,12 @@ class SessionMock(BaseMock):
         """
         Sets delete mocks
         """
-        Session = SESSION("1234567", {})
-        Session.delete_group = MagicMock(return_value=group_delete)
-        Session.delete_contacts_from_org = MagicMock(return_value=contact_value)
-        Session.delete_contacts_from_group = MagicMock(return_value=contact_value)
-        Session.get_everbridge_group = MagicMock(return_value=group_value)
-        return Session
+        session = Session("1234567", {})
+        session.delete_group = MagicMock(return_value=group_delete)
+        session.delete_contacts_from_org = MagicMock(return_value=contact_value)
+        session.delete_contacts_from_group = MagicMock(return_value=contact_value)
+        session.get_everbridge_group = MagicMock(return_value=group_value)
+        return session
 
 class LoggingMock(BaseMock):
     """

@@ -30,7 +30,7 @@ class URL():
         Returns authority URL for authentication context
         """
         return URL.LOGIN + URL.API_CONTACTS_GROUPS +  org + '/' + param
-class SESSION:
+class Session:
     """
     Session for Everbridge
     """

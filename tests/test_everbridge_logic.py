@@ -7,7 +7,7 @@ import ast
 from requests.exceptions import HTTPError, Timeout
 import api.everbridge_logic
 import api.everbridge_api
-from api.everbridge_api import URL, SESSION
+from api.everbridge_api import URL, Session
 from tests.mock_helper import RequestsMock, SessionMock
 
 def test_sync_groups_with_invalid_parmeter():
