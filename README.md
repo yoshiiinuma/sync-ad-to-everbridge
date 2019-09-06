@@ -41,7 +41,10 @@ $ pylint path-to-file
 
 6 - Copy the config file into the EverbrideTest Folder
 
-7 - From your EverbridgeHttp folder, enter in these commands
+7 - Execute the Generate_Requirements.sh
+
+8 - From your EverbridgeHttp folder, enter in these commands
+
 ```bash
 az login
 az group create --name <myResourceGroup> --location westus
