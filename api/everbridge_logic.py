@@ -27,6 +27,7 @@ def check_group(group_name, Session):
     if group_info["message"] == "OK":
         if group_info["result"]["id"] == 0:
             new_group = Session.add_group(group_name)
+            logging.info("Creating new Everbridge Group %s", group_name)
             return new_group["id"]
         else:
             return group_info["result"]["id"]
@@ -46,8 +47,8 @@ def check_contact(contact, content_check):
             phone_string = "808" + phone_string
         if (content_check["workPhone"] == '' or
                 (content_check["workPhone"] != '' and
-                 int(phone_string) !=
-                 int(content_check["workPhone"]["value"]))):
+                 str(phone_string) !=
+                 str(content_check["workPhone"]["value"]))):
             need_to_update = 1
     #Checks External ID
     if contact["userPrincipalName"] != content_check["mail"]:
@@ -264,11 +265,13 @@ def delete_evercontacts(group_id, group_backup, Session):
             delete_count = len(delete_list)
             #Deletes a group if there is no members in the group
             if ever_group["page"]["totalCount"] - delete_count == 0:
-
-                print(Session.delete_group(group_id))
+                Session.delete_group(group_id)
+                logging.info("Deleting Everbridge Group")
+                return -1
         #Deletes users from the org if the user doesn't belong to the group
         if remove_list:
             Session.delete_contacts_from_org(remove_list)
+            logging.info("Removing %s Everbridge Contacts from org" , len(remove_list))
     return delete_count
 def sync_everbridge_group(username, password, org, group_data, group_name):
     """
@@ -307,4 +310,7 @@ def sync_everbridge_group(username, password, org, group_data, group_name):
                  insert_count,
                  delete_count,
                  len(contact_list))
-    return Session.add_contacts_to_group(group_id, contact_list)
+    if delete_count != -1:
+        return Session.add_contacts_to_group(group_id, contact_list)
+    else:
+        return "Group has been deleted"
