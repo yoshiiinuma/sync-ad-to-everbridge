@@ -224,6 +224,7 @@ def test_delete_group():
     test_mock = SessionMock()
     mock_session = test_mock.delete_setup(delete_group_return, group_return_value, delete_batch_return)
     count = api.everbridge_logic.delete_evercontacts("123456",{},mock_session)
-    assert count == 3
+    assert count == -1
+    assert mock_session.delete_contacts_from_group.called_with("123456", [0, 0, 0])
     assert mock_session.delete_group.assert_called_once
 
