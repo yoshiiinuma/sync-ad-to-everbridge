@@ -1,15 +1,17 @@
 """
 Helps mock management in tests
 """
-from unittest.mock import MagicMock, patch
+import logging
+from unittest.mock import MagicMock
+import adal
 import requests
 from requests import Response
-from api.everbridge_api import URL, SESSION
-import adal 
+from api.everbridge_api import SESSION
 
 class BaseMock:
     """
     Defins the basic behavior of Mock Class
+    Implement setup method in inherited class
     """
     def __init__(self):
         self.saved_functions = []
@@ -27,7 +29,7 @@ class BaseMock:
         return self.mocked[target_name]
     def register(self, name, target):
         """
-        Keeps track of each mocked function to expose it through access
+        Keeps track of each mocked function to expose it through access method
         """
         self.mocked[name] = target
     def save(self, target, original):
@@ -108,7 +110,7 @@ class SessionMock(BaseMock):
         Sets group mocks
         """
         mock_session = SESSION(org, header)
-        mock_session.get_group_info =  MagicMock(return_value=rtnval)
+        mock_session.get_group_info = MagicMock(return_value=rtnval)
         mock_session.add_group = MagicMock(return_value=group_info)
         return mock_session
     def delete_setup(self, contact_value, group_value, group_delete):
@@ -121,3 +123,22 @@ class SessionMock(BaseMock):
         Session.delete_contacts_from_group = MagicMock(return_value=contact_value)
         Session.get_everbridge_group = MagicMock(return_value=group_value)
         return Session
+
+class LoggingMock(BaseMock):
+    """
+    Handles logging mock
+    """
+    def setup(self):
+        """
+        Sets up mocks
+        """
+        orig1 = logging.root.handlers
+        orig2 = logging.root.removeHandler
+        orig3 = logging.basicConfig
+        logging.root.handlers = MagicMock()
+        logging.root.removeHandlers = MagicMock()
+        logging.basicConfig = MagicMock()
+        self.register('logging.basicConfig', logging.basicConfig)
+        self.save('logging.basicConfig', orig3)
+        self.save('logging.root.handlers', orig1)
+        self.save('logging.root.removeHandlers', orig2)

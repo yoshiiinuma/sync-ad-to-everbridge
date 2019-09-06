@@ -7,7 +7,7 @@ import adal
 
 class URL:
     """
-    Define URL constants
+    Defines URL constants
     """
     LOGIN = 'https://login.microsoftonline.com/'
     API_BASE = 'https://graph.microsoft.com/'
@@ -33,7 +33,7 @@ class URL:
 
 def get_token(client_id, secret, tenant):
     """
-    Get Azure AD Token
+    Gets Azure AD Token
     """
     if not client_id or not secret or not tenant:
         logging.error('AZURE.API.get_token: Invalid Parameter')
@@ -49,7 +49,7 @@ def get_token(client_id, secret, tenant):
 
 def get_group_members(group_id, token):
     """
-    Fetch Azure AD Group Members with Adal
+    Fetches Azure AD Group Members with Adal
     """
     if not group_id:
         logging.error('AZURE.API.get_group_members: Invalid Group ID')
@@ -78,7 +78,7 @@ def get_group_members(group_id, token):
         raise err
 def get_group_name(group_id, token):
     """
-    Fetch Azure AD Group Members with Adal
+    Fetches Azure AD Group Members with Adal
     """
     if not group_id:
         logging.error('AZURE.API.get_group_name: Invalid Group ID')
@@ -105,4 +105,3 @@ def get_group_name(group_id, token):
     except Exception as err:
         logging.error(err)
         raise err
-
