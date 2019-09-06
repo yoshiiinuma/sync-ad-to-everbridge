@@ -70,8 +70,7 @@ func start host
 	"everbridgeOrg":"", 
 	"everbridgeGroup":"", 
 	"adTenant":"", 
-	"adGroupId":"", 
-	"adGroupName":"", 
+	"adGroupId":[], 
 	"logFileName":""
 }
 ```

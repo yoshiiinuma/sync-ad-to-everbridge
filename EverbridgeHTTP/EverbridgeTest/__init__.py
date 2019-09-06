@@ -35,7 +35,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         CONFIG["adGroupId"] = group_split
         resultString["Input"] = group_split
         #Group limit to limit cost
-        if len(group_split > 10):
+        if len(group_split) > 10:
             return func.HttpResponse(
                     "Too many groups",
                     status_code=400
