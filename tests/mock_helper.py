@@ -84,46 +84,44 @@ class RequestsMock(BaseMock):
         requests.session = MagicMock(return_value=session)
         self.save(requests.session, orig_func)
 
-class SessionMock(BaseMock):
+class SessionGetContactsMock(BaseMock):
     """
-    Handles requests session mock
+    Handles get contacts requests session mock
     """
-    def setup(self, org, url, header, rtnval, code=None):
+    def setup(self, rtnval):
         """
-        Sets  Get up mocks
+        Setup  Get contact mock session
         """
-        mock_session = Session(org, header)
-        if code:
-            # If code is provided, session.get returns Response that contains rtnval
-            res = Response()
-            res.status_code = code
-            res.json = MagicMock(return_value=rtnval)
-            mock_session.get_filtered_contacts = MagicMock(return_value=res)
-            self.register('get_filtered_contacts', mock_session.get_filtered_contacts)
-            value = mock_session.get_filtered_contacts(url)
-            mock_session.get_filtered_contacts.assert_called_with(url)
-            assert value.json() == rtnval
-        else:
-            # Without code, session.get returns side_effect
-            mock_session.get_filtered_contacts = MagicMock(side_effect=rtnval)
-    def get_group_setup(self, org, header, rtnval, group_info):
+        mock_session = Session("1234567", {})
+        mock_session.get_filtered_contacts = MagicMock(return_value=rtnval)
+        return mock_session
+
+class SessionGetGroupMock(BaseMock):
+    """
+    Handles get group contacts requests session mock
+    """
+    def setup(self, rtnval, group_info):
         """
-        Sets group mocks
+        Setup group mock session
         """
-        mock_session = Session(org, header)
+        mock_session = Session("1234567", {})
         mock_session.get_group_info = MagicMock(return_value=rtnval)
         mock_session.add_group = MagicMock(return_value=group_info)
         return mock_session
-    def delete_setup(self, contact_value, group_value, group_delete):
+
+class SessionDeleteMock(BaseMock):
+    """
+    Handles requests session mock
+    """
+    def setup(self, contact_value, group_value, group_delete):
         """
-        Sets delete mocks
+        Setup delete mock session
         """
-        session = Session("1234567", {})
-        session.delete_group = MagicMock(return_value=group_delete)
-        session.delete_contacts_from_org = MagicMock(return_value=contact_value)
-        session.delete_contacts_from_group = MagicMock(return_value=contact_value)
-        session.get_everbridge_group = MagicMock(return_value=group_value)
-        return session
+        mock_session = Session("1234567", {})
+        mock_session.delete_group = MagicMock(return_value=group_delete)
+        mock_session.delete_contacts_from_org = MagicMock(return_value=contact_value)
+        mock_session.delete_contacts_from_group = MagicMock(return_value=contact_value)
+        mock_session.get_everbridge_group = MagicMock(return_value=group_value)
 
 def createEverbridgeMock(rtnval, code=None):
     """

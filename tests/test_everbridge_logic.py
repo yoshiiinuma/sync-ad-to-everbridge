@@ -8,7 +8,7 @@ from requests.exceptions import HTTPError, Timeout
 import api.everbridge_logic
 import api.everbridge_api
 from api.everbridge_api import URL, Session
-from tests.mock_helper import RequestsMock, SessionMock
+from tests.mock_helper import RequestsMock, SessionGetContactsMock, SessionDeleteMock, SessionGetGroupMock
 
 def test_sync_groups_with_invalid_parmeter():
     """
@@ -78,16 +78,15 @@ def test_get_contacts_with_valid_params():
     query = api.everbridge_logic.create_query(ad_data["value"])
     header = api.everbridge_logic.create_authheader("Test", "Pass")
     assert(query == "&externalIds=AAA.BBB@hawaii.gov")
-    expected = json.loads(json.dumps(ever_raw))
     expected_url = URL.contacts_url(org,'?sortBy="lastName"&searchType=OR' + query) + ", data='null', headers=" + str(ast.literal_eval(str(header)))
     # Set up mocks
-    mock = SessionMock()
-    mock.setup(org, query, header, expected["page"]["data"], 200)
+    mock = SessionGetContactsMock()
+    mock_session = mock.setup(ever_raw["page"]["data"])
     # Call get_filtered_contacts
+    contacts = mock_session.get_filtered_contacts(query)
     # Check if arguments passed to session.get are correct
-    # mock.access('requests.get').assert_called_with(expected_url)
-    # Reinstate mocked functions
-    mock.restore()
+    mock_session.get_filtered_contacts.assert_called_with(query)
+    assert contacts == ever_raw["page"]["data"]
 def test_get_group_with_empty_params():
     """
     Will return false because everbridge org does not have group
@@ -115,8 +114,8 @@ def test_get_group_with_empty_params():
         "instanceUri": "string",
         "message": "string"
     }
-    test_mock = SessionMock()
-    mock_session = test_mock.get_group_setup(org, header, empty_group, new_group)
+    test_mock = SessionGetGroupMock()
+    mock_session = test_mock.setup(empty_group, new_group)
     insert_group = api.everbridge_logic.check_group("Hello", mock_session)
     assert insert_group == new_group["id"]
 def test_get_group_with_valid_params():
@@ -147,8 +146,8 @@ def test_get_group_with_valid_params():
         "dirty": "false"
         }
     }
-    test_mock = SessionMock()
-    mock_session = test_mock.get_group_setup(org, header, actual_group, None)
+    test_mock = SessionGetGroupMock()
+    mock_session = test_mock.setup(actual_group, None)
     no_group = api.everbridge_logic.check_group("Hello", mock_session)
     assert no_group == actual_group["result"]["id"]
 def test_get_group_with_error_params():
@@ -161,8 +160,8 @@ def test_get_group_with_error_params():
         "status": 401,
         "message":"error"
     }
-    test_mock = SessionMock()
-    mock_session = test_mock.get_group_setup(org, header, error_message, None)
+    test_mock = SessionGetGroupMock()
+    mock_session =  test_mock.setup(error_message, None)
     with pytest.raises(ValueError):
         api.everbridge_logic.check_group("Hello", mock_session)
 def test_delete_group():
@@ -221,8 +220,8 @@ def test_delete_group():
     },
     "previousPageUri": "string"
     }
-    test_mock = SessionMock()
-    mock_session = test_mock.delete_setup(delete_group_return, group_return_value, delete_batch_return)
+    test_mock = SessionDeleteMock()
+    mock_session = test_mock.setup(delete_group_return, group_return_value, delete_batch_return)
     count = api.everbridge_logic.delete_evercontacts("123456",{},mock_session)
     assert count == -1
     assert mock_session.delete_contacts_from_group.called_with("123456", [0, 0, 0])
