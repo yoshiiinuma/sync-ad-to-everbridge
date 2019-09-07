@@ -7,6 +7,7 @@ import adal
 import requests
 from requests import Response
 from api.everbridge_api import Session
+from api.everbridge import Everbridge
 
 class BaseMock:
     """
@@ -123,6 +124,43 @@ class SessionMock(BaseMock):
         session.delete_contacts_from_group = MagicMock(return_value=contact_value)
         session.get_everbridge_group = MagicMock(return_value=group_value)
         return session
+
+def createEverbridgeMock(rtnval, code=None):
+    """
+    Sets up Everbidge mock
+    """
+    mock = Everbridge("1234567", "user", "pass")
+    if code:
+        # If code is provided, session.get returns Response that contains rtnval
+        res = Response()
+        res.status_code = code
+        res.json = MagicMock(return_value=rtnval)
+        mock.get_filtered_contacts = MagicMock(return_value=res)
+        self.register('get_filtered_contacts', mock.get_filtered_contacts)
+    else:
+        # Without code, session.get returns side_effect
+        mock.get_filtered_contacts = MagicMock(side_effect=rtnval)
+    return mock
+
+def createEverbridgeGroupMock(rtnval, group_info):
+    """
+    Sets up Everbidge mock
+    """
+    mock = Everbridge("1234567", "user", "pass")
+    mock.get_group_info = MagicMock(return_value=rtnval)
+    mock.add_group = MagicMock(return_value=group_info)
+    return mock
+
+def createEverbridgeDeleteMock(contact_value, group_value, group_delete):
+    """
+    Sets delete mocks
+    """
+    mock = Everbridge("1234567", "user", "pass")
+    mock.delete_group = MagicMock(return_value=group_delete)
+    mock.delete_contacts_from_org = MagicMock(return_value=contact_value)
+    mock.delete_contacts_from_group = MagicMock(return_value=contact_value)
+    mock.get_everbridge_group = MagicMock(return_value=group_value)
+    return mock
 
 class LoggingMock(BaseMock):
     """
