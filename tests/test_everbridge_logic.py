@@ -86,7 +86,7 @@ def test_get_contacts_with_valid_params():
     contacts = mock_session.get_filtered_contacts(query)
     # Check if arguments passed to session.get are correct
     mock_session.get_filtered_contacts.assert_called_with(query)
-    assert contacts == ever_raw["page"]["data"]
+    assert contacts.json() == ever_raw["page"]["data"]
 def test_get_group_with_empty_params():
     """
     Will return false because everbridge org does not have group
