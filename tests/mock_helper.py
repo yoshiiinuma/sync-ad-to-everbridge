@@ -135,7 +135,6 @@ def createEverbridgeMock(rtnval, code=None):
         res.status_code = code
         res.json = MagicMock(return_value=rtnval)
         mock.get_filtered_contacts = MagicMock(return_value=res)
-        self.register('get_filtered_contacts', mock.get_filtered_contacts)
     else:
         # Without code, session.get returns side_effect
         mock.get_filtered_contacts = MagicMock(side_effect=rtnval)
