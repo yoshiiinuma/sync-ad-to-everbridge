@@ -122,6 +122,7 @@ class SessionDeleteMock(BaseMock):
         mock_session.delete_contacts_from_org = MagicMock(return_value=contact_value)
         mock_session.delete_contacts_from_group = MagicMock(return_value=contact_value)
         mock_session.get_everbridge_group = MagicMock(return_value=group_value)
+        return mock_session
 
 def createEverbridgeMock(rtnval, code=None):
     """
