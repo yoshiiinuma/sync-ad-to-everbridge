@@ -81,7 +81,7 @@ def test_get_contacts_with_valid_params():
     expected_url = URL.contacts_url(org,'?sortBy="lastName"&searchType=OR' + query) + ", data='null', headers=" + str(ast.literal_eval(str(header)))
     # Set up mocks
     mock = SessionGetContactsMock()
-    mock_session = mock.setup(ever_raw["page"]["data"])
+    mock_session = mock.setup(ever_raw["page"]["data"], 200)
     # Call get_filtered_contacts
     contacts = mock_session.get_filtered_contacts(query)
     # Check if arguments passed to session.get are correct
