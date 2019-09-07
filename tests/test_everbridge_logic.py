@@ -227,3 +227,96 @@ def test_delete_group():
     assert mock_session.delete_contacts_from_group.called_with("123456", [0, 0, 0])
     assert mock_session.delete_group.assert_called_once
 
+def test_parse_ever_data():
+    """
+    Returns a dictionary and list based on the AD Group
+    """
+    group_return_value = {
+    "message": "OK",
+    "page": {
+        "currentPageNo": 0,
+        "data": [
+            {
+                "externalId": "first@hawaii.gov",
+                "firstName": "first",
+                "lastName": "One",
+                "groups": [
+                    0
+                ],
+                "id": 1,
+                "paths":[                   
+                        {
+                            "countryCode": "US",
+                            "pathId": 241901148045316,
+                            "status": "A",
+                            "value": "first@hawaii.gov",
+                            "waitTime": 0
+                        },
+                        {
+                        "waitTime": 0,
+                        "status": "A",
+                        "pathId": 241901148045321,
+                        "countryCode": "US",
+                        "value": "111-1111",
+                        "skipValidation": "false"
+                        }
+                    ]
+                },
+            {
+                "externalId": "second@hawaii.gov",
+                "firstName": "second",
+                "groups": [
+                    0
+                ],
+                "id": 2,
+            "paths":[  {
+                            "countryCode": "US",
+                            "pathId": 241901148045316,
+                            "status": "A",
+                            "value": "second@hawaii.gov",
+                            "waitTime": 0
+                        },
+                        {
+                        "waitTime": 0,
+                        "status": "A",
+                        "pathId": 241901148045321,
+                        "countryCode": "US",
+                        "value": "222-2222",
+                        "skipValidation": "false"
+                        }],
+                "lastName": "two",
+            },
+            {
+            "externalId": "three@hawaii.gov",
+            "firstName": "third",
+            "groups": [
+                0
+            ],
+            "paths":[  {
+                            "countryCode": "US",
+                            "pathId": 241901148045316,
+                            "status": "A",
+                            "value": "three@hawaii.gov",
+                            "waitTime": 0
+                        },
+                        {
+                        "waitTime": 0,
+                        "status": "A",
+                        "pathId": 241901148045321,
+                        "countryCode": "US",
+                        "value": "333-3333",
+                        "skipValidation": "false"
+                        }],
+            "id": 3,
+            "lastName": "three",
+            }
+        ],
+        "pageSize": 1,
+        "totalCount": 3,
+        "totalPageCount": 0
+    },
+    "previousPageUri": "string"
+    }
+    parsed_data = api.everbridge_logic.parse_ever_data(group_return_value)
+    assert parsed_data[1] == [1,2,3]
+    assert parsed_data[0]["three@hawaii.gov"]["workPhone"]["value"] == "333-3333"

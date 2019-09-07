@@ -87,7 +87,7 @@ class SessionGetContactsMock(BaseMock):
     """
     Handles get contacts requests session mock
     """
-    def setup(self, rtnval, code=None):
+    def setup(self,rtnval, code=None):
         """
         Sets up Everbidge mock
         """
@@ -131,7 +131,7 @@ class SessionDeleteMock(BaseMock):
         mock_session.delete_contacts_from_group = MagicMock(return_value=contact_value)
         mock_session.get_everbridge_group = MagicMock(return_value=group_value)
         return mock_session
-
+        
 class LoggingMock(BaseMock):
     """
     Handles logging mock
