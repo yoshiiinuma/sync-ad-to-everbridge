@@ -87,13 +87,23 @@ class SessionGetContactsMock(BaseMock):
     """
     Handles get contacts requests session mock
     """
-    def setup(self, rtnval):
+    def setup(self, rtnval, code=None):
         """
-        Setup  Get contact mock session
+        Sets up Everbidge mock
         """
-        mock_session = Session("1234567", {})
-        mock_session.get_filtered_contacts = MagicMock(return_value=rtnval)
-        return mock_session
+        mock = MagicMock()
+        if code:
+            # If code is provided, session.get returns Response that contains rtnval
+            res = Response()
+            res.status_code = code
+            res.json = MagicMock(return_value=rtnval)
+            mock.get_filtered_contacts = MagicMock(return_value=res)
+            self.register('get_filtered_contacts', mock.get_filtered_contacts)
+        else:
+            # Without code, session.get returns side_effect
+            mock.get_filtered_contacts = MagicMock(side_effect=rtnval)
+        return mock
+
 class SessionGetGroupMock(BaseMock):
     """
     Handles get group contacts requests session mock
@@ -102,10 +112,11 @@ class SessionGetGroupMock(BaseMock):
         """
         Setup group mock session
         """
-        mock_session = Session("1234567", {})
+        mock_session = MagicMock()
         mock_session.get_group_info = MagicMock(return_value=rtnval)
         mock_session.add_group = MagicMock(return_value=group_info)
         return mock_session
+
 class SessionDeleteMock(BaseMock):
     """
     Handles requests session mock
@@ -114,12 +125,13 @@ class SessionDeleteMock(BaseMock):
         """
         Setup delete mock session
         """
-        mock_session = Session("1234567", {})
+        mock_session = MagicMock()
         mock_session.delete_group = MagicMock(return_value=group_delete)
         mock_session.delete_contacts_from_org = MagicMock(return_value=contact_value)
         mock_session.delete_contacts_from_group = MagicMock(return_value=contact_value)
         mock_session.get_everbridge_group = MagicMock(return_value=group_value)
         return mock_session
+
 class LoggingMock(BaseMock):
     """
     Handles logging mock
