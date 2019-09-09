@@ -57,14 +57,14 @@ def get_group_members(group_id, token):
     if not token or not token['accessToken']:
         logging.error('AZURE.API.get_group_members: Invalid Token')
         raise Exception('AZURE.API.get_group_members: Invalid Token')
-    #Create Rest session
+    # Create Rest session
     session = requests.session()
     session.headers.update({'Authorization': f"Bearer {token['accessToken']}",
                             'Accept': 'application/json',
                             'Content-Type': 'application/json',
                             'return-client-request-id': 'true'})
     url = URL.group_members_url(group_id)
-    #Will manually search through all groups if Group ID is empty
+    # Will manually search through all groups if Group ID is empty
     try:
         response = session.get(url)
         if response.status_code == 200:
@@ -76,6 +76,7 @@ def get_group_members(group_id, token):
     except Exception as err:
         logging.error(err)
         raise err
+
 def get_group_name(group_id, token):
     """
     Fetches Azure AD Group Members with Adal
@@ -86,14 +87,14 @@ def get_group_name(group_id, token):
     if not token or not token['accessToken']:
         logging.error('AZURE.API.get_group_name: Invalid Token')
         raise Exception('AZURE.API.get_group_name: Invalid Token')
-    #Create Rest session
+    # Create Rest session
     session = requests.session()
     session.headers.update({'Authorization': f"Bearer {token['accessToken']}",
                             'Accept': 'application/json',
                             'Content-Type': 'application/json',
                             'return-client-request-id': 'true'})
     url = URL.group_url(group_id)
-    #Will manually search through all groups if Group ID is empty
+    # Will manually search through all groups if Group ID is empty
     try:
         response = session.get(url)
         if response.status_code == 200:
