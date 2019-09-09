@@ -320,3 +320,145 @@ def test_parse_ever_data():
     parsed_data = api.everbridge_logic.parse_ever_data(group_return_value)
     assert parsed_data[1] == [1,2,3]
     assert parsed_data[0]["three@hawaii.gov"]["workPhone"]["value"] == "333-3333"
+
+def test_ad_parse():
+    ad_info = [{
+            "@odata.type": "#microsoft.graph.user",
+            "id": "abc1",
+            "businessPhones": [
+                "808 111-1111"
+            ],
+            "displayName": "One, First",
+            "givenName": "Fist",
+            "jobTitle": "Secretary",
+            "mail": "First.One@hawaii.gov",
+            "mobilePhone": "",
+            "officeLocation": "Somewhere",
+            "preferredLanguage": "",
+            "surname": "One",
+            "userPrincipalName": "First.One@hawaii.gov"
+        },
+        {
+            "@odata.type": "#microsoft.graph.user",
+            "id": "def2",
+            "businessPhones": [
+                "808 222-2222"
+            ],
+            "displayName": "Two, Second",
+            "givenName": "Second",
+            "jobTitle": "IT Manager",
+            "mail": "Second.Two@hawaii.gov",
+            "mobilePhone": "",
+            "officeLocation": "Nowhere",
+            "preferredLanguage": "",
+            "surname": "Two",
+            "userPrincipalName": "Second.Two@hawaii.gov"
+        },
+        {
+            "@odata.type": "#microsoft.graph.user",
+            "id": "ghi3",
+            "businessPhones": [
+                "808 333-333"
+            ],
+            "displayName": "Three,Third",
+            "givenName": "Third",
+            "jobTitle": "Senior Communications Manager",
+            "mail": "Third.Three@hawaii.gov",
+            "mobilePhone": "",
+            "officeLocation": "Everwhere",
+            "preferredLanguage": "",
+            "surname": "Three",
+            "userPrincipalName": "Third.Three@hawaii.gov"
+        }]
+    group_return_value = {
+        "message": "OK",
+        "page": {
+            "currentPageNo": 0,
+            "data": [
+                {
+                    "externalId": "First.One@hawaii.gov",
+                    "firstName": "First",
+                    "lastName": "One",
+                    "groups": [
+                        0
+                    ],
+                    "id": 1,
+                    "paths":[                   
+                            {
+                                "countryCode": "US",
+                                "pathId": 241901148045316,
+                                "status": "A",
+                                "value": "First.One@hawaii.gov",
+                                "waitTime": 0
+                            },
+                            {
+                            "waitTime": 0,
+                            "status": "A",
+                            "pathId": 241901148045321,
+                            "countryCode": "US",
+                            "value": "111-1111",
+                            "skipValidation": "false"
+                            }
+                        ]
+                    },
+                {
+                    "externalId": "Second.Two@hawaii.gov",
+                    "firstName": "Second",
+                    "groups": [
+                        0
+                    ],
+                    "id": 2,
+                "paths":[  {
+                                "countryCode": "US",
+                                "pathId": 241901148045316,
+                                "status": "A",
+                                "value": "Second.Two@hawaii.gov",
+                                "waitTime": 0
+                            },
+                            {
+                            "waitTime": 0,
+                            "status": "A",
+                            "pathId": 241901148045321,
+                            "countryCode": "US",
+                            "value": "222-2222",
+                            "skipValidation": "false"
+                            }],
+                    "lastName": "two",
+                },
+                {
+                "externalId": "Third.Three@hawaii.gov",
+                "firstName": "Third",
+                "groups": [
+                    0
+                ],
+                "paths":[  {
+                                "countryCode": "US",
+                                "pathId": 241901148045316,
+                                "status": "A",
+                                "value": "Third.Three@hawaii.gov",
+                                "waitTime": 0
+                            },
+                            {
+                            "waitTime": 0,
+                            "status": "A",
+                            "pathId": 241901148045321,
+                            "countryCode": "US",
+                            "value": "333-3333",
+                            "skipValidation": "false"
+                            }],
+                "id": 3,
+                "lastName": "Three",
+                }
+            ],
+            "pageSize": 1,
+            "totalCount": 3,
+            "totalPageCount": 0
+        },
+        "previousPageUri": "string"
+        }
+    parsed_data = api.everbridge_logic.parse_ever_data(group_return_value)
+    contact_check = parsed_data[0]
+    parsed_group_data = api.everbridge_logic.parse_ad_data(ad_info, contact_check)
+    update_list = parsed_group_data[1]
+    assert len(update_list) == 3
+

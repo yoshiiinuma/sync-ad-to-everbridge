@@ -203,6 +203,8 @@ def parse_ever_data(ever_data):
     """
     contact_check = {}
     contact_list = []
+    if ever_data["page"].get("data") is None:
+        return contact_check, contact_list
     for contact in ever_data["page"]["data"]:
         contact_list.append(contact["id"])
         ever_contact = {"name":contact["firstName"]
@@ -281,22 +283,19 @@ def sync_everbridge_group(username, password, org, group_data, group_name):
         logging.error('sync_everbridge_group: Invalid Parameter')
         raise Exception('Async_everbridge_group: Invalid parameter')
     #Convert username and password to base64
-    contact_list = []
-    contact_check = {}
-    header = create_authheader(username, password)
-    session = Session(org, header)
+    session = Session(org,  create_authheader(username, password))
     #Checks to see if group exists in Everbridge Org
     group_id = check_group(group_name, session)
     #Create the search query for the group Everbridge Contacts
     #Grabs the contacts from Everbridge with the given contact filters
     ever_data = session.get_filtered_contacts(create_query(group_data))
     #Parse Everbridge Data to filter contacts
-    #Contact List = parse_ever_data[1]
-    if ever_data["page"].get("data") is not None:
-        contact_check = parse_ever_data(ever_data)[0]
-        contact_list = parse_ever_data(ever_data)[1]
-    group_backup = parse_ad_data(group_data, contact_check)[0]
-    update_list = parse_ad_data(group_data, contact_check)[1]
+    parsed_ever_data = parse_ever_data(ever_data)
+    contact_check = parsed_ever_data [0]
+    contact_list = parsed_ever_data [1]
+    parsed_group_data = parse_ad_data(group_data, contact_check)
+    group_backup = parsed_group_data[0]
+    update_list = parsed_group_data[1]
     #Create new contacts
     insert_count = create_evercontacts(group_data, contact_list, session)
     #Delete extra users in group
