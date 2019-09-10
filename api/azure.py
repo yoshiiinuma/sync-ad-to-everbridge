@@ -5,6 +5,9 @@ import logging
 import requests
 import adal
 
+##################################################################################
+# DEPRECATED
+# Use Azure class
 class URL:
     """
     Defines URL constants
@@ -106,6 +109,7 @@ def get_group_name(group_id, token):
     except Exception as err:
         logging.error(err)
         raise err
+##################################################################################
 
 class Azure:
     """

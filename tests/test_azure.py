@@ -1,7 +1,8 @@
 """
-Test Azure Functions
+Tests Azure Functions
 """
 import json
+from unittest.mock import MagicMock
 import pytest
 from adal import AdalError
 from requests.exceptions import HTTPError, Timeout
@@ -12,6 +13,8 @@ from tests.mock_helper import AdalMock, RequestsMock, create_azure_instance
 # pylint: disable=unused-import
 import tests.log_helper
 
+##################################################################################
+# DEPRECATED
 def test_authority_url_with_valid_param_old():
     """
     Shoud return expected URL with a valid parameter
@@ -334,6 +337,52 @@ def test_get_group_name_with_valid_params_old():
     assert data == expected["displayName"]
     # Reinstate mocked functions
     mock.restore()
+##################################################################################
+
+def test_setup():
+    """
+    Tests if setup method calls get_token and set_token
+    """
+    token = {'accessToken':'XXXTOKENXXX'}
+    azure = Azure('cid', 'secret', 'tenant')
+    # Sets up mocks
+    azure.get_token = MagicMock(return_value=token)
+    azure.set_token = MagicMock()
+    # Call setup method
+    azure.setup()
+    # Tests if specified methods are called
+    azure.get_token.assert_called_with()
+    azure.set_token.assert_called_with(token)
+
+def test_setup_with_previous_token():
+    """
+    Tests if setup method does not call reset_token if token is alraedy set
+    """
+    token = {'accessToken':'XXXTOKENXXX'}
+    azure = Azure('cid', 'secret', 'tenant')
+    azure.set_token(token)
+    # Sets up mocks
+    azure.reset_token = MagicMock()
+    # Call setup method
+    azure.setup()
+    # Tests if reset_token is not called
+    assert not azure.reset_token.called
+
+def test_reset_token():
+    """
+    Tests if reset_token calls get_token and set_token
+    """
+    token = {'accessToken':'XXXTOKENXXX'}
+    azure = Azure('cid', 'secret', 'tenant')
+    # Sets up mocks
+    #azure.token = MagicMock()
+    azure.get_token = MagicMock(return_value=token)
+    azure.set_token = MagicMock()
+    # Call reset method
+    azure.reset_token()
+    # Tests if specified methods are called
+    azure.get_token.assert_called_with()
+    azure.set_token.assert_called_with(token)
 
 def test_authority_url_with_valid_param():
     """
