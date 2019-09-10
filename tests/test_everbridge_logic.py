@@ -8,7 +8,7 @@ from requests.exceptions import HTTPError, Timeout
 import api.everbridge_logic
 import api.everbridge_api
 from api.everbridge_api import URL, Session
-from tests.mock_helper import RequestsMock, SessionGetContactsMock, SessionDeleteMock, SessionGetGroupMock
+from tests.mock_helper import RequestsMock, SessionGetContactsMock, SessionDeleteMock, SessionGetGroupMock, SessionInsertMock
 
 def test_sync_groups_with_invalid_parmeter():
     """
@@ -322,6 +322,9 @@ def test_parse_ever_data():
     assert parsed_data[0]["three@hawaii.gov"]["workPhone"]["value"] == "333-3333"
 
 def test_ad_parse():
+    """
+    Returns a array equal to the number of AD Users due to different phone numbers
+    """
     ad_info = [{
             "@odata.type": "#microsoft.graph.user",
             "id": "abc1",
@@ -461,4 +464,123 @@ def test_ad_parse():
     parsed_group_data = api.everbridge_logic.parse_ad_data(ad_info, contact_check)
     update_list = parsed_group_data[1]
     assert len(update_list) == 3
-
+def test_create_contact():
+    """
+    Will return 1 due to 2 members being returned from contact query 
+    """
+    ad_info = [{
+            "@odata.type": "#microsoft.graph.user",
+            "id": "abc1",
+            "businessPhones": [
+                "808 111-1111"
+            ],
+            "displayName": "One, First",
+            "givenName": "Fist",
+            "jobTitle": "Secretary",
+            "mail": "First.One@hawaii.gov",
+            "mobilePhone": "",
+            "officeLocation": "Somewhere",
+            "preferredLanguage": "",
+            "surname": "One",
+            "userPrincipalName": "First.One@hawaii.gov"
+        },
+        {
+            "@odata.type": "#microsoft.graph.user",
+            "id": "def2",
+            "businessPhones": [
+                "808 222-2222"
+            ],
+            "displayName": "Two, Second",
+            "givenName": "Second",
+            "jobTitle": "IT Manager",
+            "mail": "Second.Two@hawaii.gov",
+            "mobilePhone": "",
+            "officeLocation": "Nowhere",
+            "preferredLanguage": "",
+            "surname": "Two",
+            "userPrincipalName": "Second.Two@hawaii.gov"
+        },
+        {
+            "@odata.type": "#microsoft.graph.user",
+            "id": "ghi3",
+            "businessPhones": [
+                "808 333-333"
+            ],
+            "displayName": "Three,Third",
+            "givenName": "Third",
+            "jobTitle": "Senior Communications Manager",
+            "mail": "Third.Three@hawaii.gov",
+            "mobilePhone": "",
+            "officeLocation": "Everwhere",
+            "preferredLanguage": "",
+            "surname": "Three",
+            "userPrincipalName": "Third.Three@hawaii.gov"
+        }]
+    group_return_value = {
+        "message": "OK",
+        "page": {
+            "currentPageNo": 0,
+            "data": [
+                {
+                    "externalId": "First.One@hawaii.gov",
+                    "firstName": "First",
+                    "lastName": "One",
+                    "groups": [
+                        0
+                    ],
+                    "id": 1,
+                    "paths":[                   
+                            {
+                                "countryCode": "US",
+                                "pathId": 241901148045316,
+                                "status": "A",
+                                "value": "First.One@hawaii.gov",
+                                "waitTime": 0
+                            },
+                            {
+                            "waitTime": 0,
+                            "status": "A",
+                            "pathId": 241901148045321,
+                            "countryCode": "US",
+                            "value": "111-1111",
+                            "skipValidation": "false"
+                            }
+                        ]
+                    },
+                {
+                "externalId": "Third.Three@hawaii.gov",
+                "firstName": "Third",
+                "groups": [
+                    0
+                ],
+                "paths":[  {
+                                "countryCode": "US",
+                                "pathId": 241901148045316,
+                                "status": "A",
+                                "value": "Third.Three@hawaii.gov",
+                                "waitTime": 0
+                            },
+                            {
+                            "waitTime": 0,
+                            "status": "A",
+                            "pathId": 241901148045321,
+                            "countryCode": "US",
+                            "value": "333-3333",
+                            "skipValidation": "false"
+                            }],
+                "id": 3,
+                "lastName": "Three",
+                }
+            ],
+            "pageSize": 1,
+            "totalCount": 3,
+            "totalPageCount": 0
+        },
+        "previousPageUri": "string"
+        }
+    contact_list = []
+    mock = SessionInsertMock()
+    mock_sesion = mock.setup(group_return_value)
+    insert_count = api.everbridge_logic.create_evercontacts(ad_info, contact_list, mock_sesion)
+    assert insert_count == 2
+    assert contact_list == [1,3]

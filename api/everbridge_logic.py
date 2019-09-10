@@ -236,9 +236,10 @@ def create_evercontacts(group_data,
             batch_insert.append(new_user)
         session.insert_new_contacts(batch_insert)
         new_contacts = session.get_filtered_contacts(new_query)
-        for contact in new_contacts["page"]["data"]:
-            contact_list.append(contact["id"])
-        count = len(new_contacts)
+        if new_contacts["page"].get("data") is not None:
+            for contact in new_contacts["page"]["data"]:
+                contact_list.append(contact["id"])
+            count = len(new_contacts["page"]["data"])
     return count
 def delete_evercontacts(group_id, group_backup, session):
     """
