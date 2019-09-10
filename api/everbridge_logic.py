@@ -164,12 +164,19 @@ def create_query(group_data):
     """
     Create query using externalId
     """
+    filter_string_list = []
     filter_string = ""
     # Fills in missing fields in the Microsoft AD Member info
+    count = 0
     for contact in group_data:
         fill_contact(contact)
         filter_string += "&externalIds=" + contact["userPrincipalName"]
-    return filter_string
+        count+= 1
+        if count == 99 or contact == group_data[len(group_data) - 1]:
+            filter_string_list.append(filter_string)
+            count = 0
+            filter_string = ""
+    return filter_string_list
 def parse_ad_data(group_data, contact_check):
     """
     Checks AD group against Everbrige dictionary to add in new contacts
@@ -194,13 +201,13 @@ def parse_ever_data(ever_data):
     """
     contact_check = {}
     contact_list = []
-    if ever_data["page"].get("data") is None:
+    if not ever_data:
         return contact_check, contact_list
-    for contact in ever_data["page"]["data"]:
-        contact_list.append(contact["id"])
+    for contact in ever_data:
+        contact_list.append(contact['id'])
         ever_contact = {"name":contact["firstName"]
                                + " " + contact["lastName"],
-                        "Id":contact["id"],
+                        "Id":contact['id'],
                         "mobilePhone":"",
                         "workPhone":"",
                         "mail":contact["externalId"]}
@@ -221,16 +228,21 @@ def create_evercontacts(group_data,
     batch_insert = []
     count = 0
     if group_data:
-        new_query = create_query(group_data)
+        new_queries = create_query(group_data)
         for contact in group_data:
             new_user = create_contact(contact, None)
             batch_insert.append(new_user)
         session.insert_new_contacts(batch_insert)
-        new_contacts = session.get_filtered_contacts(new_query)
-        if new_contacts["page"].get("data") is not None:
-            for contact in new_contacts["page"]["data"]:
-                contact_list.append(contact["id"])
-            count = len(new_contacts["page"]["data"])
+        new_contacts = []
+        #Will do multiple queries in batches of 100 if size is over 100
+        for query in new_queries:
+            query_data = session.get_filtered_contacts(query)
+            if query_data["page"].get("data") is not None:
+                new_contacts = new_contacts + query_data["page"]["data"]
+        if new_contacts:
+            for contact in new_contacts:
+                contact_list.append(contact['id'])
+            count = len(new_contacts)
     return count
 def delete_evercontacts(group_id, group_backup, session):
     """
@@ -238,12 +250,22 @@ def delete_evercontacts(group_id, group_backup, session):
     """
     delete_count = 0
     # Get all current users in group
-    ever_group = session.get_everbridge_group(group_id)
+    page_number = 0
+    ever_group = []
+    #Does multiple queries if group size is greater than 100
+    ever_group_data = session.get_everbridge_group(group_id, 1)
+    if ever_group_data["page"].get("data") is not None:
+        ever_group = ever_group + ever_group_data["page"]["data"]
+    if ever_group_data["page"]["totalPageCount"] > 1:
+        page_number = ever_group_data["page"]["totalPageCount"]
+        for page in range(1,page_number):
+            ever_group_data = session.get_everbridge_group(group_id, page)
+            ever_group = ever_group + ever_group_data["page"]["data"]
     # Removes users not in the AD Group
-    if ever_group["page"]["totalCount"] > 0:
+    if ever_group:
         remove_list = []
         delete_list = []
-        data_array = ever_group["page"]["data"]
+        data_array = ever_group
         copy_array = data_array.copy()
         for contact in copy_array:
             full_name = contact["externalId"]
@@ -251,15 +273,15 @@ def delete_evercontacts(group_id, group_backup, session):
                 data_array.remove(contact)
             else:
                 if len(contact["groups"]) == 1:
-                    remove_list.append(contact["id"])
-                delete_list.append(contact["id"])
+                    remove_list.append(contact['id'])
+                delete_list.append(contact['id'])
         # Deletes users in Everbridge Group
         if delete_list:
+            #print(delete_list)
             session.delete_contacts_from_group(group_id, delete_list)
-            delete_count = len(delete_list)
             # Deletes a group if there is no members in the group
-            if ever_group["page"]["totalCount"] - delete_count == 0:
-                session.delete_group(group_id)
+            if len(ever_group) - len(delete_list) == 0:
+                #session.delete_group(group_id)
                 logging.info("Deleting Everbridge Group")
                 return -1
         # Deletes users from the org if the user doesn't belong to the group
@@ -279,8 +301,14 @@ def sync_everbridge_group(username, password, org, group_data, group_name):
     # Checks to see if group exists in Everbridge Org
     group_id = check_group(group_name, session)
     # Create the search query for the group Everbridge Contacts
-    # Grabs the contacts from Everbridge with the given contact filters
-    ever_data = session.get_filtered_contacts(create_query(group_data))
+    # Grabs the contacts from Everbridge with the given contact filters  
+    queries = create_query(group_data)
+    #Will do multiple queries in batches of 100 if size is over 100
+    ever_data = []
+    for query in queries:
+        get_contact = session.get_filtered_contacts(query)
+        if get_contact["page"].get("data") is not None:
+            ever_data = ever_data + get_contact["page"]["data"]
     # Parse Everbridge Data to filter contacts
     parsed_ever_data = parse_ever_data(ever_data)
     contact_list = parsed_ever_data[1]

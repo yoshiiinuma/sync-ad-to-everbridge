@@ -106,13 +106,13 @@ class Session:
         """
         return self.post(URL.contacts_url(self.org, "batch?version=1"),
                          batch_insert)
-    def get_everbridge_group(self, group_id):
+    def get_everbridge_group(self, group_id, page_number):
         """
         Gets Everbridge group contact
         ?idType determines to get the group by id or name
         """
         return self.get(URL.contacts_groups_url(self.org, '?byType=id&groupId='+ str(group_id)
-                                                + '&pageSize=100&pageNumber=1'), None)
+                                                + '&pageSize=100&pageNumber=' + str(page_number)), None)
     def delete_contacts_from_group(self, group_id, delete_list):
         """
         Deletes extra users in group

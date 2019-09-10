@@ -77,8 +77,7 @@ def test_get_contacts_with_valid_params():
     }
     query = api.everbridge_logic.create_query(ad_data["value"])
     header = api.everbridge_logic.create_authheader("Test", "Pass")
-    assert(query == "&externalIds=AAA.BBB@hawaii.gov")
-    expected_url = URL.contacts_url(org,'?sortBy="lastName"&searchType=OR' + query) + ", data='null', headers=" + str(ast.literal_eval(str(header)))
+    assert(query == ["&externalIds=AAA.BBB@hawaii.gov"])
     # Set up mocks
     mock = SessionGetContactsMock()
     mock_session = mock.setup(ever_raw["page"]["data"], 200)
@@ -317,8 +316,8 @@ def test_parse_ever_data():
     },
     "previousPageUri": "string"
     }
-    parsed_data = api.everbridge_logic.parse_ever_data(group_return_value)
-    assert parsed_data[1] == [1,2,3]
+    parsed_data = api.everbridge_logic.parse_ever_data(group_return_value["page"]["data"])
+    assert parsed_data[1] == [1, 2 ,3]
     assert parsed_data[0]["three@hawaii.gov"]["workPhone"]["value"] == "333-3333"
 
 def test_ad_parse():
@@ -459,7 +458,7 @@ def test_ad_parse():
         },
         "previousPageUri": "string"
         }
-    parsed_data = api.everbridge_logic.parse_ever_data(group_return_value)
+    parsed_data = api.everbridge_logic.parse_ever_data(group_return_value["page"]["data"])
     contact_check = parsed_data[0]
     parsed_group_data = api.everbridge_logic.parse_ad_data(ad_info, contact_check)
     update_list = parsed_group_data[1]
@@ -583,4 +582,6 @@ def test_create_contact():
     mock_sesion = mock.setup(group_return_value)
     insert_count = api.everbridge_logic.create_evercontacts(ad_info, contact_list, mock_sesion)
     assert insert_count == 2
-    assert contact_list == [1,3]
+    assert contact_list == [1 ,3]
+
+

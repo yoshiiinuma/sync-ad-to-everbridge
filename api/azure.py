@@ -50,7 +50,7 @@ def get_token(client_id, secret, tenant):
         logging.error(err)
         raise err
 
-def get_group_members(group_id, token):
+def get_group_members(group_id, token, skip_token):
     """
     Fetches Azure AD Group Members with Adal
     """
@@ -67,11 +67,13 @@ def get_group_members(group_id, token):
                             'Content-Type': 'application/json',
                             'return-client-request-id': 'true'})
     url = URL.group_members_url(group_id)
+    if skip_token is not None:
+        url = URL.group_members_url(group_id) + "?" + skip_token
     # Will manually search through all groups if Group ID is empty
     try:
         response = session.get(url)
         if response.status_code == 200:
-            return response.json()['value']
+            return response.json()
         logging.error('AZURE.GET_GROUP_MEMBERS: Unexpected Error')
         logging.error(response.status_code)
         logging.error(response.json())
