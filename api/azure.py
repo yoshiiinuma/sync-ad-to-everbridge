@@ -188,7 +188,7 @@ class Azure:
         """
         return Azure.API_GROUPS + group_id + '/'
 
-    def setup_session():
+    def setup_session(self):
         """
         Creates Rest session
         """
@@ -208,7 +208,7 @@ class Azure:
         if not group_id:
             logging.error('AZURE.API.get_group_members: Invalid Group ID')
             raise Exception('AZURE.API.get_group_members: Invalid Group ID')
-        session = setup_session()
+        session = self.setup_session()
         url = self.group_members_url(group_id)
         # Will manually search through all groups if Group ID is empty
         try:
@@ -230,7 +230,7 @@ class Azure:
         if not group_id:
             logging.error('AZURE.API.get_group_name: Invalid Group ID')
             raise Exception('AZURE.API.get_group_name: Invalid Group ID')
-        session = setup_session()
+        session = self.setup_session()
         url = self.group_url(group_id)
         # Will manually search through all groups if Group ID is empty
         try:
