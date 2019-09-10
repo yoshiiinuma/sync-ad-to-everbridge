@@ -354,7 +354,7 @@ def test_setup():
     azure.get_token.assert_called_with()
     azure.set_token.assert_called_with(token)
 
-def test_setup_with_previous_token():
+def test_setup_with_preset_token():
     """
     Tests if setup method does not call reset_token if token is alraedy set
     """
@@ -392,14 +392,34 @@ def test_authority_url_with_valid_param():
     url = azure.authority_url()
     assert url == 'https://login.microsoftonline.com/tenant'
 
-def test_group_members_url_with_valid_param():
+def test_paged_group_members_url():
     """
-    Should return expected URL with a valid parameter
+    Should return expected URL with default value
     """
     azure = create_azure_instance()
-    gid = 'groupid'
-    url = azure.group_members_url(gid)
-    assert url == 'https://graph.microsoft.com/v1.0/groups/' + gid + '/members'
+    gid = 'xxxx'
+    base = "https://graph.microsoft.com/v1.0/groups/xxxx/members"
+    url = azure.paged_group_members_url(gid, 1)
+    assert url == base + '?$orderby=userPrincipalName&$top=100'
+    url = azure.paged_group_members_url(gid, 2)
+    assert url == base + '?$orderby=userPrincipalName&$top=100&$skip=100'
+    url = azure.paged_group_members_url(gid, 3)
+    assert url == base + '?$orderby=userPrincipalName&$top=100&$skip=200'
+
+def test_paged_group_members_url_with_pagesize():
+    """
+    Should return expected URL with default value
+    """
+    azure = create_azure_instance()
+    azure.set_pagesize(5)
+    gid = 'xxxx'
+    base = "https://graph.microsoft.com/v1.0/groups/xxxx/members"
+    url = azure.paged_group_members_url(gid, 1)
+    assert url == base + '?$orderby=userPrincipalName&$top=5'
+    url = azure.paged_group_members_url(gid, 2)
+    assert url == base + '?$orderby=userPrincipalName&$top=5&$skip=5'
+    url = azure.paged_group_members_url(gid, 3)
+    assert url == base + '?$orderby=userPrincipalName&$top=5&$skip=10'
 
 def test_get_token_with_invalid_parmeter():
     """
@@ -638,7 +658,7 @@ def test_get_group_members_with_404():
 
 def test_get_group_members_with_timeout():
     """
-    Should return None
+    Should raise Exception
     """
     gid = "000abcde-f123-56gh-i789-000000000jkl"
     # Set up mocks
@@ -650,6 +670,74 @@ def test_get_group_members_with_timeout():
         azure.get_group_members(gid)
     # Reinstate mocked functions
     mock.restore()
+
+def test_get_paged_group_members_with_valid_params():
+    """
+    Should return group member data
+    """
+    gid = "000abcde-f123-56gh-i789-000000000jkl"
+    raw = {
+        '@odata.context': 'https://graph.microsoft.com/v1.0/$metadata#directoryObjects',
+        'value': [
+            {
+                '@odata.type': '#microsoft.graph.user',
+                'id': '1000aaa-11bb-22cc-3344-1234567890ab',
+                'businessPhones': ['808 000-0001'],
+                'displayName': 'BBB, AAA',
+                'givenName': 'AAA',
+                'jobTitle': 'IT Specialist',
+                'mail': 'AAA.BBB@hawaii.gov',
+                'mobilePhone': None,
+                'officeLocation': 'ZZZ',
+                'preferredLanguage': None,
+                'surname': 'BBB',
+                'userPrincipalName': 'AAA.BBB@hawaii.gov'
+            }
+        ]
+    }
+    azure = create_azure_instance()
+    expected = json.loads(json.dumps(raw))
+    expected_url = azure.paged_group_members_url(gid, 1)
+    # Set up mocks
+    mock = RequestsMock()
+    mock.setup(expected, 200)
+    # Call get_group_members
+    data = azure.get_paged_group_members(gid, 1)
+    # Check if arguments passed to session.get are correct
+    mock.access('session.get').assert_called_with(expected_url)
+    mock.access('session.headers.update').assert_called_with({
+        'Authorization': 'Bearer XXXTOKENXXX',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'return-client-request-id': 'true'
+    })
+    assert data == expected['value']
+    # Reinstate mocked functions
+    mock.restore()
+
+def test_get_paged_group_members_with_invalid_group_id():
+    """
+    Should raise Exception
+    """
+    # Set up mocks
+    azure = create_azure_instance()
+    with pytest.raises(Exception):
+        azure.get_paged_group_members(None, 1)
+
+def test_get_paged_group_members_with_invalid_page():
+    """
+    Should raise Exception
+    """
+    gid = "000abcde-f123-56gh-i789-000000000jkl"
+    # Set up mocks
+    azure = create_azure_instance()
+    with pytest.raises(Exception):
+        azure.get_paged_group_members(gid, "1")
+    with pytest.raises(Exception):
+        azure.get_paged_group_members(gid, 0)
+    with pytest.raises(Exception):
+        azure.get_paged_group_members(gid, -1)
+
 def test_get_group_name_with_invalid_groupid():
     """
     Should raise an exception with an empty parameter

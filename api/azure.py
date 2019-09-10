@@ -120,12 +120,14 @@ class Azure:
     LOGIN = 'https://login.microsoftonline.com/'
     API_BASE = 'https://graph.microsoft.com/'
     API_GROUPS = API_BASE + 'v1.0/groups/'
+    DEFAULT_PAGESIZE = 100
 
     def __init__(self, client_id, secret, tenant):
         self.client_id = client_id
         self.secret = secret
         self.tenant = tenant
         self.token = None
+        self.pagesize = Azure.DEFAULT_PAGESIZE
 
     def setup(self):
         """
@@ -170,6 +172,12 @@ class Azure:
         """
         self.token = token
 
+    def set_pagesize(self, pagesize):
+        """
+        Setter for pagesize
+        """
+        self.pagesize = pagesize
+
     def authority_url(self):
         """
         Returns authority URL for authentication context
@@ -183,6 +191,16 @@ class Azure:
         """
         return Azure.API_GROUPS + group_id + '/members'
 
+    def paged_group_members_url(self, group_id, page=1):
+        """
+        Returns group members api URL
+        """
+        params = f"?$orderby=userPrincipalName&$top={self.pagesize}"
+        skip = self.pagesize * (page - 1)
+        if skip > 0:
+            params += f"&$skip={skip}"
+        return self.group_members_url(group_id) + params
+
     # pylint: disable=no-self-use
     def group_url(self, group_id):
         """
@@ -190,21 +208,52 @@ class Azure:
         """
         return Azure.API_GROUPS + group_id + '/'
 
+    def setup_session(self):
+        """
+        Creates Rest session
+        """
+        self.check_token()
+        token = 'Bearer ' + self.token['accessToken']
+        session = requests.session()
+        session.headers.update({'Authorization': token,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'return-client-request-id': 'true'})
+        return session
+
+    def get_paged_group_members(self, group_id, page):
+        """
+        Fetches Azure AD Group Members with Adal
+        """
+        if not group_id:
+            logging.error('AZURE.GET_PAGED_GROUP_MEMBERS: Invalid Group ID')
+            raise Exception('AZURE.GET_PAGED_GROUP_MEMBERS: Invalid Group ID')
+        if not isinstance(page, int) or page < 1:
+            logging.error('AZURE.PAGED_GROUP_MEMBERS_URL: Invalid Page')
+            raise Exception('AZURE.PAGED_GROUP_MEMBERS_URL: Invalid Page')
+        session = self.setup_session()
+        url = self.paged_group_members_url(group_id, page)
+        # Will manually search through all groups if Group ID is empty
+        try:
+            response = session.get(url)
+            if response.status_code == 200:
+                return response.json()['value']
+            logging.error('AZURE.GET_PAGED_GROUP_MEMBERS: Unexpected Error')
+            logging.error(response.status_code)
+            logging.error(response.json())
+            return None
+        except Exception as err:
+            logging.error(err)
+            raise err
+
     def get_group_members(self, group_id):
         """
         Fetches Azure AD Group Members with Adal
         """
         if not group_id:
-            logging.error('AZURE.API.get_group_members: Invalid Group ID')
-            raise Exception('AZURE.API.get_group_members: Invalid Group ID')
-        self.check_token()
-        token = self.token['accessToken']
-        # Create Rest session
-        session = requests.session()
-        session.headers.update({'Authorization': f"Bearer {token}",
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json',
-                                'return-client-request-id': 'true'})
+            logging.error('AZURE.GET_GROUP_MEMBERS: Invalid Group ID')
+            raise Exception('AZURE.GET_GROUP_MEMBERS: Invalid Group ID')
+        session = self.setup_session()
         url = self.group_members_url(group_id)
         # Will manually search through all groups if Group ID is empty
         try:
@@ -224,16 +273,9 @@ class Azure:
         Fetches Azure AD Group Members with Adal
         """
         if not group_id:
-            logging.error('AZURE.API.get_group_name: Invalid Group ID')
-            raise Exception('AZURE.API.get_group_name: Invalid Group ID')
-        self.check_token()
-        token = self.token['accessToken']
-        # Create Rest session
-        session = requests.session()
-        session.headers.update({'Authorization': f"Bearer {token}",
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json',
-                                'return-client-request-id': 'true'})
+            logging.error('AZURE.get_group_name: Invalid Group ID')
+            raise Exception('AZURE.GET_GROUP_NAME: Invalid Group ID')
+        session = self.setup_session()
         url = self.group_url(group_id)
         # Will manually search through all groups if Group ID is empty
         try:

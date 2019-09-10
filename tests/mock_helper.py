@@ -7,6 +7,7 @@ import adal
 import requests
 from requests import Response
 from api.azure import Azure
+from api.everbridge import Everbridge
 
 class BaseMock:
     """
