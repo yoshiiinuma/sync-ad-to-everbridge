@@ -8,6 +8,7 @@ import requests
 from requests import Response
 from api.everbridge_api import Session
 from api.everbridge import Everbridge
+from api.azure import Azure
 
 class BaseMock:
     """
@@ -187,3 +188,19 @@ class LoggingMock(BaseMock):
         self.save('logging.basicConfig', orig3)
         self.save('logging.root.handlers', orig1)
         self.save('logging.root.removeHandlers', orig2)
+
+def create_azure_instance(cid=None, secret=None, tenant=None,
+        token={'accessToken':'XXXTOKENXXX'}):
+    """
+    Creates Azure instance
+    """
+    if not cid:
+        cid = 'cid'
+    if not secret:
+        secret = 'secret'
+    if not tenant:
+        tenant = 'tenant'
+    azure = Azure(cid, secret, tenant)
+    azure.set_token(token)
+    return azure
+
