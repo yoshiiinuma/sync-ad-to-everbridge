@@ -354,7 +354,7 @@ def test_setup():
     azure.get_token.assert_called_with()
     azure.set_token.assert_called_with(token)
 
-def test_setup_with_previous_token():
+def test_setup_with_preset_token():
     """
     Tests if setup method does not call reset_token if token is alraedy set
     """
