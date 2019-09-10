@@ -3,7 +3,6 @@ Test Azure Functions
 """
 import json
 import pytest
-from unittest.mock import MagicMock
 from adal import AdalError
 from requests.exceptions import HTTPError, Timeout
 import api.azure
@@ -618,10 +617,10 @@ def test_get_group_name_with_invalid_token():
     """
     with pytest.raises(Exception):
         azure = create_azure_instance('cid', 'secret', 'tenant', None)
-        azure.get_group_name('aaa', None)
+        azure.get_group_name('aaa')
     with pytest.raises(Exception):
         azure = create_azure_instance('cid', 'secret', 'tenant', {})
-        azure.get_group_name('aaa', {})
+        azure.get_group_name('aaa')
     with pytest.raises(Exception):
         azure = create_azure_instance('cid', 'secret', 'tenant', {'accessToken':None})
         azure.get_group_name('aaa')

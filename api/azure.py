@@ -126,7 +126,7 @@ class Azure:
         Sets up token if it is empty; Must be called onece before any API calls
         """
         if not self.token:
-            reset_token()
+            self.reset_token()
 
     def check_token(self):
         """
@@ -140,11 +140,11 @@ class Azure:
         """
         Resets token
         """
-        set_token(get_token())
+        self.set_token(self.get_token())
 
     def get_token(self):
         """
-        Gets Azure AD Token 
+        Gets Azure AD Token
         """
         if not self.client_id or not self.secret or not self.tenant:
             logging.error('AZURE.API.get_token: Invalid Parameter')
@@ -153,7 +153,7 @@ class Azure:
         try:
             token = context.acquire_token_with_client_credentials(
                 Azure.API_BASE, self.client_id, self.secret)
-            return self.token
+            return token
         except Exception as err:
             logging.error(err)
             raise err
@@ -170,12 +170,14 @@ class Azure:
         """
         return Azure.LOGIN + self.tenant
 
+    # pylint: disable=no-self-use
     def group_members_url(self, group_id):
         """
         Returns group members api URL
         """
         return Azure.API_GROUPS + group_id + '/members'
 
+    # pylint: disable=no-self-use
     def group_url(self, group_id):
         """
         Returns group info api URL

@@ -6,7 +6,6 @@ from unittest.mock import MagicMock
 import adal
 import requests
 from requests import Response
-from api.everbridge_api import Session
 from api.everbridge import Everbridge
 from api.azure import Azure
 
@@ -134,7 +133,7 @@ class SessionDeleteMock(BaseMock):
         mock_session.get_everbridge_group = MagicMock(return_value=group_value)
         return mock_session
 
-def createEverbridgeMock(rtnval, code=None):
+def create_everbridge_mock(rtnval, code=None):
     """
     Sets up Everbidge mock
     """
@@ -150,7 +149,7 @@ def createEverbridgeMock(rtnval, code=None):
         mock.get_filtered_contacts = MagicMock(side_effect=rtnval)
     return mock
 
-def createEverbridgeGroupMock(rtnval, group_info):
+def create_everbridge_group_mock(rtnval, group_info):
     """
     Sets up Everbidge mock
     """
@@ -159,7 +158,7 @@ def createEverbridgeGroupMock(rtnval, group_info):
     mock.add_group = MagicMock(return_value=group_info)
     return mock
 
-def createEverbridgeDeleteMock(contact_value, group_value, group_delete):
+def create_everbridge_delete_mock(contact_value, group_value, group_delete):
     """
     Sets delete mocks
     """
@@ -189,8 +188,9 @@ class LoggingMock(BaseMock):
         self.save('logging.root.handlers', orig1)
         self.save('logging.root.removeHandlers', orig2)
 
+# pylint: disable=dangerous-default-value
 def create_azure_instance(cid=None, secret=None, tenant=None,
-        token={'accessToken':'XXXTOKENXXX'}):
+                          token={'accessToken':'XXXTOKENXXX'}):
     """
     Creates Azure instance
     """
@@ -203,4 +203,3 @@ def create_azure_instance(cid=None, secret=None, tenant=None,
     azure = Azure(cid, secret, tenant)
     azure.set_token(token)
     return azure
-
