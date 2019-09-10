@@ -6,7 +6,6 @@ from unittest.mock import MagicMock
 import adal
 import requests
 from requests import Response
-from api.everbridge import Everbridge
 from api.azure import Azure
 
 class BaseMock:
