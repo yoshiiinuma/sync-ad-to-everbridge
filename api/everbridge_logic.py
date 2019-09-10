@@ -29,11 +29,9 @@ def check_group(group_name, session):
             new_group = session.add_group(group_name)
             logging.info("Creating new Everbridge Group %s", group_name)
             return new_group["id"]
-        else:
-            return group_info["result"]["id"]
-    elif group_info.get("status") is not None and group_info["status"] == 401:
-        logging.error(group_info["message"])
-        raise ValueError
+        return group_info["result"]["id"]
+    logging.error(group_info["message"])
+    raise ValueError
 def check_contact(contact, content_check):
     """
     Checks AD contact data with everbridge contact data and updates if mismatched
@@ -68,7 +66,6 @@ def create_contact(contact, ever_id):
     Contact Paths are the delivery methods for notifications in Everbridge.
     Contact Paths can not be created or deleted through the API.
     To view paths in the org, go to Settings -> Notifications -> Delivery Methods
-    https://api.everbridge.net/rest/contactPaths/org
     """
     paths = [
         #Add Email Contact Path to the new contact
@@ -120,15 +117,9 @@ def create_contact(contact, ever_id):
                 "value": phone_string,
                 "skipValidation": "false"
             })
-    #Base info for Contact
-    """
-    Record Types are required for contact creation.
-    Record Types allow the org to categorize employees.
-    The static Record Type Id is the default "Employee" record type.
-    There is only 1 record type in the org but more can be added.
-    To manage Record Types, go to Settings -> Contacts and Groups-> Contact Record Types.
-    https://api.everbridge.net/rest/recordTypes/org
-    """
+    #Record Types allow the org to categorize employees.
+    #The static Record Type Id is the default "Employee" record type.
+    #To manage Record Types, go to Settings -> Contacts and Groups-> Contact Record Types.
     new_contact = {
         "firstName": contact["givenName"],
         "lastName": contact["surname"],
@@ -274,7 +265,7 @@ def delete_evercontacts(group_id, group_backup, session):
         #Deletes users from the org if the user doesn't belong to the group
         if remove_list:
             session.delete_contacts_from_org(remove_list)
-            logging.info("Removing %s Everbridge Contacts from org" , len(remove_list))
+            logging.info("Removing %s Everbridge Contacts from org", len(remove_list))
     return delete_count
 def sync_everbridge_group(username, password, org, group_data, group_name):
     """
@@ -284,7 +275,7 @@ def sync_everbridge_group(username, password, org, group_data, group_name):
         logging.error('sync_everbridge_group: Invalid Parameter')
         raise Exception('Async_everbridge_group: Invalid parameter')
     #Convert username and password to base64
-    session = Session(org,  create_authheader(username, password))
+    session = Session(org, create_authheader(username, password))
     #Checks to see if group exists in Everbridge Org
     group_id = check_group(group_name, session)
     #Create the search query for the group Everbridge Contacts
@@ -292,25 +283,20 @@ def sync_everbridge_group(username, password, org, group_data, group_name):
     ever_data = session.get_filtered_contacts(create_query(group_data))
     #Parse Everbridge Data to filter contacts
     parsed_ever_data = parse_ever_data(ever_data)
-    contact_check = parsed_ever_data [0]
-    contact_list = parsed_ever_data [1]
-    parsed_group_data = parse_ad_data(group_data, contact_check)
-    group_backup = parsed_group_data[0]
-    update_list = parsed_group_data[1]
+    contact_list = parsed_ever_data[1]
+    parsed_group_data = parse_ad_data(group_data, parsed_ever_data[0])
     #Create new contacts
     insert_count = create_evercontacts(group_data, contact_list, session)
     #Delete extra users in group
-    delete_count = delete_evercontacts(group_id, group_backup, session)
+    delete_count = delete_evercontacts(group_id, parsed_group_data[0], session)
     #Updates Everbridge Contacts
-    if update_list:
-        session.update_contacts(update_list)
+    if parsed_group_data[1]:
+        session.update_contacts(parsed_group_data[1])
     #Inserts users to group
-    
     logging.info("%s contacts created,%s users removed from group, %s users upserted to the group",
                  insert_count,
                  delete_count,
                  len(contact_list))
     if delete_count != -1:
         return session.add_contacts_to_group(group_id, contact_list)
-    else:
-        return "Group has been deleted"
+    return "Group has been deleted"
