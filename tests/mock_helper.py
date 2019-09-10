@@ -6,7 +6,8 @@ from unittest.mock import MagicMock
 import adal
 import requests
 from requests import Response
-from api.everbridge_api import Session
+from api.everbridge import Everbridge
+from api.azure import Azure
 
 class BaseMock:
     """
@@ -132,6 +133,42 @@ class SessionDeleteMock(BaseMock):
         mock_session.get_everbridge_group = MagicMock(return_value=group_value)
         return mock_session
 
+def create_everbridge_mock(rtnval, code=None):
+    """
+    Sets up Everbidge mock
+    """
+    mock = Everbridge("1234567", "user", "pass")
+    if code:
+        # If code is provided, session.get returns Response that contains rtnval
+        res = Response()
+        res.status_code = code
+        res.json = MagicMock(return_value=rtnval)
+        mock.get_filtered_contacts = MagicMock(return_value=res)
+    else:
+        # Without code, session.get returns side_effect
+        mock.get_filtered_contacts = MagicMock(side_effect=rtnval)
+    return mock
+
+def create_everbridge_group_mock(rtnval, group_info):
+    """
+    Sets up Everbidge mock
+    """
+    mock = Everbridge("1234567", "user", "pass")
+    mock.get_group_info = MagicMock(return_value=rtnval)
+    mock.add_group = MagicMock(return_value=group_info)
+    return mock
+
+def create_everbridge_delete_mock(contact_value, group_value, group_delete):
+    """
+    Sets delete mocks
+    """
+    mock = Everbridge("1234567", "user", "pass")
+    mock.delete_group = MagicMock(return_value=group_delete)
+    mock.delete_contacts_from_org = MagicMock(return_value=contact_value)
+    mock.delete_contacts_from_group = MagicMock(return_value=contact_value)
+    mock.get_everbridge_group = MagicMock(return_value=group_value)
+    return mock
+
 class SessionInsertMock(BaseMock):
     """
     Handles insert session mock
@@ -163,3 +200,19 @@ class LoggingMock(BaseMock):
         self.save('logging.basicConfig', orig3)
         self.save('logging.root.handlers', orig1)
         self.save('logging.root.removeHandlers', orig2)
+
+# pylint: disable=dangerous-default-value
+def create_azure_instance(cid=None, secret=None, tenant=None,
+                          token={'accessToken':'XXXTOKENXXX'}):
+    """
+    Creates Azure instance
+    """
+    if not cid:
+        cid = 'cid'
+    if not secret:
+        secret = 'secret'
+    if not tenant:
+        tenant = 'tenant'
+    azure = Azure(cid, secret, tenant)
+    azure.set_token(token)
+    return azure
