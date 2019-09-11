@@ -6,8 +6,7 @@ import pytest
 import ast
 from requests.exceptions import HTTPError, Timeout
 import api.everbridge_logic
-import api.everbridge_api
-from api.everbridge_api import URL, Session
+from api.everbridge import URL, Everbridge
 from tests.mock_helper import create_everbridge_mock, create_everbridge_group_mock, create_everbridge_delete_mock, create_everbridge_get_group_mock, create_everbridge_insert_mock
 
 def test_sync_groups_with_invalid_parmeter():

@@ -4,7 +4,7 @@ Logic to handle the Everbridge Contacts
 import base64
 import re
 import logging
-from .everbridge import Everbridge, URL
+from .everbridge import Everbridge
 def create_authheader(username, password):
     """
     Creates Header for HTTP CALLS, Creates base64 encode for auth
@@ -172,7 +172,7 @@ def create_query(group_data):
     for contact in group_data:
         fill_contact(contact)
         filter_string += "&externalIds=" + contact["userPrincipalName"]
-        count+= 1
+        count += 1
         total_count += 1
         if count == 99 or total_count - len(group_data) == 0:
             filter_string_list.append(filter_string)
@@ -260,7 +260,7 @@ def delete_evercontacts(group_id, group_backup, session):
         ever_group = ever_group + ever_group_data["page"]["data"]
     if ever_group_data["page"]["totalPageCount"] > 1:
         page_number = ever_group_data["page"]["totalPageCount"]
-        for page in range(1,page_number):
+        for page in range(1, page_number):
             ever_group_data = session.get_everbridge_group(group_id, page)
             ever_group = ever_group + ever_group_data["page"]["data"]
     # Removes users not in the AD Group
@@ -299,34 +299,33 @@ def sync_everbridge_group(username, password, org, group_data, group_name):
         logging.error('sync_everbridge_group: Invalid Parameter')
         raise Exception('Async_everbridge_group: Invalid parameter')
     # Convert username and password to base64
-    Everbridge_Session = Everbridge(org, username, password)
+    everbridge_session = Everbridge(org, username, password)
     # Checks to see if group exists in Everbridge Org
-    group_id = check_group(group_name, Everbridge_Session)
+    group_id = check_group(group_name, everbridge_session)
     # Create the search query for the group Everbridge Contacts
-    # Grabs the contacts from Everbridge with the given contact filters  
+    # Grabs the contacts from Everbridge with the given contact filters
     queries = create_query(group_data)
     #Will do multiple queries in batches of 100 if size is over 100
     ever_data = []
     for query in queries:
-        get_contact = Everbridge_Session.get_filtered_contacts(query)
+        get_contact = everbridge_session.get_filtered_contacts(query)
         if get_contact["page"].get("data") is not None:
             ever_data = ever_data + get_contact["page"]["data"]
     # Parse Everbridge Data to filter contacts
     parsed_ever_data = parse_ever_data(ever_data)
-    contact_list = parsed_ever_data[1]
     parsed_group_data = parse_ad_data(group_data, parsed_ever_data[0])
     # Create new contacts
-    insert_count = create_evercontacts(group_data, contact_list, Everbridge_Session)
+    insert_count = create_evercontacts(group_data, parsed_ever_data[1], everbridge_session)
     # Delete extra users in group
-    delete_count = delete_evercontacts(group_id, parsed_group_data[0], Everbridge_Session)
+    delete_count = delete_evercontacts(group_id, parsed_group_data[0], everbridge_session)
     # Updates Everbridge Contacts
     if parsed_group_data[1]:
-        Everbridge_Session.update_contacts(parsed_group_data[1])
+        everbridge_session.update_contacts(parsed_group_data[1])
     # Inserts users to group
     logging.info("%s contacts created,%s users removed from group, %s users upserted to the group",
                  insert_count,
                  delete_count,
-                 len(contact_list))
+                 len(parsed_ever_data[1]))
     if delete_count != -1:
-        return Everbridge_Session.add_contacts_to_group(group_id, contact_list)
+        return everbridge_session.add_contacts_to_group(group_id, parsed_ever_data[1])
     return "Group has been deleted"

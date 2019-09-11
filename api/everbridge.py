@@ -134,12 +134,12 @@ class Everbridge:
         url = URL.contacts_url(self.org, "batch?version=1")
         return self.post(url, batch_insert)
 
-    def get_everbridge_group(self, group_id):
+    def get_everbridge_group(self, group_id, page_number):
         """
         Gets Everbridge group contact
         ?idType determines to get the group by id or name
         """
-        params = '?byType=id&groupId='+ str(group_id) + '&pageSize=100&pageNumber=1'
+        params = '?byType=id&groupId='+ str(group_id) + '&pageSize=100&pageNumber= + page_number'
         url = URL.contacts_groups_url(self.org, params)
         return self.get(url, None)
 
