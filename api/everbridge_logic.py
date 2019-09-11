@@ -168,11 +168,13 @@ def create_query(group_data):
     filter_string = ""
     # Fills in missing fields in the Microsoft AD Member info
     count = 0
+    total_count = 0
     for contact in group_data:
         fill_contact(contact)
         filter_string += "&externalIds=" + contact["userPrincipalName"]
         count+= 1
-        if count == 99 or contact == group_data[len(group_data) - 1]:
+        total_count += 1
+        if count == 99 or total_count - len(group_data) == 0:
             filter_string_list.append(filter_string)
             count = 0
             filter_string = ""

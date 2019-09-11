@@ -39,25 +39,19 @@ def main():
     Main Function
     """
     #Function will not run if number of ADGroups does not match Evergroups
-    token = api.azure.get_token(CONFIG["clientId"], CONFIG["clientSecret"], CONFIG["adTenant"])
+    azure = api.azure.Azure(CONFIG["clientId"], CONFIG["clientSecret"], CONFIG["adTenant"])
+    azure.set_token(azure.get_token())
     for group in CONFIG["adGroupId"]:
-        ad_group_data = []
-        data = api.azure.get_group_members(group, token, None)
-        ad_group_data = ad_group_data + data["value"]
-        if data.get("@odata.nextLink") is not None:
-            while data.get("@odata.nextLink") is not None:
-                skip_token = data["@odata.nextLink"].split('?')
-                data = api.azure.get_group_members(group, token, skip_token[1])
-                ad_group_data = ad_group_data + data["value"]
-        group_name = api.azure.get_group_name(group, token)
+        group_name = azure.get_group_name(group)
+        data = azure.get_all_group_members(group)
         if data is not None:
             result = api.everbridge_logic.sync_everbridge_group(CONFIG["everbridgeUsername"],
                                                         CONFIG["everbridgePassword"],
                                                         CONFIG["everbridgeOrg"],
-                                                        ad_group_data,
+                                                        data,
                                                         group_name)
             if result != "Group has been deleted":
-                print("Good " + str(len(result['data'])) + ":" + str(len(ad_group_data)))
+                print("Good " + str(len(result['data'])) + ":" + str(len(data)))
             else:
                 print("Bad Group was going to get deleted")
             

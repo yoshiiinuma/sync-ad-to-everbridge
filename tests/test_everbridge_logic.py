@@ -8,7 +8,7 @@ from requests.exceptions import HTTPError, Timeout
 import api.everbridge_logic
 import api.everbridge_api
 from api.everbridge_api import URL, Session
-from tests.mock_helper import RequestsMock, SessionGetContactsMock, SessionDeleteMock, SessionGetGroupMock, SessionInsertMock
+from tests.mock_helper import create_everbridge_mock, create_everbridge_group_mock, create_everbridge_delete_mock, create_everbridge_get_group_mock, create_everbridge_insert_mock
 
 def test_sync_groups_with_invalid_parmeter():
     """
@@ -76,16 +76,14 @@ def test_get_contacts_with_valid_params():
         }
     }
     query = api.everbridge_logic.create_query(ad_data["value"])
-    header = api.everbridge_logic.create_authheader("Test", "Pass")
     assert(query == ["&externalIds=AAA.BBB@hawaii.gov"])
     # Set up mocks
-    mock = SessionGetContactsMock()
-    mock_session = mock.setup(ever_raw["page"]["data"], 200)
+    mock_session = create_everbridge_mock(ever_raw, 200)
     # Call get_filtered_contacts
     contacts = mock_session.get_filtered_contacts(query)
     # Check if arguments passed to session.get are correct
     mock_session.get_filtered_contacts.assert_called_with(query)
-    assert contacts.json() == ever_raw["page"]["data"]
+    assert contacts.json()["page"]["data"] == ever_raw["page"]["data"]
 def test_get_group_with_empty_params():
     """
     Will return false because everbridge org does not have group
@@ -113,8 +111,7 @@ def test_get_group_with_empty_params():
         "instanceUri": "string",
         "message": "string"
     }
-    test_mock = SessionGetGroupMock()
-    mock_session = test_mock.setup(empty_group, new_group)
+    mock_session = create_everbridge_get_group_mock(empty_group, new_group)
     insert_group = api.everbridge_logic.check_group("Hello", mock_session)
     assert insert_group == new_group["id"]
 def test_get_group_with_valid_params():
@@ -145,8 +142,7 @@ def test_get_group_with_valid_params():
         "dirty": "false"
         }
     }
-    test_mock = SessionGetGroupMock()
-    mock_session = test_mock.setup(actual_group, None)
+    mock_session = create_everbridge_get_group_mock(actual_group, None)
     no_group = api.everbridge_logic.check_group("Hello", mock_session)
     assert no_group == actual_group["result"]["id"]
 def test_get_group_with_error_params():
@@ -159,8 +155,7 @@ def test_get_group_with_error_params():
         "status": 401,
         "message":"error"
     }
-    test_mock = SessionGetGroupMock()
-    mock_session =  test_mock.setup(error_message, None)
+    mock_session =  create_everbridge_get_group_mock(error_message, None)
     with pytest.raises(ValueError):
         api.everbridge_logic.check_group("Hello", mock_session)
 def test_delete_group():
@@ -219,8 +214,7 @@ def test_delete_group():
     },
     "previousPageUri": "string"
     }
-    test_mock = SessionDeleteMock()
-    mock_session = test_mock.setup(delete_group_return, group_return_value, delete_batch_return)
+    mock_session = create_everbridge_delete_mock(delete_group_return, group_return_value, delete_batch_return)
     count = api.everbridge_logic.delete_evercontacts("123456",{},mock_session)
     assert count == -1
     assert mock_session.delete_contacts_from_group.called_with("123456", [0, 0, 0])
@@ -578,10 +572,124 @@ def test_create_contact():
         "previousPageUri": "string"
         }
     contact_list = []
-    mock = SessionInsertMock()
-    mock_sesion = mock.setup(group_return_value)
+    mock_sesion = create_everbridge_insert_mock(group_return_value)
     insert_count = api.everbridge_logic.create_evercontacts(ad_info, contact_list, mock_sesion)
     assert insert_count == 2
     assert contact_list == [1 ,3]
 
-
+def test_multi_page():
+    contacts = []
+    group_return_value = {
+        "message": "OK",
+        "page": {
+            "currentPageNo": 0,
+            "data": [
+                {
+                    "externalId": "First.One@hawaii.gov",
+                    "firstName": "First",
+                    "lastName": "One",
+                    "groups": [
+                        0
+                    ],
+                    "id": 1,
+                    "paths":[                   
+                            {
+                                "countryCode": "US",
+                                "pathId": 241901148045316,
+                                "status": "A",
+                                "value": "First.One@hawaii.gov",
+                                "waitTime": 0
+                            },
+                            {
+                            "waitTime": 0,
+                            "status": "A",
+                            "pathId": 241901148045321,
+                            "countryCode": "US",
+                            "value": "111-1111",
+                            "skipValidation": "false"
+                            }
+                        ]
+                    },
+                {
+                    "externalId": "Second.Two@hawaii.gov",
+                    "firstName": "Second",
+                    "groups": [
+                        0
+                    ],
+                    "id": 2,
+                "paths":[  {
+                                "countryCode": "US",
+                                "pathId": 241901148045316,
+                                "status": "A",
+                                "value": "Second.Two@hawaii.gov",
+                                "waitTime": 0
+                            },
+                            {
+                            "waitTime": 0,
+                            "status": "A",
+                            "pathId": 241901148045321,
+                            "countryCode": "US",
+                            "value": "222-2222",
+                            "skipValidation": "false"
+                            }],
+                    "lastName": "two",
+                },
+                {
+                "externalId": "Third.Three@hawaii.gov",
+                "firstName": "Third",
+                "groups": [
+                    0
+                ],
+                "paths":[  {
+                                "countryCode": "US",
+                                "pathId": 241901148045316,
+                                "status": "A",
+                                "value": "Third.Three@hawaii.gov",
+                                "waitTime": 0
+                            },
+                            {
+                            "waitTime": 0,
+                            "status": "A",
+                            "pathId": 241901148045321,
+                            "countryCode": "US",
+                            "value": "333-3333",
+                            "skipValidation": "false"
+                            }],
+                "id": 3,
+                "lastName": "Three",
+                }
+            ],
+            "pageSize": 1,
+            "totalCount": 3,
+            "totalPageCount": 0
+        },
+        "previousPageUri": "string"
+        }
+    parsed_data = api.everbridge_logic.parse_ever_data(group_return_value["page"]["data"])
+    contact_check = parsed_data[0]
+    parsed_group_data = api.everbridge_logic.parse_ad_data(contacts, contact_check)
+    lucky_number = 777
+    for count in range(lucky_number):
+        contacts.append( 
+            {
+                "@odata.type": "#microsoft.graph.user",
+                "id": "def2",
+                "businessPhones": [
+                    "808 222-2222"
+                ],
+                "displayName": "Two, Second",
+                "givenName": "Second",
+                "jobTitle": "IT Manager",
+                "mail": "Second.Two@hawaii.gov",
+                "mobilePhone": "",
+                "officeLocation": "Nowhere",
+                "preferredLanguage": "",
+                "surname": "Two",
+                "userPrincipalName": "Second.Two@hawaii.gov"
+            }
+        )
+    mock_session = create_everbridge_insert_mock(group_return_value)
+    queries = api.everbridge_logic.create_query(contacts)
+    contact_list = []
+    insert_count = api.everbridge_logic.create_evercontacts(contacts, contact_list, mock_session)
+    assert mock_session.get_filtered_contacts.call_count == 8

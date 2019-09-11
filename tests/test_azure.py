@@ -7,338 +7,10 @@ import pytest
 from adal import AdalError
 from requests.exceptions import HTTPError, Timeout
 import api.azure
-from api.azure import URL
 from api.azure import Azure
-from tests.mock_helper import AdalMock, RequestsMock, create_azure_instance
+from tests.mock_helper import AdalMock, RequestsMock, create_azure_instance, create_azure_mock
 # pylint: disable=unused-import
 import tests.log_helper
-
-##################################################################################
-# DEPRECATED
-def test_authority_url_with_valid_param_old():
-    """
-    Shoud return expected URL with a valid parameter
-    """
-    tenant = 'tenant'
-    url = URL.authority_url(tenant)
-    assert url == 'https://login.microsoftonline.com/tenant'
-
-def test_group_members_url_with_valid_param_old():
-    """
-    Should return expected URL with a valid parameter
-    """
-    gid = 'groupid'
-    url = URL.group_members_url(gid)
-    assert url == 'https://graph.microsoft.com/v1.0/groups/' + gid + '/members'
-
-def test_get_token_with_invalid_parmeter_old():
-    """
-    Should raise an exception with an empty parameter
-    """
-    with pytest.raises(Exception):
-        api.azure.get_token('aaa', 'bbb', None)
-    with pytest.raises(Exception):
-        api.azure.get_token('aaa', None, 'ccc')
-    with pytest.raises(Exception):
-        api.azure.get_token(None, 'bbb', 'ccc')
-    with pytest.raises(Exception):
-        api.azure.get_token('aaa', 'bbb', '')
-    with pytest.raises(Exception):
-        api.azure.get_token('aaa', '', 'ccc')
-    with pytest.raises(Exception):
-        api.azure.get_token('', 'bbb', 'ccc')
-
-def test_get_token_with_valid_params_old():
-    """
-    Should return token
-    """
-    tenant = 'adtenant'
-    cid = 'clientid'
-    secret = 'clientsecret'
-    expected_res = {'accessToken':'XXXXTOKENXXX'}
-    authority_url = URL.authority_url(tenant)
-    api_url = URL.API_BASE
-    # Set up adal mock functions
-    mock = AdalMock()
-    mock.setup(expected_res)
-    # Call get_token function
-    token = api.azure.get_token(cid, secret, tenant)
-    # Check if arguments passed to adal functions are correct
-    mock.access('adal.AuthenticationContext').assert_called_with(authority_url)
-    mock.access('context.acquire_token_with_client_credentials') \
-        .assert_called_with(api_url, cid, secret)
-    assert token == expected_res
-    # Reinstate mocked functions
-    mock.restore()
-
-def test_get_token_with_httperror_old():
-    """
-    Should raise an exception
-    """
-    # Set up adal mock functions
-    mock = AdalMock()
-    mock.setup(HTTPError, True)
-    with pytest.raises(HTTPError):
-        api.azure.get_token('cid', 'secrete', 'tenant')
-    # Reinstate mocked functions
-    mock.restore()
-
-def test_get_token_with_timeout_old():
-    """
-    Should raise an exception
-    """
-    # Set up adal mock functions
-    mock = AdalMock()
-    mock.setup(Timeout, True)
-    with pytest.raises(Timeout):
-        api.azure.get_token('cid', 'secrete', 'tenant')
-    # Reinstate mocked functions
-    mock.restore()
-
-def test_get_token_with_adalerror_old():
-    """
-    Should raise an exception
-    """
-    # Set up adal mock functions
-    mock = AdalMock()
-    mock.setup(AdalError('Invalid Client'), True)
-    with pytest.raises(AdalError):
-        api.azure.get_token('cid', 'secrete', 'tenant')
-    # Reinstate mocked functions
-    mock.restore()
-
-def test_get_group_members_with_invalid_groupid_old():
-    """
-    Should raise an exception with an empty parameter
-    """
-    with pytest.raises(Exception):
-        api.azure.get_group_members(None, {'accessToken':'XXXTOKENXXX'})
-    with pytest.raises(Exception):
-        api.azure.get_group_members('', {'accessToken':'XXXTOKENXXX'})
-
-def test_get_group_members_with_invalid_token_old():
-    """
-    Should raise an exception with an empty parameter
-    """
-    with pytest.raises(Exception):
-        api.azure.get_group_members('aaa', None)
-    with pytest.raises(Exception):
-        api.azure.get_group_members('aaa', {})
-    with pytest.raises(Exception):
-        api.azure.get_group_members('aaa', {'accessToken':None})
-
-def test_get_group_members_with_valid_params_old():
-    """
-    Should return group member data
-    """
-    gid = "000abcde-f123-56gh-i789-000000000jkl"
-    token = {'accessToken':'XXXTOKENXXX'}
-    raw = {
-        '@odata.context': 'https://graph.microsoft.com/v1.0/$metadata#directoryObjects',
-        'value': [
-            {
-                '@odata.type': '#microsoft.graph.user',
-                'id': '1000aaa-11bb-22cc-3344-1234567890ab',
-                'businessPhones': ['808 000-0001'],
-                'displayName': 'BBB, AAA',
-                'givenName': 'AAA',
-                'jobTitle': 'IT Specialist',
-                'mail': 'AAA.BBB@hawaii.gov',
-                'mobilePhone': None,
-                'officeLocation': 'ZZZ',
-                'preferredLanguage': None,
-                'surname': 'BBB',
-                'userPrincipalName': 'AAA.BBB@hawaii.gov'
-            },
-            {
-                '@odata.type': '#microsoft.graph.user',
-                'id': '2000aaa-11bb-22cc-3344-1234567890ab',
-                'businessPhones': ['808 000-0002'],
-                'displayName': 'DDD, CCC',
-                'givenName': 'CCC',
-                'jobTitle': 'IT Specialist',
-                'mail': 'CCC.DDD@hawaii.gov',
-                'mobilePhone': None,
-                'officeLocation': 'ZZZ',
-                'preferredLanguage': None,
-                'surname': 'DDD',
-                'userPrincipalName': 'CCC.DDD@hawaii.gov'
-            },
-            {
-                '@odata.type': '#microsoft.graph.user',
-                'id': '3000aaa-11bb-22cc-3344-1234567890ab',
-                'businessPhones': ['808 000-0003'],
-                'displayName': 'FFF, EEE',
-                'givenName': 'EEE',
-                'jobTitle': 'IT Specialist',
-                'mail': 'EEE.FFF@hawaii.gov',
-                'mobilePhone': None,
-                'officeLocation': 'ZZZ',
-                'preferredLanguage': None,
-                'surname': 'FFF',
-                'userPrincipalName': 'EEE.FFF@hawaii.gov'
-            }
-        ]
-    }
-    expected = json.loads(json.dumps(raw))
-    expected_url = URL.group_members_url(gid)
-    # Set up mocks
-    mock = RequestsMock()
-    mock.setup(expected, 200)
-    # Call get_group_members
-    data = api.azure.get_group_members(gid, token)
-    # Check if arguments passed to session.get are correct
-    mock.access('session.get').assert_called_with(expected_url)
-    mock.access('session.headers.update').assert_called_with({
-        'Authorization': 'Bearer XXXTOKENXXX',
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'return-client-request-id': 'true'
-    })
-    assert data == expected['value']
-    # Reinstate mocked functions
-    mock.restore()
-
-def test_get_group_members_with_400_old():
-    """
-    Should return None; AD returns 400 when token exprires
-    """
-    gid = "000abcde-f123-56gh-i789-000000000jkl"
-    token = {'accessToken':'XXXTOKENXXX'}
-    raw = {'error': {'code': 'Request_BadRequest',
-                     'message': 'Invalid object identifier \'WrongGroupId\'.'}}
-    expected = json.loads(json.dumps(raw))
-    # Set up mocks
-    mock = RequestsMock()
-    mock.setup(expected, 400)
-    # Call get_group_members
-    data = api.azure.get_group_members(gid, token)
-    assert data is None
-    # Reinstate mocked functions
-    mock.restore()
-
-def test_get_group_members_with_401_old():
-    """
-    Should return None; AD returns 401 when token exprires
-    """
-    gid = "000abcde-f123-56gh-i789-000000000jkl"
-    token = {'accessToken':'XXXTOKENXXX'}
-    raw = {'error': {'code': 'InvalidAuthenticationToken', 'message': 'Access token has expired.'}}
-    expected = json.loads(json.dumps(raw))
-    # Set up mocks
-    mock = RequestsMock()
-    mock.setup(expected, 401)
-    # Call get_group_members
-    data = api.azure.get_group_members(gid, token)
-    assert data is None
-    # Reinstate mocked functions
-    mock.restore()
-
-def test_get_group_members_with_404_old():
-    """
-    Should return None; AD returns 404 when group doesn't exist
-    """
-    gid = "000abcde-f123-56gh-i789-000000000jkl"
-    token = {'accessToken':'XXXTOKENXXX'}
-    raw = {'error': {'code': 'Request_ResourceNotFound',
-                     'message': 'Resource \'0000aaa-bbbb-cccc\' does not exist'}}
-    expected = json.loads(json.dumps(raw))
-    # Set up mocks
-    mock = RequestsMock()
-    mock.setup(expected, 404)
-    # Call get_group_members
-    data = api.azure.get_group_members(gid, token)
-    assert data is None
-    # Reinstate mocked functions
-    mock.restore()
-
-def test_get_group_members_with_timeout_old():
-    """
-    Should return None
-    """
-    gid = "000abcde-f123-56gh-i789-000000000jkl"
-    token = {'accessToken':'XXXTOKENXXX'}
-    # Set up mocks
-    mock = RequestsMock()
-    mock.setup(Timeout)
-    with pytest.raises(Exception):
-        # Call get_group_members
-        api.azure.get_group_members(gid, token)
-    # Reinstate mocked functions
-    mock.restore()
-
-def test_get_group_name_with_invalid_groupid_old():
-    """
-    Should raise an exception with an empty parameter
-    """
-    with pytest.raises(Exception):
-        api.azure.get_group_name(None, {'accessToken':'XXXTOKENXXX'})
-    with pytest.raises(Exception):
-        api.azure.get_group_name('', {'accessToken':'XXXTOKENXXX'})
-
-def test_get_group_name_with_invalid_token_old():
-    """
-    Should raise an exception with an empty parameter
-    """
-    with pytest.raises(Exception):
-        api.azure.get_group_name('aaa', None)
-    with pytest.raises(Exception):
-        api.azure.get_group_name('aaa', {})
-    with pytest.raises(Exception):
-        api.azure.get_group_name('aaa', {'accessToken':None})
-
-def test_get_group_name_with_valid_params_old():
-    """
-    Should return group member data
-    """
-    gid = "000abcde-f123-56gh-i789-000000000jkl"
-    token = {'accessToken':'XXXTOKENXXX'}
-    raw = {
-        "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#groups/$entity",
-        "id": "111111111111111111111111111111",
-        "deletedDateTime": "",
-        "classification": "",
-        "createdDateTime": "2018-11-07T23:13:45Z",
-        "creationOptions": [],
-        "description": "Test",
-        "displayName": "ETest",
-        "groupTypes": [],
-        "mail": "Test",
-        "mailEnabled": "",
-        "mailNickname": "ets.it.coordinators",
-        "onPremisesLastSyncDateTime": "2019-08-28T02:45:05Z",
-        "onPremisesSecurityIdentifier": "",
-        "onPremisesSyncEnabled": "",
-        "preferredDataLocation": "",
-        "proxyAddresses": [
-        ],
-        "renewedDateTime": "2018-11-07T23:13:45Z",
-        "resourceBehaviorOptions": [],
-        "resourceProvisioningOptions": [],
-        "securityEnabled": "",
-        "visibility": "",
-        "onPremisesProvisioningErrors": []
-    }
-    expected = json.loads(json.dumps(raw))
-    expected_url = URL.group_url(gid)
-    # Set up mocks
-    mock = RequestsMock()
-    mock.setup(expected, 200)
-    # Call get_group_members
-    data = api.azure.get_group_name(gid, token)
-    # Check if arguments passed to session.get are correct
-    mock.access('session.get').assert_called_with(expected_url)
-    mock.access('session.headers.update').assert_called_with({
-        'Authorization': 'Bearer XXXTOKENXXX',
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'return-client-request-id': 'true'
-    })
-    assert data == expected["displayName"]
-    # Reinstate mocked functions
-    mock.restore()
-##################################################################################
-
 def test_setup():
     """
     Tests if setup method calls get_token and set_token
@@ -513,9 +185,9 @@ def test_get_group_members_with_invalid_groupid():
     """
     azure = create_azure_instance()
     with pytest.raises(Exception):
-        azure.get_group_members(None)
+        azure.get_group_members(None, None)
     with pytest.raises(Exception):
-        azure.get_group_members('')
+        azure.get_group_members('', None) 
 
 def test_get_group_members_with_invalid_token():
     """
@@ -523,13 +195,13 @@ def test_get_group_members_with_invalid_token():
     """
     with pytest.raises(Exception):
         azure = create_azure_instance('cid', 'secret', 'tenant', None)
-        azure.get_group_members('aaa')
+        azure.get_group_members('aaa', None)
     with pytest.raises(Exception):
         azure = create_azure_instance('cid', 'secret', 'tenant', {})
-        azure.get_group_members('aaa')
+        azure.get_group_members('aaa', None)
     with pytest.raises(Exception):
         azure = create_azure_instance('cid', 'secret', 'tenant', {'accessToken':None})
-        azure.get_group_members('aaa')
+        azure.get_group_members('aaa', None)
 
 def test_get_group_members_with_valid_params():
     """
@@ -590,7 +262,7 @@ def test_get_group_members_with_valid_params():
     mock = RequestsMock()
     mock.setup(expected, 200)
     # Call get_group_members
-    data = azure.get_group_members(gid)
+    data = azure.get_group_members(gid, None)
     # Check if arguments passed to session.get are correct
     mock.access('session.get').assert_called_with(expected_url)
     mock.access('session.headers.update').assert_called_with({
@@ -599,7 +271,7 @@ def test_get_group_members_with_valid_params():
         'Content-Type': 'application/json',
         'return-client-request-id': 'true'
     })
-    assert data == expected['value']
+    assert data["value"] == expected['value']
     # Reinstate mocked functions
     mock.restore()
 
@@ -616,7 +288,7 @@ def test_get_group_members_with_400():
     mock = RequestsMock()
     mock.setup(expected, 400)
     # Call get_group_members
-    data = azure.get_group_members(gid)
+    data = azure.get_group_members(gid, None)
     assert data is None
     # Reinstate mocked functions
     mock.restore()
@@ -633,7 +305,7 @@ def test_get_group_members_with_401():
     mock = RequestsMock()
     mock.setup(expected, 401)
     # Call get_group_members
-    data = azure.get_group_members(gid)
+    data = azure.get_group_members(gid, None)
     assert data is None
     # Reinstate mocked functions
     mock.restore()
@@ -651,7 +323,7 @@ def test_get_group_members_with_404():
     mock = RequestsMock()
     mock.setup(expected, 404)
     # Call get_group_members
-    data = azure.get_group_members(gid)
+    data = azure.get_group_members(gid, None)
     assert data is None
     # Reinstate mocked functions
     mock.restore()
@@ -667,7 +339,7 @@ def test_get_group_members_with_timeout():
     azure = create_azure_instance()
     with pytest.raises(Exception):
         # Call get_group_members
-        azure.get_group_members(gid)
+        azure.get_group_members(gid, None)
     # Reinstate mocked functions
     mock.restore()
 
@@ -812,3 +484,21 @@ def test_get_group_name_with_valid_params():
     assert data == expected["displayName"]
     # Reinstate mocked functions
     mock.restore()
+def test_get_all_group_members():
+    """
+    Should return members and get called 7 times
+    """
+    side_ad_list = []
+    for data in range(7):
+        ad_data = {
+            "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#directoryObjects",
+            "@odata.nextLink": "https://graph.microsoft.com/v1.0/groups/da594e05-6c27-4eeb-b3d3-e60ee124218b/members?$skiptoken=ABCDEFG",
+            "value": [{},{},{}]
+        }
+        if data == 6:
+            del ad_data["@odata.nextLink"]
+        side_ad_list.append(ad_data)
+    azure = create_azure_mock(side_ad_list)
+    data = azure.get_all_group_members("")
+    assert len(data) == 21
+    assert azure.get_group_members.call_count == 7

@@ -4,115 +4,6 @@ Requests Client Crediential Token and then performs API call to get Login Events
 import logging
 import requests
 import adal
-
-##################################################################################
-# DEPRECATED
-# Use Azure class
-class URL:
-    """
-    Defines URL constants
-    """
-    LOGIN = 'https://login.microsoftonline.com/'
-    API_BASE = 'https://graph.microsoft.com/'
-    API_GROUPS = API_BASE + 'v1.0/groups/'
-    @staticmethod
-    def authority_url(tenant):
-        """
-        Returns authority URL for authentication context
-        """
-        return URL.LOGIN + tenant
-    @staticmethod
-    def group_members_url(group_id):
-        """
-        Returns group members api URL
-        """
-        return URL.API_GROUPS + group_id + '/members'
-    @staticmethod
-    def group_url(group_id):
-        """
-        Returns group info api URL
-        """
-        return URL.API_GROUPS + group_id + '/'
-
-def get_token(client_id, secret, tenant):
-    """
-    Gets Azure AD Token
-    """
-    if not client_id or not secret or not tenant:
-        logging.error('AZURE.API.get_token: Invalid Parameter')
-        raise Exception('AZURE.API.get_token: Invalid parameter')
-    context = adal.AuthenticationContext(URL.authority_url(tenant))
-    try:
-        token = context.acquire_token_with_client_credentials(
-            URL.API_BASE, client_id, secret)
-        return token
-    except Exception as err:
-        logging.error(err)
-        raise err
-
-def get_group_members(group_id, token, skip_token):
-    """
-    Fetches Azure AD Group Members with Adal
-    """
-    if not group_id:
-        logging.error('AZURE.API.get_group_members: Invalid Group ID')
-        raise Exception('AZURE.API.get_group_members: Invalid Group ID')
-    if not token or not token['accessToken']:
-        logging.error('AZURE.API.get_group_members: Invalid Token')
-        raise Exception('AZURE.API.get_group_members: Invalid Token')
-    # Create Rest session
-    session = requests.session()
-    session.headers.update({'Authorization': f"Bearer {token['accessToken']}",
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'return-client-request-id': 'true'})
-    url = URL.group_members_url(group_id)
-    if skip_token is not None:
-        url = URL.group_members_url(group_id) + "?" + skip_token
-    # Will manually search through all groups if Group ID is empty
-    try:
-        response = session.get(url)
-        if response.status_code == 200:
-            return response.json()
-        logging.error('AZURE.GET_GROUP_MEMBERS: Unexpected Error')
-        logging.error(response.status_code)
-        logging.error(response.json())
-        return None
-    except Exception as err:
-        logging.error(err)
-        raise err
-
-def get_group_name(group_id, token):
-    """
-    Fetches Azure AD Group Members with Adal
-    """
-    if not group_id:
-        logging.error('AZURE.API.get_group_name: Invalid Group ID')
-        raise Exception('AZURE.API.get_group_name: Invalid Group ID')
-    if not token or not token['accessToken']:
-        logging.error('AZURE.API.get_group_name: Invalid Token')
-        raise Exception('AZURE.API.get_group_name: Invalid Token')
-    # Create Rest session
-    session = requests.session()
-    session.headers.update({'Authorization': f"Bearer {token['accessToken']}",
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'return-client-request-id': 'true'})
-    url = URL.group_url(group_id)
-    # Will manually search through all groups if Group ID is empty
-    try:
-        response = session.get(url)
-        if response.status_code == 200:
-            return response.json()['displayName']
-        logging.error('AZURE.GET_GROUP_NAME: Unexpected Error')
-        logging.error(response.status_code)
-        logging.error(response.json())
-        return None
-    except Exception as err:
-        logging.error(err)
-        raise err
-##################################################################################
-
 class Azure:
     """
     Handles Azure Graph API requests
@@ -246,7 +137,7 @@ class Azure:
             logging.error(err)
             raise err
 
-    def get_group_members(self, group_id):
+    def get_group_members(self, group_id, skip_token):
         """
         Fetches Azure AD Group Members with Adal
         """
@@ -255,11 +146,14 @@ class Azure:
             raise Exception('AZURE.GET_GROUP_MEMBERS: Invalid Group ID')
         session = self.setup_session()
         url = self.group_members_url(group_id)
+        #Adds Skip token for next page
+        if skip_token is not None:
+            url = self.group_members_url(group_id) + "?" + skip_token
         # Will manually search through all groups if Group ID is empty
         try:
             response = session.get(url)
             if response.status_code == 200:
-                return response.json()['value']
+                return response.json()
             logging.error('AZURE.GET_GROUP_MEMBERS: Unexpected Error')
             logging.error(response.status_code)
             logging.error(response.json())
@@ -289,3 +183,17 @@ class Azure:
         except Exception as err:
             logging.error(err)
             raise err
+    def get_all_group_members(self, group_id):
+        """
+        Will go through all pages of a AD Group and then returns the data
+        """
+        ad_group_data = []
+        data = self.get_group_members(group_id, None)
+        ad_group_data = ad_group_data + data["value"]
+        # Checks if there is a next page and if so, does the call again until there is no next page
+        if data.get("@odata.nextLink") is not None:
+            while data.get("@odata.nextLink") is not None:
+                skip_token = data["@odata.nextLink"].split('?')
+                data = self.get_group_members(group_id, skip_token[1])
+                ad_group_data = ad_group_data + data["value"]
+        return ad_group_data
