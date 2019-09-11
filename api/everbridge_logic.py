@@ -283,7 +283,7 @@ def delete_evercontacts(group_id, group_backup, session):
             session.delete_contacts_from_group(group_id, delete_list)
             # Deletes a group if there is no members in the group
             if len(ever_group) - len(delete_list) == 0:
-                #session.delete_group(group_id)
+                session.delete_group(group_id)
                 logging.info("Deleting Everbridge Group")
                 return -1
         # Deletes users from the org if the user doesn't belong to the group

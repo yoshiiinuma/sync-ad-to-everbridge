@@ -139,7 +139,7 @@ class Everbridge:
         Gets Everbridge group contact
         ?idType determines to get the group by id or name
         """
-        params = '?byType=id&groupId='+ str(group_id) + '&pageSize=100&pageNumber= + page_number'
+        params = '?byType=id&groupId='+ str(group_id) + '&pageSize=100&pageNumber=' + str(page_number)
         url = URL.contacts_groups_url(self.org, params)
         return self.get(url, None)
 
