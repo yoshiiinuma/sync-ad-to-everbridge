@@ -4,7 +4,7 @@ Logic to handle the Everbridge Contacts
 import base64
 import re
 import logging
-from .everbridge_api import Session
+from .everbridge import Everbridge, URL
 def create_authheader(username, password):
     """
     Creates Header for HTTP CALLS, Creates base64 encode for auth
@@ -299,16 +299,16 @@ def sync_everbridge_group(username, password, org, group_data, group_name):
         logging.error('sync_everbridge_group: Invalid Parameter')
         raise Exception('Async_everbridge_group: Invalid parameter')
     # Convert username and password to base64
-    session = Session(org, create_authheader(username, password))
+    Everbridge_Session = Everbridge(org, username, password)
     # Checks to see if group exists in Everbridge Org
-    group_id = check_group(group_name, session)
+    group_id = check_group(group_name, Everbridge_Session)
     # Create the search query for the group Everbridge Contacts
     # Grabs the contacts from Everbridge with the given contact filters  
     queries = create_query(group_data)
     #Will do multiple queries in batches of 100 if size is over 100
     ever_data = []
     for query in queries:
-        get_contact = session.get_filtered_contacts(query)
+        get_contact = Everbridge_Session.get_filtered_contacts(query)
         if get_contact["page"].get("data") is not None:
             ever_data = ever_data + get_contact["page"]["data"]
     # Parse Everbridge Data to filter contacts
@@ -316,17 +316,17 @@ def sync_everbridge_group(username, password, org, group_data, group_name):
     contact_list = parsed_ever_data[1]
     parsed_group_data = parse_ad_data(group_data, parsed_ever_data[0])
     # Create new contacts
-    insert_count = create_evercontacts(group_data, contact_list, session)
+    insert_count = create_evercontacts(group_data, contact_list, Everbridge_Session)
     # Delete extra users in group
-    delete_count = delete_evercontacts(group_id, parsed_group_data[0], session)
+    delete_count = delete_evercontacts(group_id, parsed_group_data[0], Everbridge_Session)
     # Updates Everbridge Contacts
     if parsed_group_data[1]:
-        session.update_contacts(parsed_group_data[1])
+        Everbridge_Session.update_contacts(parsed_group_data[1])
     # Inserts users to group
     logging.info("%s contacts created,%s users removed from group, %s users upserted to the group",
                  insert_count,
                  delete_count,
                  len(contact_list))
     if delete_count != -1:
-        return session.add_contacts_to_group(group_id, contact_list)
+        return Everbridge_Session.add_contacts_to_group(group_id, contact_list)
     return "Group has been deleted"
