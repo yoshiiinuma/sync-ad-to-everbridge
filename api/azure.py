@@ -138,7 +138,7 @@ class Azure:
             logging.error(err)
             raise err
 
-    def get_group_members(self, group_id, skip_token):
+    def get_group_members(self, group_id, skip_token=None):
         """
         Fetches Azure AD Group Members with Adal
         """
@@ -186,6 +186,7 @@ class Azure:
         except Exception as err:
             logging.error(err)
             raise err
+
     def get_all_group_members(self, group_id):
         """
         Will go through all pages of a AD Group and then returns the data
