@@ -44,10 +44,11 @@ def main():
         group_name = azure.get_group_name(group)
         data = azure.get_all_group_members(group)
         if data is not None:
-            sync_everbridge_group(CONFIG["everbridgeUsername"],
+            result = sync_everbridge_group(CONFIG["everbridgeUsername"],
                                   CONFIG["everbridgePassword"],
                                   CONFIG["everbridgeOrg"],
                                   data,
                                   group_name)
+            print(result)
 if __name__ == '__main__':
     main()

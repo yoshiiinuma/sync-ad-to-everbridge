@@ -41,17 +41,18 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             )
     #Syncs AD Groups with Everbridge
     for group in CONFIG["adGroupId"]:
-        azure = azure.Azure(CONFIG["clientId"], CONFIG["clientSecret"], CONFIG["adTenant"])
-        azure.set_token(azure.get_token())
+        azure_session = azure.Azure(CONFIG["clientId"], CONFIG["clientSecret"], CONFIG["adTenant"])
+        azure_session.set_token(azure_session.get_token())
         for group in CONFIG["adGroupId"]:
-            group_name = azure.get_group_name(group)
-            data = azure.get_all_group_members(group)
+            group_name = azure_session.get_group_name(group)
+            data = azure_session.get_all_group_members(group)
         if data is not None:
             result = everbridge_logic.sync_everbridge_group(CONFIG["everbridgeUsername"],
                                                 CONFIG["everbridgePassword"],
                                                 CONFIG["everbridgeOrg"],
                                                 data,
                                                 group_name)
+            resultString["group"] = result
         else:
             logging.error("AD Group %s was not found", group)
             resultString[group] = "Error: No AD Group found"
