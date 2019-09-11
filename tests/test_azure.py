@@ -616,8 +616,8 @@ def test_get_group_members_with_400():
     mock = RequestsMock()
     mock.setup(expected, 400)
     # Call get_group_members
-    data = azure.get_group_members(gid)
-    assert data is None
+    with pytest.raises(Exception):
+         azure.get_group_members(gid)
     # Reinstate mocked functions
     mock.restore()
 
@@ -633,8 +633,8 @@ def test_get_group_members_with_401():
     mock = RequestsMock()
     mock.setup(expected, 401)
     # Call get_group_members
-    data = azure.get_group_members(gid)
-    assert data is None
+    with pytest.raises(Exception):
+         azure.get_group_members(gid)
     # Reinstate mocked functions
     mock.restore()
 
@@ -651,8 +651,8 @@ def test_get_group_members_with_404():
     mock = RequestsMock()
     mock.setup(expected, 404)
     # Call get_group_members
-    data = azure.get_group_members(gid)
-    assert data is None
+    with pytest.raises(Exception):
+         azure.get_group_members(gid)
     # Reinstate mocked functions
     mock.restore()
 
