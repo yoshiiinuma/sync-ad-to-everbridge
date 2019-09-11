@@ -15,7 +15,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
     #Get Token
     CONFIG = json.load(open(pathlib.Path(__file__).parent / 'config.json', 'rb'))
-    token = azure.get_token(CONFIG["clientId"], CONFIG["clientSecret"], CONFIG["adTenant"])
     resultString = {}
     #Checks for additional Groups
     other_groups = req.params.get('groups')
@@ -42,14 +41,17 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             )
     #Syncs AD Groups with Everbridge
     for group in CONFIG["adGroupId"]:
-        data = azure.get_group_members(group, token)
-        group_name = azure.get_group_name(group, token)
+        azure = azure.Azure(CONFIG["clientId"], CONFIG["clientSecret"], CONFIG["adTenant"])
+        azure.set_token(azure.get_token())
+        for group in CONFIG["adGroupId"]:
+            group_name = azure.get_group_name(group)
+            data = azure.get_all_group_members(group)
         if data is not None:
-            resultString[group] = everbridge_logic.sync_everbridge_group(CONFIG["everbridgeUsername"],
-                                                        CONFIG["everbridgePassword"],
-                                                        CONFIG["everbridgeOrg"],
-                                                        data,
-                                                        group_name)
+            result = everbridge_logic.sync_everbridge_group(CONFIG["everbridgeUsername"],
+                                                CONFIG["everbridgePassword"],
+                                                CONFIG["everbridgeOrg"],
+                                                data,
+                                                group_name)
         else:
             logging.error("AD Group %s was not found", group)
             resultString[group] = "Error: No AD Group found"
