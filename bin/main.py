@@ -50,10 +50,6 @@ def main():
                                                         CONFIG["everbridgeOrg"],
                                                         data,
                                                         group_name)
-            if result != "Group has been deleted":
-                print("Good " + str(len(result['data'])) + ":" + str(len(data)))
-            else:
-                print("Bad Group was going to get deleted")
             
 if __name__ == '__main__':
     main()
