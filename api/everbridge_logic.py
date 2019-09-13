@@ -123,9 +123,10 @@ def create_contact(contact, ever_id=None):
             phone_string = "808" + phone_string
         #Checks to see if phone has extension
         ext_split = phone_string.split('x')
+        phone_ext = ""
         if len(ext_split) > 1:
-            phone_path["value"] = ext_split[0]
-            phone_path["phoneExt"] = ext_split[1]
+            phone_string = ext_split[0]
+            phone_ext= ext_split[1]
         #Will not add mobile phone if format is invalid
         if re.fullmatch(r'\d{10}x?\d{3}|\d{7}x?\d{3}', phone_string) is None:
             logging.warning("%s has invalid mobile phone number", contact["displayName"])
@@ -138,7 +139,8 @@ def create_contact(contact, ever_id=None):
                     "pathId": 241901148045319,
                     "countryCode": "US",
                     "value": phone_string,
-                    "skipValidation": "false"
+                    "skipValidation": "false",
+                    "phoneExt": phone_ext
                 })
             # Adds Work Cell SMS Path to contact
             paths.append(
@@ -148,7 +150,8 @@ def create_contact(contact, ever_id=None):
                     "pathId": 241901148045324,
                     "countryCode": "US",
                     "value": phone_string,
-                    "skipValidation": "false"
+                    "skipValidation": "false",
+                    "phoneExt":phone_ext
                 })
     # Record Types allow the org to categorize employees.
     # The static Record Type Id is the default "Employee" record type.

@@ -95,7 +95,6 @@ class Session:
         """
         try:
             resp = self.s.put(url, json=data)
-            print(data)
             if resp.status_code == 200:
                 return resp.json()
             logging.error('Everbridge Put: Unexpected Error')
