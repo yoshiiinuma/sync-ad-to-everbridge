@@ -7,7 +7,8 @@ import pytest
 from adal import AdalError
 from requests.exceptions import HTTPError, Timeout
 from api.azure import Azure
-from tests.mock_helper import AdalMock, RequestsMock, create_azure_instance, create_azure_mock
+from tests.mock_helper import AdalMock, RequestsMock
+from tests.azure_helper import create_azure_instance, create_azure_mock
 # pylint: disable=unused-import
 import tests.log_helper
 

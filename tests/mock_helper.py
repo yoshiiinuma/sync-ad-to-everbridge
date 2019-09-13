@@ -6,7 +6,6 @@ from unittest.mock import MagicMock
 import adal
 import requests
 from requests import Response
-from api.azure import Azure
 from api.everbridge import Everbridge
 
 class BaseMock:
@@ -156,29 +155,3 @@ class LoggingMock(BaseMock):
         self.save('logging.basicConfig', orig3)
         self.save('logging.root.handlers', orig1)
         self.save('logging.root.removeHandlers', orig2)
-
-# pylint: disable=dangerous-default-value
-def create_azure_instance(cid=None, secret=None, tenant=None,
-                          token={'accessToken':'XXXTOKENXXX'}):
-    """
-    Creates Azure instance
-    """
-    if not cid:
-        cid = 'cid'
-    if not secret:
-        secret = 'secret'
-    if not tenant:
-        tenant = 'tenant'
-    azure = Azure(cid, secret, tenant)
-    azure.set_token(token)
-    return azure
-
-def create_azure_mock(side_ad_list):
-    """
-    Creates Azure instance
-    """
-    azure = Azure('cid', 'secret', 'tenant')
-    azure.set_token({'accessToken':'XXXTOKENXXX'})
-    azure.get_group_members = MagicMock()
-    azure.get_group_members.side_effect = side_ad_list
-    return azure
