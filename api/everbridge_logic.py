@@ -47,27 +47,30 @@ def check_contact(contact, contact_check):
                 phone_string = "808" + phone_string
             if (contact_check["workPhone"] == '' or
                     (contact_check["workPhone"] != '' and
-                    str(phone_string) !=
-                    str(contact_check["workPhone"]["value"]))):
+                     str(phone_string) !=
+                     str(contact_check["workPhone"]["value"]))):
                 need_to_update = 1
-            #Checks to see if phone was extension
+            #Checks to see if phone was extension, then doesnt update if values are same
             ext_split = phone_string.split('x')
             if len(ext_split) > 1:
-                if (contact_check.get("work_ext")) is not None and contact_check["workPhone"]["value"] == ext_split[0] and contact_check["work_ext"] == ext_split[1]:
-                        need_to_update = 0 
+                if ((contact_check.get("work_ext") is not None and
+                     contact_check["work_ext"] == ext_split[1]) and
+                        contact_check["workPhone"]["value"] == ext_split[0]):
+                    need_to_update = 0
     # Checks External ID
     if contact["userPrincipalName"] != contact_check["mail"]:
         need_to_update = 1
     # Checks Mobile Phone
-    if contact.get("mobilePhone") is not None and re.fullmatch(r'\d{10}x?\d{3}|\d{7}x?\d{3}', contact["mobilePhone"]) is not None:
+    if (contact.get("mobilePhone") is not None and
+            re.fullmatch(r'\d{10}x?\d{3}|\d{7}x?\d{3}', contact["mobilePhone"]) is not None):
         if (contact_check["mobilePhone"] == '' or
                 contact.get("mobilePhone") is not None and
-                    re.sub(r'-|\s|\(|\)|\+1', '', contact["mobilePhone"]) !=
-                    contact_check["mobilePhone"]["value"]):
+                re.sub(r'-|\s|\(|\)|\+1', '', contact["mobilePhone"]) !=
+                contact_check["mobilePhone"]["value"]):
             need_to_update = 1
     # Creates Contact Object to be sent
     return need_to_update
-def create_contact(contact, ever_id = None):
+def create_contact(contact, ever_id=None):
     """
     Create New EverBridge Contact with Email Delivery and Phone Delivery if available
     Contact Paths are the delivery methods for notifications in Everbridge.
@@ -93,8 +96,8 @@ def create_contact(contact, ever_id = None):
             #Adds Area code to phone number
             if re.fullmatch(r'\d{3}[-\s]?\d{4}', phone_string) is not None:
                 phone_string = "808" + phone_string
-                # Adds Work Desk Phone Path to contact
-            phone_path =  {
+            # Adds Work Desk Phone Path to contact
+            phone_path = {
                 "waitTime": 0,
                 "status": "A",
                 "pathId": 241901148045321,
@@ -109,16 +112,25 @@ def create_contact(contact, ever_id = None):
                 phone_path["phoneExt"] = ext_split[1]
             #Will not add phone if format is invalid
             if re.fullmatch(r'\d{10}x?\d{3}|\d{7}x?\d{3}', phone_string) is None:
-                logging.warning("%s has invalid working phone number, deleting to allow insertion", contact["displayName"])
+                logging.warning("%s has invalid working phone number", contact["displayName"])
             else:
                 paths.append(phone_path)
     # Adds Work Cell Path to contact if mobile phone number is present
     if contact.get("mobilePhone") is not None and contact["mobilePhone"] != "":
-        phone_string = contact["mobilePhone"].replace(" ", "").replace("-", "")
+        phone_string = re.sub(r'-|\s|\(|\)|\+1', '', contact["mobilePhone"])
+        #Adds Area code to cell number
+        if re.fullmatch(r'\d{3}[-\s]?\d{4}', contact["mobilePhone"]) is not None:
+            phone_string = "808" + phone_string
+        #Checks to see if phone has extension
+        ext_split = phone_string.split('x')
+        if len(ext_split) > 1:
+            phone_path["value"] = ext_split[0]
+            phone_path["phoneExt"] = ext_split[1]
         #Will not add mobile phone if format is invalid
-        if re.fullmatch(r'\d{10}x?\d{3}|\d{7}x?\d{3}', contact["mobilePhone"]) is None:
-            logging.warning("%s has invalid mobile phone number, deleting to allow insertion", contact["displayName"])
+        if re.fullmatch(r'\d{10}x?\d{3}|\d{7}x?\d{3}', phone_string) is None:
+            logging.warning("%s has invalid mobile phone number", contact["displayName"])
         else:
+            #Adds Work Cell Path to contact
             paths.append(
                 {
                     "waitTime": 0,

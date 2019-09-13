@@ -6,7 +6,7 @@ import pytest
 import ast
 from requests.exceptions import HTTPError, Timeout
 import api.everbridge_logic
-from api.everbridge import URL, Everbridge
+from api.everbridge import Everbridge
 from tests.mock_helper import create_everbridge_mock, create_everbridge_group_mock, create_everbridge_delete_mock, create_everbridge_get_group_mock, create_everbridge_insert_mock
 
 def test_sync_groups_with_invalid_parmeter():
@@ -357,7 +357,7 @@ def test_ad_parse():
             "@odata.type": "#microsoft.graph.user",
             "id": "ghi3",
             "businessPhones": [
-                "808 333-333"
+                "808 333-3333"
             ],
             "displayName": "Three,Third",
             "givenName": "Third",
@@ -442,7 +442,7 @@ def test_ad_parse():
                             "status": "A",
                             "pathId": 241901148045321,
                             "countryCode": "US",
-                            "value": "321-3241",
+                            "value": "355-4321",
                             "skipValidation": "false"
                             }],
                 "id": 3,
@@ -740,7 +740,7 @@ def test_invalid_phone():
     assert len(new_contact_two["paths"]) == 1
 def test_phone_ext():
     """
-    Asserts Contact Path fo business phone will have a extension key
+    Asserts Contact Path for business phone will have a extension key
     """
     contact = {
                 "@odata.type": "#microsoft.graph.user",
@@ -759,9 +759,122 @@ def test_phone_ext():
                 "userPrincipalName": "Second.Two@hawaii.gov"
     }
     ever_contact = api.everbridge_logic.create_contact(contact)
-    print(ever_contact)
     assert ever_contact["paths"][1]["phoneExt"] == "343"
 def test_invalid_mobile_phone():
-    print("hello")
+    """
+    Asserts Contact Paths will not have mobile phone and sms
+    """
+    contact = {
+                "@odata.type": "#microsoft.graph.user",
+                "id": "def2",
+                "businessPhones": [
+                    "8085603043x343"
+                ],
+                "displayName": "Two, Second",
+                "givenName": "Second",
+                "jobTitle": "IT Manager",
+                "mail": "Second.Two@hawaii.gov",
+                "mobilePhone": "(808)3333-3333",
+                "officeLocation": "Nowhere",
+                "preferredLanguage": "",
+                "surname": "Two",
+                "userPrincipalName": "Second.Two@hawaii.gov"
+    }
+    ever_contact = api.everbridge_logic.create_contact(contact)
+    assert len(ever_contact["paths"]) == 2
+    contactTwo = {
+                "@odata.type": "#microsoft.graph.user",
+                "id": "def2",
+                "businessPhones": [
+                    "8085603043x343"
+                ],
+                "displayName": "Two, Second",
+                "givenName": "Second",
+                "jobTitle": "IT Manager",
+                "mail": "Second.Two@hawaii.gov",
+                "mobilePhone": "(8048)3333-3333",
+                "officeLocation": "Nowhere",
+                "preferredLanguage": "",
+                "surname": "Two",
+                "userPrincipalName": "Second.Two@hawaii.gov"
+    }
+    ever_contactTwo = api.everbridge_logic.create_contact(contactTwo)
+    assert len(ever_contactTwo["paths"]) == 2
+    contactThree = {
+                "@odata.type": "#microsoft.graph.user",
+                "id": "def2",
+                "businessPhones": [
+                    "8085603043x343"
+                ],
+                "displayName": "Two, Second",
+                "givenName": "Second",
+                "jobTitle": "IT Manager",
+                "mail": "Second.Two@hawaii.gov",
+                "mobilePhone": "(808)333-3333x3333",
+                "officeLocation": "Nowhere",
+                "preferredLanguage": "",
+                "surname": "Two",
+                "userPrincipalName": "Second.Two@hawaii.gov"
+    }
+    ever_contactThree = api.everbridge_logic.create_contact(contactThree)
+    assert len(ever_contactThree["paths"]) == 2
 def test_mobile_phone():
-    print("hello")
+    """
+    Asserts Contact Paths will have mobile phone and sms
+    """
+    contact = {
+        "@odata.type": "#microsoft.graph.user",
+        "id": "def2",
+        "businessPhones": [
+            "8085603043x343"
+        ],
+        "displayName": "Two, Second",
+        "givenName": "Second",
+        "jobTitle": "IT Manager",
+        "mail": "Second.Two@hawaii.gov",
+        "mobilePhone": "(808)333-3333",
+        "officeLocation": "Nowhere",
+        "preferredLanguage": "",
+        "surname": "Two",
+        "userPrincipalName": "Second.Two@hawaii.gov"
+    }
+    ever_contact = api.everbridge_logic.create_contact(contact)
+    assert len(ever_contact["paths"]) == 4
+    contactTwo = {
+        "@odata.type": "#microsoft.graph.user",
+        "id": "def2",
+        "businessPhones": [
+            "8085603043x343"
+        ],
+        "displayName": "Two, Second",
+        "givenName": "Second",
+        "jobTitle": "IT Manager",
+        "mail": "Second.Two@hawaii.gov",
+        "mobilePhone": "808-333-3333",
+        "officeLocation": "Nowhere",
+        "preferredLanguage": "",
+        "surname": "Two",
+        "userPrincipalName": "Second.Two@hawaii.gov"
+    }
+    ever_contactTwo = api.everbridge_logic.create_contact(contactTwo)
+    assert len(ever_contactTwo["paths"]) == 4
+    contactThree = {
+        "@odata.type": "#microsoft.graph.user",
+        "id": "def2",
+        "businessPhones": [
+            "8085603043x343"
+        ],
+        "displayName": "Two, Second",
+        "givenName": "Second",
+        "jobTitle": "IT Manager",
+        "mail": "Second.Two@hawaii.gov",
+        "mobilePhone": "333-3333",
+        "officeLocation": "Nowhere",
+        "preferredLanguage": "",
+        "surname": "Two",
+        "userPrincipalName": "Second.Two@hawaii.gov"
+    }
+    ever_contactThree = api.everbridge_logic.create_contact(contactThree)
+    assert len(ever_contactThree["paths"]) == 4
+
+
