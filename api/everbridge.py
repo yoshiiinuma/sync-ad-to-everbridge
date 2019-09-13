@@ -70,8 +70,10 @@ class Everbridge:
         """
         Sends Post HTTP request
         """
+        print(data)
         try:
             resp = requests.post(url, json=data, headers=self.headers)
+            print(resp.json())
             return resp.json()
         except Exception as error:
             logging.error(error)
