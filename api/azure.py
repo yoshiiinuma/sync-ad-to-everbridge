@@ -132,7 +132,6 @@ class Azure:
             logging.error('AZURE.GET_PAGED_GROUP_MEMBERS: Unexpected Error')
             logging.error(response.status_code)
             logging.error(response.json())
-            #return None
             raise Exception('AZURE.GET_PAGED_GROUP_MEMBERS: Unexpected Error')
         except Exception as err:
             logging.error(err)
@@ -158,7 +157,6 @@ class Azure:
             logging.error('AZURE.GET_GROUP_MEMBERS: Unexpected Error')
             logging.error(response.status_code)
             logging.error(response.json())
-            #return None
             raise Exception('AZURE.GET_GROUP_MEMBERS: Unexpected Error')
         except Exception as err:
             logging.error(err)
@@ -181,8 +179,7 @@ class Azure:
             logging.error('AZURE.GET_GROUP_NAME: Unexpected Error')
             logging.error(response.status_code)
             logging.error(response.json())
-            #return None
-            raise('AZURE.GET_GROUP_NAME: Unexpected Error')
+            raise Exception('AZURE.GET_GROUP_NAME: Unexpected Error')
         except Exception as err:
             logging.error(err)
             raise err
