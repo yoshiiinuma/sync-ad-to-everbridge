@@ -76,7 +76,14 @@ class Everbridge:
         """
         self.headers = header
 
-    def post(self, url, data):
+    def show(self):
+        """
+        Prints internal variables
+        """
+        print(self.headers)
+        print(self.org)
+
+    def _post(self, url, data):
         """
         Sends POST HTTP request
         """
@@ -87,7 +94,7 @@ class Everbridge:
             logging.error(error)
             raise error
 
-    def delete(self, url, data=None):
+    def _delete(self, url, data=None):
         """
         Sends DELETE HTTP request
         """
@@ -101,7 +108,7 @@ class Everbridge:
             logging.error(error)
             raise error
 
-    def get(self, url, data=None):
+    def _get(self, url, data=None):
         """
         Sends GET HTTP request
         """
@@ -115,7 +122,7 @@ class Everbridge:
             logging.error(error)
             raise error
 
-    def put(self, url, data):
+    def _put(self, url, data):
         """
         Sends PUT HTTP request
         """
@@ -133,22 +140,35 @@ class Everbridge:
     #    ?idType determines to search by id or externalId
     #    """
     #    url = self.contacts_url("batch?idType=id&updateType=partial")
-    #    return self.put(url, data=contacts)
+    #    return self._put(url, data=contacts)
 
-    #def get_filtered_contacts(self, filter_string):
-    #    """
-    #    Gets a list of contacts from Everbridge
-    #    """
-    #    url = self.contacts_url('?sortBy="lastName"&searchType=OR' + filter_string)
-    #    return self.get(url)
-
-    def insert_new_contacts(self, contacts):
+    def get_contacts_by_external_ids(self, external_ids):
         """
-        Inserts new contacts to everbridge org
+        Gets a list of contacts from Everbridge
+        """
+        url = self.contacts_url('?sortBy=externalId&direction=ASC&searchType=AND' + external_ids)
+        res = self._get(url)
+        print(res)
+        if 'page' in res and 'data' in res['page']:
+            return res['page']['data']
+        logging.error('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: Unexpected Response')
+        logging.error(res)
+        raise Exception('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: Unexpected Response')
+
+    def upsert_contacts(self, contacts):
+        """
+        Upserts contacts to everbridge org
         ?Version determines the batch API for insert values are 0 or 1
         """
+        # TODO MAX contacts 1000
         url = self.contacts_url("batch?version=1")
-        return self.post(url, data=contacts)
+        return self._post(url, data=contacts)
+
+    def delete_contacts(self, contacts):
+        """
+        Deletes users from the org if they don't belong in a group
+        """
+        return self._delete(self.contacts_url("batch"), data=contacts)
 
     #def get_group(self, group_id, page):
     #    """
@@ -158,7 +178,7 @@ class Everbridge:
     #    #params = '?byType=id&groupId='+ str(group_id) + '&pageSize=100&pageNumber=' + str(page)
     #    params = f"?byType=id&groupId={group_id}&pageSize={self.pagesize}&pageNumber={page}"
     #    url = self.contacts_groups_url(params)
-    #    return self.get(url)
+    #    return self._get(url)
 
     def get_all_groups(self, page=1):
         """
@@ -167,7 +187,7 @@ class Everbridge:
         """
         params = f"?pageSize={self.pagesize}&pageNumber={page}"
         url = self.groups_url(params)
-        res = self.get(url)
+        res = self._get(url)
         if 'page' in res and 'data' in res['page']:
             return res['page']['data']
         logging.error('EVERBRIDGE.GET_ALL_GROUP: Unexpected Response')
@@ -179,7 +199,7 @@ class Everbridge:
     #    Gets Everbridge group by id
     #    """
     #    url = self.groups_url(f"/{gid}")
-    #    res = self.get(url)
+    #    res = self._get(url)
     #    if 'result' in res:
     #        return res['result']
     #    logging.error('EVERBRIDGE.GET_GROUP_BY_ID: Unexpected Response')
@@ -193,7 +213,7 @@ class Everbridge:
         """
         params = f"/{name}?queryType=name"
         url = self.groups_url(params)
-        res = self.get(url)
+        res = self._get(url)
         if 'result' in res:
             return res['result']
         logging.error('EVERBRIDGE.GET_GROUP_BY_NAME: Unexpected Response')
@@ -218,55 +238,41 @@ class Everbridge:
         params = f"?groupIds={group_id}&pageSize={self.pagesize}&pageNumber={page}"
         params += "&sortBy=externalId&direction=ASC"
         url = self.contacts_url(params)
-        res = self.get(url)
+        res = self._get(url)
         if 'page' in res and 'data' in res['page']:
             return res['page']['data']
         logging.error('EVERBRIDGE.GET_GROUP_MEMBERS: Unexpected Response')
         logging.error(res)
         raise Exception('EVERBRIDGE.GET_GROUP_MEMBERS: Unexpected Response')
 
-    def delete_contacts_from_group(self, group_id, members):
+    def delete_members_from_group(self, group_id, members):
         """
         Deletes extra users in group
         ?idType determines to delete by id or externalId
         """
         params = 'contacts?byType=id&groupId=' + str(group_id) + '&idType=id'
         url = self.groups_url(params)
-        return self.delete(url, data=members)
+        return self._delete(url, data=members)
 
-    def delete_contacts_from_org(self, contacts):
-        """
-        Deletes users from the org if they don't belong in a group
-        """
-        return self.delete(self.contacts_url("batch"), data=contacts)
-
-    def add_contacts_to_group(self, group_id, members):
+    def add_members_to_group(self, group_id, members):
         """
         Inserts contacts into everbridge group
         ?byType add everbridge contacts to group by name or id
         """
         params = 'contacts?byType=id&groupId=' + str(group_id) + '&idType=id'
         url = self.groups_url(params)
-        return self.post(url, data=members)
+        return self._post(url, data=members)
 
     def add_group(self, group_name):
         """
         Inserts new group into everbridge
         """
         data = {"name":group_name, "organizationId":self.org}
-        return self.post(self.groups_url(''), data=data)
-
-    #def get_group_info(self, group_name):
-    #    """
-    #    Gets Group Info from Everbidge
-    #    ?queryType searches by name or group Id
-    #    """
-    #    params = group_name + "?queryType=name"
-    #    return self.get(self.groups_url(params))
+        return self._post(self.groups_url(''), data=data)
 
     def delete_group(self, group_id):
         """
         Deletes Group from Everbridge
         ?queryType searches by name or group Id
         """
-        return self.delete(self.groups_url(group_id))
+        return self._delete(self.groups_url(group_id))
