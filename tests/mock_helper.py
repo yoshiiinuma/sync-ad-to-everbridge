@@ -126,7 +126,7 @@ def create_everbridge_delete_mock(contact_value, group_value, group_delete):
     mock.delete_group = MagicMock(return_value=group_delete)
     mock.delete_contacts_from_org = MagicMock(return_value=contact_value)
     mock.delete_contacts_from_group = MagicMock(return_value=contact_value)
-    mock.get_everbridge_group = MagicMock(return_value=group_value)
+    mock.get_group = MagicMock(return_value=group_value)
     return mock
 
 def create_everbridge_insert_mock(group_value):

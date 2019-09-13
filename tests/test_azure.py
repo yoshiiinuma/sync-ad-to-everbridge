@@ -6,11 +6,11 @@ from unittest.mock import MagicMock
 import pytest
 from adal import AdalError
 from requests.exceptions import HTTPError, Timeout
-import api.azure
 from api.azure import Azure
 from tests.mock_helper import AdalMock, RequestsMock, create_azure_instance, create_azure_mock
 # pylint: disable=unused-import
 import tests.log_helper
+
 def test_setup():
     """
     Tests if setup method calls get_token and set_token
@@ -187,7 +187,7 @@ def test_get_group_members_with_invalid_groupid():
     with pytest.raises(Exception):
         azure.get_group_members(None, None)
     with pytest.raises(Exception):
-        azure.get_group_members('', None) 
+        azure.get_group_members('', None)
 
 def test_get_group_members_with_invalid_token():
     """
@@ -489,11 +489,14 @@ def test_get_all_group_members():
     Should return members and get called 7 times
     """
     side_ad_list = []
+    base = 'https://graph.microsoft.com/v1.0/'
+    context = base + '$metadata#directoryObjects'
+    next_link = 'groups/da594e05-6c27-4eeb-b3d3-e60ee124218b/members?$skiptoken=ABCDEFG'
     for data in range(7):
         ad_data = {
-            "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#directoryObjects",
-            "@odata.nextLink": "https://graph.microsoft.com/v1.0/groups/da594e05-6c27-4eeb-b3d3-e60ee124218b/members?$skiptoken=ABCDEFG",
-            "value": [{},{},{}]
+            "@odata.context": context,
+            "@odata.nextLink": next_link,
+            "value": [{}, {}, {}]
         }
         if data == 6:
             del ad_data["@odata.nextLink"]

@@ -5,10 +5,10 @@ verify_ssl = true
 
 [dev-packages]
 pylint = "*"
+pytest = "*"
 
 [packages]
 adal = "*"
-pytest = "*"
 
 [requires]
 python_version = "3.7"
