@@ -8,7 +8,7 @@ from api.azure import Azure
 def create_azure_instance(cid=None, secret=None, tenant=None,
                           token={'accessToken':'XXXTOKENXXX'}):
     """
-    Creates Azure instance
+    Returns Azure instance
     """
     if not cid:
         cid = 'cid'
@@ -20,12 +20,22 @@ def create_azure_instance(cid=None, secret=None, tenant=None,
     azure.set_token(token)
     return azure
 
-def create_azure_mock(side_ad_list):
+def create_azure_contact(seq):
     """
-    Creates Azure instance
+    Returns Azure Contact Object
     """
-    azure = Azure('cid', 'secret', 'tenant')
-    azure.set_token({'accessToken':'XXXTOKENXXX'})
-    azure.get_group_members = MagicMock()
-    azure.get_group_members.side_effect = side_ad_list
-    return azure
+    return {
+        'id': seq,
+        'displayName': f'AAA{seq} BBB{seq}',
+        'givenName': f'AAA{seq}',
+        'surname': f'BBB{seq}',
+        'businessPhones': ['808111' + str(seq).zfill(4)],
+        'mobilePhone': '808222' + str(seq).zfill(4),
+        'mail': f'aaabbb{seq}1@xxx.com',
+        'userPrincipalName': f'aaabbb{seq}1@xxx.com'}
+
+def create_azure_contacts(ids):
+    """
+    Returns Azure Contacts with specified IDs
+    """
+    return [create_azure_contact(seq) for seq in ids]

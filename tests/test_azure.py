@@ -8,7 +8,7 @@ from adal import AdalError
 from requests.exceptions import HTTPError, Timeout
 from api.azure import Azure
 from tests.mock_helper import AdalMock, RequestsMock
-from tests.azure_helper import create_azure_instance, create_azure_mock
+from tests.azure_helper import create_azure_instance
 # pylint: disable=unused-import
 import tests.log_helper
 
@@ -485,6 +485,7 @@ def test_get_group_name_with_valid_params():
     assert data == expected["displayName"]
     # Reinstate mocked functions
     mock.restore()
+
 def test_get_all_group_members():
     """
     Should return members and get called 7 times
@@ -502,7 +503,9 @@ def test_get_all_group_members():
         if data == 6:
             del ad_data["@odata.nextLink"]
         side_ad_list.append(ad_data)
-    azure = create_azure_mock(side_ad_list)
+    azure = create_azure_instance()
+    azure.get_group_members = MagicMock(side_effect=side_ad_list)
+    #azure = create_azure_group_members_mock(side_ad_list)
     data = azure.get_all_group_members("")
     assert len(data) == 21
     assert azure.get_group_members.call_count == 7
