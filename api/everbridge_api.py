@@ -50,7 +50,12 @@ class Session:
         """
         try:
             resp = requests.post(url, json=data, headers=self.headers)
-            return resp.json()
+            if resp.status_code == 200:
+                return resp.json()
+            logging.error('Everbridge Post: Unexpected Error')
+            logging.error(resp.status_code)
+            logging.error(resp.json())
+            raise Exception('Everbridge Post: Unexpected Error')
         except requests.exceptions.RequestException as error:
             logging.error(error)
             raise error
@@ -60,7 +65,12 @@ class Session:
         """
         try:
             resp = self.s.delete(url, data=json.dumps(data))
-            return resp.json()
+            if resp.status_code == 200:
+                return resp.json()
+            logging.error('Everbridge Delete: Unexpected Error')
+            logging.error(resp.status_code)
+            logging.error(resp.json())
+            raise Exception('Everbridge Delete: Unexpected Error')
         except requests.exceptions.RequestException as error:
             logging.error(error)
             raise error
@@ -70,7 +80,12 @@ class Session:
         """
         try:
             resp = self.s.get(url, json=json.dumps(data))
-            return resp.json()
+            if resp.status_code == 200:
+                return resp.json()
+            logging.error('Everbridge Get: Unexpected Error')
+            logging.error(resp.status_code)
+            logging.error(resp.json())
+            raise Exception('Everbridge Get: Unexpected Error')
         except requests.exceptions.RequestException as error:
             logging.error(error)
             raise error
@@ -80,7 +95,12 @@ class Session:
         """
         try:
             resp = self.s.put(url, json=data)
-            return resp.json()
+            if resp.status_code == 200:
+                return resp.json()
+            logging.error('Everbridge Put: Unexpected Error')
+            logging.error(resp.status_code)
+            logging.error(resp.json())
+            raise Exception('Everbridge Put: Unexpected Error')
         except requests.exceptions.RequestException as error:
             logging.error(error)
             raise error

@@ -4,7 +4,7 @@ Logic to handle the Everbridge Contacts
 import base64
 import re
 import logging
-from .everbridge import Everbridge
+from .everbridge_api import Session
 def create_authheader(username, password):
     """
     Creates Header for HTTP CALLS, Creates base64 encode for auth
@@ -32,35 +32,45 @@ def check_group(group_name, session):
         return group_info["result"]["id"]
     logging.error(group_info["message"])
     raise ValueError
-def check_contact(contact, content_check):
+def check_contact(contact, contact_check):
     """
     Checks AD contact data with everbridge contact data and updates if mismatched
     """
     need_to_update = 0
     # Checks Work Desk Phone
     if contact["businessPhones"]:
-        phone_string = contact["businessPhones"][0]
-        phone_string = re.sub(r'-|\s|\(|\)|\+1', '', phone_string)
-        if len(phone_string) == 7:
-            phone_string = "808" + phone_string
-        if (content_check["workPhone"] == '' or
-                (content_check["workPhone"] != '' and
-                 str(phone_string) !=
-                 str(content_check["workPhone"]["value"]))):
-            need_to_update = 1
+        phone_string = re.sub(r'-|\s|\(|\)|\+1', '', contact["businessPhones"][0])
+        #Regex to check for invalid phone numbers
+        if re.fullmatch(r'\d{10}x?\d{3}|\d{7}x?\d{3}', phone_string) is not None:
+            # Adds 808 if phone number is missing
+            if re.fullmatch(r'\d{3}[-\s]?\d{4}', phone_string) is not None:
+                phone_string = "808" + phone_string
+            if (contact_check["workPhone"] == '' or
+                    (contact_check["workPhone"] != '' and
+                     str(phone_string) !=
+                     str(contact_check["workPhone"]["value"]))):
+                need_to_update = 1
+            #Checks to see if phone was extension, then doesnt update if values are same
+            ext_split = phone_string.split('x')
+            if len(ext_split) > 1:
+                if ((contact_check.get("work_ext") is not None and
+                     contact_check["work_ext"] == ext_split[1]) and
+                        contact_check["workPhone"]["value"] == ext_split[0]):
+                    need_to_update = 0
     # Checks External ID
-    if contact["userPrincipalName"] != content_check["mail"]:
+    if contact["userPrincipalName"] != contact_check["mail"]:
         need_to_update = 1
     # Checks Mobile Phone
-    if ((contact.get("mobilePhone") is not None and
-         content_check["mobilePhone"] == '') or
-            contact.get("mobilePhone") is not None and
+    if (contact.get("mobilePhone") is not None and
+            re.fullmatch(r'\d{10}x?\d{3}|\d{7}x?\d{3}', contact["mobilePhone"]) is not None):
+        if (contact_check["mobilePhone"] == '' or
+                contact.get("mobilePhone") is not None and
                 re.sub(r'-|\s|\(|\)|\+1', '', contact["mobilePhone"]) !=
-                content_check["mobilePhone"]["value"]):
-        need_to_update = 1
+                contact_check["mobilePhone"]["value"]):
+            need_to_update = 1
     # Creates Contact Object to be sent
     return need_to_update
-def create_contact(contact, ever_id):
+def create_contact(contact, ever_id=None):
     """
     Create New EverBridge Contact with Email Delivery and Phone Delivery if available
     Contact Paths are the delivery methods for notifications in Everbridge.
@@ -77,46 +87,72 @@ def create_contact(contact, ever_id):
             "skipValidation": "false"
         }
     ]
+    #Removes invalid phone numbers to allow the contact to be inserted
     if contact["businessPhones"]:
         for phone_number in contact["businessPhones"]:
-            phone_string = phone_number
-            re.sub(r'-|\s|\(|\)|\+1', '', phone_string)
-            if len(phone_string) == 7:
+            # Add phone number if phone number array isn't empty
+            #Removes non number characters
+            phone_string = re.sub(r'-|\s|\(|\)|\+1', '', phone_number)
+            #Adds Area code to phone number
+            if re.fullmatch(r'\d{3}[-\s]?\d{4}', phone_string) is not None:
                 phone_string = "808" + phone_string
-            if len(phone_string) >= 10:
-                # Add phone number if phone number array isn't empty
-                # Adds Work Desk Phone Path to contact
-                paths.append(
-                    {
-                        "waitTime": 0,
-                        "status": "A",
-                        "pathId": 241901148045321,
-                        "countryCode": "US",
-                        "value": phone_string,
-                        "skipValidation": "false"
-                    })
+            # Adds Work Desk Phone Path to contact
+            phone_path = {
+                "waitTime": 0,
+                "status": "A",
+                "pathId": 241901148045321,
+                "countryCode": "US",
+                "value": phone_string,
+                "skipValidation": "false"
+            }
+            #Checks to see if phone has extension
+            ext_split = phone_string.split('x')
+            if len(ext_split) > 1:
+                phone_path["value"] = ext_split[0]
+                phone_path["phoneExt"] = ext_split[1]
+            #Will not add phone if format is invalid
+            if re.fullmatch(r'\d{10}x?\d{3}|\d{7}x?\d{3}', phone_string) is None:
+                logging.warning("%s has invalid working phone number", contact["displayName"])
+            else:
+                paths.append(phone_path)
     # Adds Work Cell Path to contact if mobile phone number is present
-    if contact.get("mobilePhone") is not None:
-        phone_string = contact["mobilePhone"].replace(" ", "").replace("-", "")
-        paths.append(
-            {
-                "waitTime": 0,
-                "status": "A",
-                "pathId": 241901148045319,
-                "countryCode": "US",
-                "value": phone_string,
-                "skipValidation": "false"
-            })
-        # Adds Work Cell SMS Path to contact
-        paths.append(
-            {
-                "waitTime": 0,
-                "status": "A",
-                "pathId": 241901148045324,
-                "countryCode": "US",
-                "value": phone_string,
-                "skipValidation": "false"
-            })
+    if contact.get("mobilePhone") is not None and contact["mobilePhone"] != "":
+        phone_string = re.sub(r'-|\s|\(|\)|\+1', '', contact["mobilePhone"])
+        #Adds Area code to cell number
+        if re.fullmatch(r'\d{3}[-\s]?\d{4}', contact["mobilePhone"]) is not None:
+            phone_string = "808" + phone_string
+        #Checks to see if phone has extension
+        ext_split = phone_string.split('x')
+        phone_ext = ""
+        if len(ext_split) > 1:
+            phone_string = ext_split[0]
+            phone_ext= ext_split[1]
+        #Will not add mobile phone if format is invalid
+        if re.fullmatch(r'\d{10}x?\d{3}|\d{7}x?\d{3}', phone_string) is None:
+            logging.warning("%s has invalid mobile phone number", contact["displayName"])
+        else:
+            #Adds Work Cell Path to contact
+            paths.append(
+                {
+                    "waitTime": 0,
+                    "status": "A",
+                    "pathId": 241901148045319,
+                    "countryCode": "US",
+                    "value": phone_string,
+                    "skipValidation": "false",
+                    "phoneExt": phone_ext
+                })
+            # Adds Work Cell SMS Path to contact
+            paths.append(
+                {
+                    "waitTime": 0,
+                    "status": "A",
+                    "pathId": 241901148045324,
+                    "countryCode": "US",
+                    "value": phone_string,
+                    "skipValidation": "false",
+                    "phoneExt":phone_ext
+                })
     # Record Types allow the org to categorize employees.
     # The static Record Type Id is the default "Employee" record type.
     # To manage Record Types, go to Settings -> Contacts and Groups-> Contact Record Types.
@@ -150,6 +186,9 @@ def fill_contact(contact):
             last = "None"
         contact["givenName"] = first
         contact["surname"] = last
+    if contact.get("surname") is None:
+        contact["surname"] = "Missing Last Name"
+        logging.warning("%s has no last name ONLY. Adding in placeholder", contact["displayName"])
     if contact.get("userPrincipalName") is None and contact["mail"] is None:
         logging.warning("%s has no email. Adding in placeholder", contact["displayName"])
         contact["userPrincipalName"] = "missingmail" + contact["givenName"] +"@hawaii.gov"
@@ -214,6 +253,8 @@ def parse_ever_data(ever_data):
                         "workPhone":"",
                         "mail":contact["externalId"]}
         if len(contact["paths"]) > 1 and contact["paths"][1]["pathId"] == 241901148045321:
+            if contact["paths"][1].get("phoneExt") is not None:
+                ever_contact["work_ext"] = contact["paths"][1]["phoneExt"]
             ever_contact["workPhone"] = contact["paths"][1]
         if len(contact["paths"]) > 2:
             ever_contact["mobilePhone"] = contact["paths"][2]
@@ -279,7 +320,6 @@ def delete_evercontacts(group_id, group_backup, session):
                 delete_list.append(contact['id'])
         # Deletes users in Everbridge Group
         if delete_list:
-            #print(delete_list)
             session.delete_contacts_from_group(group_id, delete_list)
             # Deletes a group if there is no members in the group
             if len(ever_group) - len(delete_list) == 0:
@@ -299,7 +339,7 @@ def sync_everbridge_group(username, password, org, group_data, group_name):
         logging.error('sync_everbridge_group: Invalid Parameter')
         raise Exception('Async_everbridge_group: Invalid parameter')
     # Convert username and password to base64
-    everbridge_session = Everbridge(org, username, password)
+    everbridge_session = Session(org, create_authheader(username, password))
     # Checks to see if group exists in Everbridge Org
     group_id = check_group(group_name, everbridge_session)
     # Create the search query for the group Everbridge Contacts
