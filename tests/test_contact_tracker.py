@@ -7,7 +7,9 @@ def create_tracker():
     """
     Creates ContactTracker instacne with data
     """
-    tracker = ContactTracker()
+    ad_gid = 123
+    ev_gid = 456
+    tracker = ContactTracker(ad_gid, ev_gid)
     tracker.push(ContactTracker.INSERT_CONTACT, {'externalId': 'aaa1@test.com'})
     tracker.push(ContactTracker.INSERT_CONTACT, {'externalId': 'aaa2@test.com'})
     tracker.push(ContactTracker.INSERT_CONTACT, {'externalId': 'aaa3@test.com'})
@@ -117,6 +119,8 @@ def test_report():
     """
     tracker = create_tracker()
     rslt = tracker.report()
-    exp = {'inserted_contacts': 3, 'removed_members': 3, 'updated_contacts': 3,
-           'deleted_contacts': 0, 'added_members': 0}
+    exp = {
+        'azure_group_id': 123, 'everbridge_group_id': 456,
+        'inserted_contacts': 3, 'removed_members': 3, 'updated_contacts': 3,
+        'deleted_contacts': 0, 'added_members': 0}
     assert rslt == exp

@@ -10,7 +10,9 @@ class ContactTracker:
     UPDATE_CONTACT = 'UPDATE_CONTACT'
     REMOVE_MEMBER = 'REMOVE_MEMBER'
 
-    def __init__(self):
+    def __init__(self, ad_group_id=None, ev_group_id=None):
+        self.ad_group_id = ad_group_id
+        self.ev_group_id = ev_group_id
         self.new_contacts = []
         self.updated_contacts = []
         self.obsolete_contacts = []
@@ -57,6 +59,7 @@ class ContactTracker:
     def get_inserted_contact_external_ids(self, per=100):
         """
         Returns the list of externalIds from new_contacts
+        The list is divided into sublists per given number (default 100)
         """
         filters = []
         ids = ""
@@ -95,6 +98,8 @@ class ContactTracker:
         Returns size of each list
         """
         return {
+            'azure_group_id': self.ad_group_id,
+            'everbridge_group_id': self.ev_group_id,
             'inserted_contacts': len(self.new_contacts),
             'updated_contacts': len(self.updated_contacts),
             'deleted_contacts': len(self.obsolete_contacts),

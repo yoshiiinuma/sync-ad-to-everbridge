@@ -34,7 +34,7 @@ class Synchronizer:
             rslt = self.sync_group(itr_ad, itr_ev)
             # Delete the group from Everbridge if no members exist
             if rslt['everbridge'] + rslt['inserted'] - rslt['deleted'] == 0:
-                self._remove_everbridge_group(gid_ev)
+                self._delete_everbridge_group(gid_ev)
                 rslt['removed'] = True
             self.report[name] = rslt
             logging.info("Synched %s", name)
@@ -45,7 +45,7 @@ class Synchronizer:
         """
         Syncs specified AD Grdoup to Everbridge group
         """
-        tracker = ContactTracker()
+        tracker = ContactTracker(itr_ad.get_group_id(), itr_ev.get_group_id())
         con_ad = next(itr_ad)
         con_ev = next(itr_ev)
         while con_ad or con_ev:
@@ -58,8 +58,6 @@ class Synchronizer:
                 tracker.push(ContactTracker.INSERT_CONTACT, convert_to_everbridge(con_ad))
                 con_ad = next(itr_ad)
             elif con_ad['userPrincipalName'] == con_ev['externalId']:
-                #if is_different(con_ad, con_ev):
-                #    upsert_list.append(convert_to_everbridge(con_ad, con_ev['id']))
                 converted = convert_to_everbridge(con_ad, con_ev['id'])
                 if con_ev != converted:
                     tracker.push(ContactTracker.UPDATE_CONTACT, converted)
@@ -76,8 +74,6 @@ class Synchronizer:
         self._handle_delete(itr_ev.get_group_id(), tracker)
         self._handle_upsert(itr_ev.get_group_id(), tracker)
         report = tracker.report()
-        report['azure_group_id'] = itr_ad.get_group_id()
-        report['everbridge_group_id'] = itr_ev.get_group_id()
         report['azure_count'] = itr_ad.get_total()
         report['everbridge_count'] = itr_ev.get_total()
         return report
@@ -90,9 +86,9 @@ class Synchronizer:
         logging.info("Created Everbridge Group %s", group_name)
         return new_group['id']
 
-    def _remove_everbridge_group(self, group_name):
+    def _delete_everbridge_group(self, group_name):
         """
-        Removes a Everbridge group
+        Deletes a Everbridge group
         """
         self.everbridge.delete_group(group_name)
         logging.info("Deleted Everbridge Group %s", group_name)
@@ -108,17 +104,18 @@ class Synchronizer:
         contacts = tracker.get_delete_contact_ids()
         if contacts:
             self.everbridge.delete_contacts(group_id, contacts)
-            #tracker.set_obsolete_contacts(contacts)
 
     def _handle_upsert(self, group_id, tracker):
         """
-        Upserts contacts and adds members to group
+        Upserts contacts and adds newly inserted members to group
         """
         updated = tracker.get_upsert_contacts()
         if not updated:
             return
         self.everbridge.upsert_contacts(updated)
         new_members = []
+        # Retrieve Everbridge IDs for newly inserted contacts
+        # ids are given per 100
         for ids in tracker.get_inserted_contact_external_ids():
             contacts = self.everbridge.get_contacts_by_external_ids(ids)
             new_members += [con['id'] for con in contacts]
