@@ -73,9 +73,9 @@ class Synchronizer:
                 con_ad = next(itr_ad)
         self._handle_delete(itr_ev.get_group_id(), tracker)
         self._handle_upsert(itr_ev.get_group_id(), tracker)
+        tracker.set_azure_count(itr_ad.get_total())
+        tracker.set_everbridge_count(itr_ev.get_total())
         report = tracker.report()
-        report['azure_count'] = itr_ad.get_total()
-        report['everbridge_count'] = itr_ev.get_total()
         return report
 
     def _create_new_everbridge_group(self, group_name):

@@ -121,6 +121,7 @@ def test_report():
     rslt = tracker.report()
     exp = {
         'azure_group_id': 123, 'everbridge_group_id': 456,
+        'azure_count': 0, 'everbridge_count': 0,
         'inserted_contacts': 3, 'removed_members': 3, 'updated_contacts': 3,
         'deleted_contacts': 0, 'added_members': 0}
     assert rslt == exp

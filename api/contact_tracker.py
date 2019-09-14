@@ -13,6 +13,8 @@ class ContactTracker:
     def __init__(self, ad_group_id=None, ev_group_id=None):
         self.ad_group_id = ad_group_id
         self.ev_group_id = ev_group_id
+        self.ad_count = 0
+        self.ev_count = 0
         self.new_contacts = []
         self.updated_contacts = []
         self.obsolete_contacts = []
@@ -24,6 +26,18 @@ class ContactTracker:
         Sets new members
         """
         self.new_members = members
+
+    def set_azure_count(self, count):
+        """
+        Sets the total read count of AD group members
+        """
+        self.ad_count = count
+
+    def set_everbridge_count(self, count):
+        """
+        Sets the total read count of Everbridge group members
+        """
+        self.ev_count = count
 
     def push(self, optype, contact):
         """
@@ -100,6 +114,8 @@ class ContactTracker:
         return {
             'azure_group_id': self.ad_group_id,
             'everbridge_group_id': self.ev_group_id,
+            'azure_count': self.ad_count,
+            'everbridge_count': self.ev_count,
             'inserted_contacts': len(self.new_contacts),
             'updated_contacts': len(self.updated_contacts),
             'deleted_contacts': len(self.obsolete_contacts),
