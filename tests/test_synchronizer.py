@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from api.synchronizer import Synchronizer
 from api.azure_group_member_iterator import AzureGroupMemberIterator
 from api.everbridge_group_member_iterator import EverbridgeGroupMemberIterator
-from azure_helper import create_azure_instance, create_azure_contacts
+from azure_helper import create_azure_mock, create_azure_contacts
 from everbridge_helper import create_everbridge_mock, \
                               create_everbridge_contacts, \
                               modify_everbridge_data
@@ -18,16 +18,6 @@ def pp(obj):
     Prtty Print
     """
     pprint.PrettyPrinter().pprint(obj)
-
-def create_azure_mock(group_name, ids):
-    """
-    Creates Azure API mock
-    """
-    data = [create_azure_contacts(ids)]
-    azure = create_azure_instance()
-    azure.get_group_name = MagicMock(return_value=group_name)
-    azure.get_paged_group_members = MagicMock(side_effect=data)
-    return azure
 
 def test_run():
     """
