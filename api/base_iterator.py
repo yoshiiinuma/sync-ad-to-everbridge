@@ -22,9 +22,17 @@ class BaseIterator:
     # pylint: disable=no-self-use
     def _get_next_page(self):
         """
-        Fetches paged group members; MUST BE IMPLEMENTED IN THE CHILD
+        Fetches paged group members
         """
-        raise Exception('_get_next_page MUST BE IMPLEMENTED IN THE CHILD')
+        if self.no_more_data:
+            return
+        self.current_page += 1
+        self.members = self.api.get_paged_group_members(self.group_id, self.current_page)
+        self.index = 0
+        self.nom = len(self.members)
+        # no more data if the number of memebers from the last fetch is 0
+        if self.nom == 0:
+            self.no_more_data = True
 
     def __iter__(self):
         """
