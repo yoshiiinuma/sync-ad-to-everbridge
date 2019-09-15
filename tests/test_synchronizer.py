@@ -7,7 +7,9 @@ from api.synchronizer import Synchronizer
 from api.azure_group_member_iterator import AzureGroupMemberIterator
 from api.everbridge_group_member_iterator import EverbridgeGroupMemberIterator
 from azure_helper import create_azure_instance, create_azure_contacts
-from everbridge_helper import create_everbridge_instance, create_everbridge_contacts
+from everbridge_helper import create_everbridge_mock, \
+                              create_everbridge_contacts, \
+                              modify_everbridge_data
 # pylint: disable=unused-import
 import tests.log_helper
 
@@ -26,46 +28,6 @@ def create_azure_mock(group_name, ids):
     azure.get_group_name = MagicMock(return_value=group_name)
     azure.get_paged_group_members = MagicMock(side_effect=data)
     return azure
-
-def create_azure_mock_with_multiple_groups(group_names, data):
-    """
-    Creates Azure API mock
-    """
-    azure = create_azure_instance()
-    azure.get_group_name = MagicMock(side_effect=group_names)
-    azure.get_paged_group_members = MagicMock(side_effect=data)
-    return azure
-
-def create_everbridge_mock(data):
-    """
-    Creates Everbridge API mock
-    """
-    ever = create_everbridge_instance()
-    ever.get_group_id_by_name = MagicMock(return_value=123)
-    ever.get_paged_group_members = MagicMock(side_effect=data)
-    ever.add_group = MagicMock()
-    ever.delete_group = MagicMock()
-    ever.get_contacts_by_external_ids = MagicMock()
-    ever.delete_contacts = MagicMock()
-    ever.upsert_contacts = MagicMock()
-    ever.add_members_to_group = MagicMock()
-    ever.delete_members_from_group = MagicMock()
-    return ever
-
-def modify_everbridge_data(data, ids, key, val):
-    """
-    Changes contacts specified by ids
-    """
-    for contact in data:
-        if contact['id'] in ids:
-            if key == 'phone':
-                contact['paths'][1]['value'] = val
-            elif key == 'mobile':
-                contact['paths'][2]['value'] = val
-            elif key == 'sms':
-                contact['paths'][2]['value'] = val
-            else:
-                contact[key] = val
 
 def test_run():
     """
