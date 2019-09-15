@@ -33,7 +33,7 @@ class Synchronizer:
             # Sync AD group to Everbridge
             rslt = self.sync_group(itr_ad, itr_ev)
             # Delete the group from Everbridge if no members exist
-            if rslt['everbridge'] + rslt['inserted'] - rslt['deleted'] == 0:
+            if rslt['everbridge_count'] + rslt['inserted_contacts'] - rslt['removed_members'] == 0:
                 self._delete_everbridge_group(gid_ev)
                 rslt['removed'] = True
             self.report[name] = rslt
