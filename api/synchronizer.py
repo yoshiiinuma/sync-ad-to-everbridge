@@ -45,7 +45,7 @@ class Synchronizer:
         """
         Syncs specified AD Grdoup to Everbridge group
         """
-        tracker = ContactTracker(itr_ad.get_group_id(), itr_ev.get_group_id())
+        tracker = ContactTracker()
         con_ad = next(itr_ad)
         con_ev = next(itr_ev)
         while con_ad or con_ev:
@@ -73,9 +73,14 @@ class Synchronizer:
                 con_ad = next(itr_ad)
         self._handle_delete(itr_ev.get_group_id(), tracker)
         self._handle_upsert(itr_ev.get_group_id(), tracker)
-        tracker.set_azure_count(itr_ad.get_total())
-        tracker.set_everbridge_count(itr_ev.get_total())
-        report = tracker.report()
+        return Synchronizer._enhance_report(tracker.report(), itr_ad, itr_ev)
+
+    @staticmethod
+    def _enhance_report(report, itr_ad, itr_ev):
+        report['azure_group_id'] = itr_ad.get_group_id()
+        report['everbridge_group_id'] = itr_ev.get_group_id()
+        report['azure_count'] = itr_ad.get_total()
+        report['everbridge_count'] = itr_ev.get_total()
         return report
 
     def _create_new_everbridge_group(self, group_name):
