@@ -30,5 +30,4 @@ def create_everbridge_contacts(ad_ids, need_ever_id=False):
     """
     if need_ever_id:
         return [create_everbridge_contact(seq, seq) for seq in ad_ids]
-    else:
-        return [create_everbridge_contact(seq) for seq in ad_ids]
+    return [create_everbridge_contact(seq) for seq in ad_ids]

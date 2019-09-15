@@ -72,7 +72,6 @@ def test_run():
     Should synchronize specified AD groups to Everbridge
     """
     gid = 123
-    ad_group_ids = [gid]
     azure = create_azure_mock('GROUP1', [1, 2, 4, 5, 6, 7])
     data = [create_everbridge_contacts([1, 2, 3, 5, 8], True)]
     delete_ids = [3, 8]
@@ -103,18 +102,19 @@ def test_run():
     ever.upsert_contacts.assert_called_with(upsert_data)
     ever.get_contacts_by_external_ids.assert_called_with(inserted_exids)
     ever.add_members_to_group.assert_called_with(gid, insert_ids)
-    assert rslt == { 'GROUP1': {
+    assert rslt == {
+        'GROUP1': {
             'azure_group_id': 123, 'everbridge_group_id': 123,
             'azure_count': 6, 'everbridge_count': 5,
             'inserted_contacts': 3, 'updated_contacts': 2, 'removed_members': 2,
-            'deleted_contacts': 2, 'added_members': 3}}
+            'deleted_contacts': 2, 'added_members': 3}
+        }
 
 def test_run_add_group():
     """
     Should add a group to Everbridge and insert all the members
     """
     gid = 123
-    ad_group_ids = [gid]
     azure = create_azure_mock('GROUP1', [1, 2])
     data = [create_everbridge_contacts([], True)]
     insert_ids = [1, 2]
@@ -122,7 +122,7 @@ def test_run_add_group():
     inserted_data = [create_everbridge_contacts(insert_ids, True)]
     inserted_exids = ('&externalIds=aaabbb0001@xxx.com&externalIds=aaabbb0002@xxx.com')
     ever = create_everbridge_mock(data)
-    ever.add_group  = MagicMock(return_value={'id': 123})
+    ever.add_group = MagicMock(return_value={'id': 123})
     ever.get_group_id_by_name = MagicMock(return_value=None)
     ever.get_contacts_by_external_ids = MagicMock(side_effect=inserted_data)
     app = Synchronizer(azure, ever)
@@ -138,18 +138,19 @@ def test_run_add_group():
     ever.upsert_contacts.assert_called_with(insert_data)
     ever.get_contacts_by_external_ids.assert_called_with(inserted_exids)
     ever.add_members_to_group.assert_called_with(gid, insert_ids)
-    assert rslt == { 'GROUP1': {
+    assert rslt == {
+        'GROUP1': {
             'azure_group_id': 123, 'everbridge_group_id': 123,
             'azure_count': 2, 'everbridge_count': 0,
             'inserted_contacts': 2, 'updated_contacts': 0, 'removed_members': 0,
-            'deleted_contacts': 0, 'added_members': 2}}
+            'deleted_contacts': 0, 'added_members': 2}
+        }
 
 def test_run_delete_group():
     """
     Should delete the all the members and the group
     """
     gid = 123
-    ad_group_ids = [gid]
     azure = create_azure_mock('GROUP1', [])
     data = [create_everbridge_contacts([1, 2, 3], True)]
     delete_ids = [1, 2, 3]
@@ -168,11 +169,13 @@ def test_run_delete_group():
     ever.upsert_contacts.assert_not_called()
     ever.get_contacts_by_external_ids.assert_not_called()
     ever.add_members_to_group.assert_not_called()
-    assert rslt == { 'GROUP1': {
+    assert rslt == {
+        'GROUP1': {
             'azure_group_id': 123, 'everbridge_group_id': 123,
             'azure_count': 0, 'everbridge_count': 3,
             'inserted_contacts': 0, 'updated_contacts': 0, 'removed_members': 3,
-            'deleted_contacts': 3, 'added_members': 0, 'removed': True}}
+            'deleted_contacts': 3, 'added_members': 0, 'removed': True}
+        }
 
 def test_sync_group_insert_and_delete():
     """

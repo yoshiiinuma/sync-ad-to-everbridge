@@ -10,6 +10,7 @@ class ContactTracker:
     UPDATE_CONTACT = 'UPDATE_CONTACT'
     REMOVE_MEMBER = 'REMOVE_MEMBER'
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, ad_group_id=None, ev_group_id=None):
         self.ad_group_id = ad_group_id
         self.ev_group_id = ev_group_id

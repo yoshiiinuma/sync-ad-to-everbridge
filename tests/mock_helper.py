@@ -133,8 +133,8 @@ def create_everbridge_insert_mock(group_value):
     Setup delete mock session
     """
     mock_session = MagicMock()
-    mock_session.get_filtered_contacts = MagicMock(return_value = group_value)
-    mock_session.insert_new_contacts = MagicMock(return_value = None)
+    mock_session.get_filtered_contacts = MagicMock(return_value=group_value)
+    mock_session.insert_new_contacts = MagicMock(return_value=None)
     return mock_session
 
 class LoggingMock(BaseMock):

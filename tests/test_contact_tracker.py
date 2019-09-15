@@ -17,9 +17,9 @@ def create_tracker():
     tracker.push(ContactTracker.UPDATE_CONTACT, {'id': 2, 'externalId': 'bbb2@test.com'})
     tracker.push(ContactTracker.UPDATE_CONTACT, {'id': 3, 'externalId': 'bbb3@test.com'})
     tracker.push(ContactTracker.REMOVE_MEMBER,
-                 {'id': 4, 'externalId': 'ccc4@test.com', 'groups': [1, 2]})
+                 {'id': 4, 'externalId': 'ccc4@test.com', 'groups': [456, 999]})
     tracker.push(ContactTracker.REMOVE_MEMBER,
-                 {'id': 5, 'externalId': 'ccc5@test.com', 'groups': [1]})
+                 {'id': 5, 'externalId': 'ccc5@test.com', 'groups': [456]})
     tracker.push(ContactTracker.REMOVE_MEMBER,
                  {'id': 6, 'externalId': 'ccc6@test.com'})
     return tracker
@@ -55,8 +55,8 @@ def test_remove_member():
     tracker = create_tracker()
     contacts = tracker.get_contacts(ContactTracker.REMOVE_MEMBER)
     expected = [
-        {'id': 4, 'externalId': 'ccc4@test.com', 'groups': [1, 2]},
-        {'id': 5, 'externalId': 'ccc5@test.com', 'groups': [1]},
+        {'id': 4, 'externalId': 'ccc4@test.com', 'groups': [456, 999]},
+        {'id': 5, 'externalId': 'ccc5@test.com', 'groups': [456]},
         {'id': 6, 'externalId': 'ccc6@test.com'}]
     assert contacts == expected
 
