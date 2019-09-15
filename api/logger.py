@@ -14,6 +14,8 @@ from os.path import dirname, abspath, join
 import sys
 import logging
 
+SUPPORTED_LOGLEVELS = ('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG')
+
 def setup_logger(filename=None, level=None):
     """
     Sets up logger
