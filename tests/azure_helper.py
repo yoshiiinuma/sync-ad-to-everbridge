@@ -14,9 +14,7 @@ def create_azure_mock(group_name, ids):
     azure.get_paged_group_members = MagicMock(side_effect=data)
     return azure
 
-# pylint: disable=dangerous-default-value
-def create_azure_instance(cid=None, secret=None, tenant=None,
-                          token={'accessToken':'XXXTOKENXXX'}):
+def create_azure_instance(cid=None, secret=None, tenant=None, token=None):
     """
     Returns Azure instance
     """
@@ -26,6 +24,8 @@ def create_azure_instance(cid=None, secret=None, tenant=None,
         secret = 'secret'
     if not tenant:
         tenant = 'tenant'
+    if not token:
+        token = {'accessToken': 'XXXTOKENXXX'}
     azure = Azure(cid, secret, tenant)
     azure.set_token(token)
     return azure
