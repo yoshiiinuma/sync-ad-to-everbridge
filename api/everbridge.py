@@ -186,19 +186,19 @@ class Everbridge:
     #    url = self.contacts_groups_url(params)
     #    return self._get(url)
 
-    def get_all_groups(self, page=1):
-        """
-        Gets Everbridge group contact
-        ?idType determines to get the group by id or name
-        """
-        params = f"?pageSize={self.pagesize}&pageNumber={page}"
-        url = self.groups_url(params)
-        res = self._get(url)
-        if 'page' in res and 'data' in res['page']:
-            return res['page']['data']
-        logging.error('EVERBRIDGE.GET_ALL_GROUP: Unexpected Response')
-        logging.error(res)
-        raise Exception('EVERBRIDGE.GET_ALL_GROUP: Unexpected Response')
+    #def get_all_groups(self, page=1):
+    #    """
+    #    Gets Everbridge group contact
+    #    ?idType determines to get the group by id or name
+    #    """
+    #    params = f"?pageSize={self.pagesize}&pageNumber={page}"
+    #    url = self.groups_url(params)
+    #    res = self._get(url)
+    #    if 'page' in res and 'data' in res['page']:
+    #        return res['page']['data']
+    #    logging.error('EVERBRIDGE.GET_ALL_GROUP: Unexpected Response')
+    #    logging.error(res)
+    #    raise Exception('EVERBRIDGE.GET_ALL_GROUP: Unexpected Response')
 
     #def get_group_by_id(self, gid):
     #    """
@@ -251,8 +251,11 @@ class Everbridge:
         params += "&sortBy=externalId&direction=ASC"
         url = self.contacts_url(params)
         res = self._get(url)
-        if 'page' in res and 'data' in res['page']:
-            return res['page']['data']
+        if 'page' in res:
+            if 'data' in res['page']:
+                return res['page']['data']
+            else:
+                return []
         logging.error('EVERBRIDGE.GET_GROUP_MEMBERS: Unexpected Response')
         logging.error(res)
         raise Exception('EVERBRIDGE.GET_GROUP_MEMBERS: Unexpected Response')
