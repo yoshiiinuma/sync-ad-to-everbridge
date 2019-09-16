@@ -53,3 +53,11 @@ def create_azure_contacts(ids):
     Returns Azure Contacts with specified IDs
     """
     return [create_azure_contact(seq) for seq in ids]
+
+def modify_azure_data(data, ids, key, val):
+    """
+    Changes contacts specified by ids
+    """
+    for contact in data:
+        if contact['id'] in ids:
+            contact[key] = val
