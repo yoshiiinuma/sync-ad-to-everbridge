@@ -4,11 +4,14 @@ Azure Test Helper
 from unittest.mock import MagicMock
 from api.azure import Azure
 
-def create_azure_mock(group_name, ids):
+def create_azure_mock(group_name, ids=None, data=None):
     """
     Creates Azure API mock
     """
-    data = [create_azure_contacts(ids)]
+    if not data:
+        if not ids:
+            ids = []
+        data = [create_azure_contacts(ids)]
     azure = create_azure_instance()
     azure.get_group_name = MagicMock(return_value=group_name)
     azure.get_paged_group_members = MagicMock(side_effect=data)
