@@ -44,7 +44,6 @@ class BaseIterator:
         """
         Returns next group member object
         """
-        self.show()
         if self.no_more_data:
             return None
         if self.index >= self.nom:
