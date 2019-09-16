@@ -1,23 +1,16 @@
 """
 Tests Synchronizer
 """
-import pprint
 from unittest.mock import MagicMock
 from api.synchronizer import Synchronizer
 from api.azure_group_member_iterator import AzureGroupMemberIterator
 from api.everbridge_group_member_iterator import EverbridgeGroupMemberIterator
-from azure_helper import create_azure_mock, create_azure_contacts
+from azure_helper import create_azure_mock
 from everbridge_helper import create_everbridge_mock, \
                               create_everbridge_contacts, \
                               modify_everbridge_data
 # pylint: disable=unused-import
 import tests.log_helper
-
-def pp(obj):
-    """
-    Prtty Print
-    """
-    pprint.PrettyPrinter().pprint(obj)
 
 def test_run():
     """
