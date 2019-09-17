@@ -50,23 +50,18 @@ def fill_azure_contact(contact):
     if 'mobilePhone' in contact:
         contact['mobilePhone'] = normalize_phone(contact['mobilePhone'])
 
-#def is_different(con_ad, con_ev):
-#    """
-#    Returns True if Everbridge Contact is different from AD Contact
-#    """
-#    # Checks Work Desk Phone
-#    if con_ad['businessPhones']:
-#        phone = con_ad['businessPhones'][0]
-#        if not con_ev['workPhone'] == '' or phone != con_ev['workPhone']['value']:
-#            return True
-#    # Checks External ID
-#    if con_ad['userPrincipalName'] != con_ev['mail']:
-#        return True
-#    # Checks Mobile Phone
-#    if con_ad.get('mobilePhone'):
-#        if con_ad['mobilePhone'] != con_ev['mobilePhone']['value']:
-#            return True
-#    return False
+def extract_attributes_for_comparison(contact):
+    """
+    Returns Everbridge Contact which has the minimum set of attributes needed for comparison
+    """
+    keys = ('id', 'externalId', 'firstName', 'lastName', 'paths', 'recordTypeId')
+    return {key: contact.get(key, '') for key in keys}
+
+def is_different(con_ad, con_ev):
+    """
+    Returns True if Everbridge Contact is different from AD Contact
+    """
+    return con_ad != extract_attributes_for_comparison(con_ev)
 
 def convert_to_everbridge(contact, ever_id=None):
     """
@@ -83,13 +78,14 @@ def convert_to_everbridge(contact, ever_id=None):
             'status': 'A',
             'pathId': 241901148045316,
             'value': contact['userPrincipalName'],
-            'skipValidation': 'false'
+            'skipValidation': False
         }
     ]
     if contact['businessPhones']:
         for phone in contact['businessPhones']:
             #Checks to see if phone has extension
             extension = None
+            # pylint: disable=unused-variable
             if 'x' in phone:
                 phone, extension, *ignore = phone.split('x')
             path = {
@@ -98,14 +94,14 @@ def convert_to_everbridge(contact, ever_id=None):
                 'pathId': 241901148045321,
                 'countryCode': 'US',
                 'value': phone,
-                'skipValidation': 'false'}
+                'skipValidation': False}
             if extension:
                 path['phoneExt'] = extension
-            #if len(phone) >= 10:
             if re.fullmatch(r'\d{10}|\d{7}', phone):
                 paths.append(path)
             else:
-                logging.warning("%s has invalid working phone number %s", contact["displayName"], phone)
+                logging.warning("%s has invalid working phone number %s",
+                                contact["displayName"], phone)
     # Adds Work Cell Path to contact if mobile phone number is present
     if contact.get('mobilePhone'):
         if re.fullmatch(r'\d{10}|\d{7}', contact['mobilePhone']):
@@ -116,7 +112,7 @@ def convert_to_everbridge(contact, ever_id=None):
                     'pathId': 241901148045319,
                     'countryCode': 'US',
                     'value': contact['mobilePhone'],
-                    'skipValidation': 'false'
+                    'skipValidation': False
                 })
             # Adds Work Cell SMS Path to contact
             paths.append(
@@ -126,10 +122,11 @@ def convert_to_everbridge(contact, ever_id=None):
                     'pathId': 241901148045324,
                     'countryCode': 'US',
                     'value': contact['mobilePhone'],
-                    'skipValidation': 'false'
+                    'skipValidation': False
                 })
         else:
-            logging.warning("%s has invalid mobile phone number %s", contact["displayName"], contact['mobilePhone'])
+            logging.warning("%s has invalid mobile phone number %s",
+                            contact["displayName"], contact['mobilePhone'])
     # Base info for Contact
     # Record Types are required for contact creation.
     # Record Types allow the org to categorize employees.
