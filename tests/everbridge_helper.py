@@ -60,57 +60,6 @@ def create_session_mock(rtnval, code=None, method='GET'):
             raise Exception('Invalid Method: ' + method)
     return session
 
-def create_post_session_mock(rtnval, code=None):
-    """
-    Sets up requests session mock
-    """
-    session = MagicMock()
-    session.headers.update = MagicMock()
-    if code:
-        # If code is provided, session.get returns Response that contains rtnval
-        res = Response()
-        res.status_code = code
-        res.json = MagicMock(return_value=rtnval)
-        session.post = MagicMock(return_value=res)
-    else:
-        # Without code, session.get returns side_effect
-        session.post = MagicMock(side_effect=rtnval)
-    return session
-
-def create_put_session_mock(rtnval, code=None):
-    """
-    Sets up requests session mock
-    """
-    session = MagicMock()
-    session.headers.update = MagicMock()
-    if code:
-        # If code is provided, session.get returns Response that contains rtnval
-        res = Response()
-        res.status_code = code
-        res.json = MagicMock(return_value=rtnval)
-        session.put = MagicMock(return_value=res)
-    else:
-        # Without code, session.get returns side_effect
-        session.get = MagicMock(side_effect=rtnval)
-    return session
-
-def create_get_session_mock(rtnval, code=None):
-    """
-    Sets up requests session mock
-    """
-    session = MagicMock()
-    session.headers.update = MagicMock()
-    if code:
-        # If code is provided, session.get returns Response that contains rtnval
-        res = Response()
-        res.status_code = code
-        res.json = MagicMock(return_value=rtnval)
-        session.get = MagicMock(return_value=res)
-    else:
-        # Without code, session.get returns side_effect
-        session.get = MagicMock(side_effect=rtnval)
-    return session
-
 def create_everbridge_mock(data):
     """
     Creates Everbridge API mock
