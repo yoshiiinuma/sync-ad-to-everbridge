@@ -164,7 +164,7 @@ class Everbridge:
         Upserts contacts to everbridge org
         ?Version determines the batch API for insert values are 0 or 1
         """
-        if not contacts:
+        if contacts is None:
             raise Exception('EVERBRIDGE.UPSERT_CONTACTS: No Contacts Provided')
         # TODO MAX contacts 1000
         url = self.contacts_url("batch?version=1")
@@ -181,7 +181,12 @@ class Everbridge:
         """
         if not contacts:
             raise Exception('EVERBRIDGE.DELETE_CONTACTS: No Contacts Provided')
-        return self._delete(self.contacts_url("batch"), data=contacts)
+        rslt = self._delete(self.contacts_url("batch"), data=contacts)
+        if not rslt or ('code' in rslt and rslt['code'] != 100):
+            logging.error('EVERBRIDGE.DELETE_CONTACTS: Unexpected Response')
+            logging.error(rslt)
+            raise Exception('EVERBRIDGE.DELETE_CONTACTS: Unexpected Response')
+        return rslt
 
     #def get_group(self, group_id, page):
     #    """
@@ -274,7 +279,7 @@ class Everbridge:
         """
         if not group_id:
             raise Exception('EVERBRIDGE.DELETE_MEMBERS_FROM_GROUP: No Group ID Provided')
-        if not members:
+        if members is None:
             raise Exception('EVERBRIDGE.DELETE_MEMBERS_FROM_GROUP: No Members Provided')
         params = 'contacts?byType=id&groupId=' + str(group_id) + '&idType=id'
         url = self.groups_url(params)
@@ -292,7 +297,7 @@ class Everbridge:
         """
         if not group_id:
             raise Exception('EVERBRIDGE.ADD_MEMBERS_TO_GROUP: No Group ID Provided')
-        if not members:
+        if members is None:
             raise Exception('EVERBRIDGE.ADD_MEMBERS_TO_GROUP: No Members Provided')
         params = 'contacts?byType=id&groupId=' + str(group_id) + '&idType=id'
         url = self.groups_url(params)
