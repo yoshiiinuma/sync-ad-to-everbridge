@@ -119,7 +119,7 @@ def create_contact(contact, ever_id=None):
     if contact.get("mobilePhone") is not None and contact["mobilePhone"] != "":
         phone_string = re.sub(r'-|\s|\(|\)|\+1', '', contact["mobilePhone"])
         #Adds Area code to cell number
-        if re.fullmatch(r'\d{3}[-\s]?\d{4}', contact["mobilePhone"]) is not None:
+        if re.fullmatch(r'\d{7}x\d{3}|\d{7}', phone_string) is not None:
             phone_string = "808" + phone_string
         #Checks to see if phone has extension
         ext_split = phone_string.split('x')
@@ -128,7 +128,7 @@ def create_contact(contact, ever_id=None):
             phone_string = ext_split[0]
             phone_ext= ext_split[1]
         #Will not add mobile phone if format is invalid
-        if re.fullmatch(r'\d{10}x?\d{3}|\d{7}x?\d{3}', phone_string) is None:
+        if re.fullmatch(r'\d{10}', phone_string) is None or (phone_ext and re.fullmatch(r'\d{0,10}', phone_ext) is None):
             logging.warning("%s has invalid mobile phone number", contact["displayName"])
         else:
             #Adds Work Cell Path to contact

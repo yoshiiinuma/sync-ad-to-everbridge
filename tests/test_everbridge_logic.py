@@ -810,7 +810,7 @@ def test_invalid_mobile_phone():
                 "givenName": "Second",
                 "jobTitle": "IT Manager",
                 "mail": "Second.Two@hawaii.gov",
-                "mobilePhone": "(808)333-3333x3333",
+                "mobilePhone": "(808)333-3333x33333333333333333",
                 "officeLocation": "Nowhere",
                 "preferredLanguage": "",
                 "surname": "Two",
