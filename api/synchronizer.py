@@ -5,7 +5,7 @@ import logging
 from api.azure_group_member_iterator import AzureGroupMemberIterator
 from api.everbridge_group_member_iterator import EverbridgeGroupMemberIterator
 from api.contact_tracker import ContactTracker
-from api.contact_utils import convert_to_everbridge
+from api.contact_utils import convert_to_everbridge, is_different
 
 class Synchronizer:
     """
@@ -59,7 +59,7 @@ class Synchronizer:
                 con_ad = next(itr_ad)
             elif con_ad['userPrincipalName'] == con_ev['externalId']:
                 converted = convert_to_everbridge(con_ad, con_ev['id'])
-                if con_ev != converted:
+                if is_different(converted, con_ev):
                     tracker.push(ContactTracker.UPDATE_CONTACT, converted)
                 con_ad = next(itr_ad)
                 con_ev = next(itr_ev)
@@ -111,7 +111,7 @@ class Synchronizer:
         self.everbridge.delete_members_from_group(group_id, members)
         contacts = tracker.get_delete_contact_ids()
         if contacts:
-            self.everbridge.delete_contacts(group_id, contacts)
+            self.everbridge.delete_contacts(contacts)
 
     def _handle_upsert(self, group_id, tracker):
         """
