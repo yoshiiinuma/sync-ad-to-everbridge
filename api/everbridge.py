@@ -148,11 +148,13 @@ class Everbridge:
         """
         if not external_ids:
             raise Exception('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: No External IDs Provided')
-        url = self.contacts_url('?sortBy=externalId&direction=ASC&searchType=AND' + external_ids)
+        url = self.contacts_url('?sortBy=externalId&direction=ASC&searchType=OR' + external_ids)
         res = self._get(url)
-        print(res)
-        if 'page' in res and 'data' in res['page']:
-            return res['page']['data']
+        if 'page' in res:
+            if 'data' in res['page']:
+                return res['page']['data']
+            else:
+                return []
         logging.error('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: Unexpected Response')
         logging.error(res)
         raise Exception('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: Unexpected Response')
@@ -166,7 +168,12 @@ class Everbridge:
             raise Exception('EVERBRIDGE.UPSERT_CONTACTS: No Contacts Provided')
         # TODO MAX contacts 1000
         url = self.contacts_url("batch?version=1")
-        return self._post(url, data=contacts)
+        rslt = self._post(url, data=contacts)
+        if not rslt or ('code' in rslt and rslt['code'] != 100):
+            logging.error('EVERBRIDGE.UPSERT_CONTACTS: Unexpected Response')
+            logging.error(rslt)
+            raise Exception('EVERBRIDGE.UPSERT_CONTACTS: Unexpected Response')
+        return rslt
 
     def delete_contacts(self, contacts):
         """
@@ -271,7 +278,12 @@ class Everbridge:
             raise Exception('EVERBRIDGE.DELETE_MEMBERS_FROM_GROUP: No Members Provided')
         params = 'contacts?byType=id&groupId=' + str(group_id) + '&idType=id'
         url = self.groups_url(params)
-        return self._delete(url, data=members)
+        rslt = self._delete(url, data=members)
+        if not rslt or ('code' in rslt and rslt['code'] != 100):
+            logging.error('EVERBRIDGE.DELETE_MEMBERS_FROM_GROUP: Unexpected Response')
+            logging.error(rslt)
+            raise Exception('EVERBRIDGE.DELETE_MEMBERS_FROM_GROUP: Unexpected Response')
+        return rslt
 
     def add_members_to_group(self, group_id, members):
         """
@@ -284,7 +296,12 @@ class Everbridge:
             raise Exception('EVERBRIDGE.ADD_MEMBERS_TO_GROUP: No Members Provided')
         params = 'contacts?byType=id&groupId=' + str(group_id) + '&idType=id'
         url = self.groups_url(params)
-        return self._post(url, data=members)
+        rslt = self._post(url, data=members)
+        if not rslt or ('code' in rslt and rslt['code'] != 100):
+            logging.error('EVERBRIDGE.ADD_MEMBERS_TO_GROUP: Unexpected Response')
+            logging.error(rslt)
+            raise Exception('EVERBRIDGE.ADD_MEMBERS_TO_GROUP: Unexpected Response')
+        return rslt
 
     def add_group(self, group_name):
         """
@@ -307,4 +324,9 @@ class Everbridge:
         """
         if not group_id:
             raise Exception('EVERBRIDGE.DELETE_GROUP: No Group ID Provided')
-        return self._delete(self.groups_url(group_id))
+        rslt = self._delete(self.groups_url(group_id))
+        if not rslt or 'message' not in rslt or rslt['message'] != 'OK':
+            logging.error('EVERBRIDGE.DELETE_GROUP: Unexpected Response')
+            logging.error(rslt)
+            raise Exception('EVERBRIDGE.DELETE_GROUP: Failed')
+        return rslt
