@@ -88,39 +88,48 @@ def convert_to_everbridge(contact, ever_id=None):
     ]
     if contact['businessPhones']:
         for phone in contact['businessPhones']:
-            if len(phone) >= 10:
-                # Add phone number if phone number array isn't empty
-                # Adds Work Desk Phone Path to contact
-                paths.append(
-                    {
-                        'waitTime': 0,
-                        'status': 'A',
-                        'pathId': 241901148045321,
-                        'countryCode': 'US',
-                        'value': phone,
-                        'skipValidation': 'false'
-                    })
+            #Checks to see if phone has extension
+            extension = None
+            if 'x' in phone:
+                phone, extension, *ignore = phone.split('x')
+            path = {
+                'waitTime': 0,
+                'status': 'A',
+                'pathId': 241901148045321,
+                'countryCode': 'US',
+                'value': phone,
+                'skipValidation': 'false'}
+            if extension:
+                path['phoneExt'] = extension
+            #if len(phone) >= 10:
+            if re.fullmatch(r'\d{10}|\d{7}', phone):
+                paths.append(path)
+            else:
+                logging.warning("%s has invalid working phone number %s", contact["displayName"], phone)
     # Adds Work Cell Path to contact if mobile phone number is present
     if contact.get('mobilePhone'):
-        paths.append(
-            {
-                'waitTime': 0,
-                'status': 'A',
-                'pathId': 241901148045319,
-                'countryCode': 'US',
-                'value': contact['mobilePhone'],
-                'skipValidation': 'false'
-            })
-        # Adds Work Cell SMS Path to contact
-        paths.append(
-            {
-                'waitTime': 0,
-                'status': 'A',
-                'pathId': 241901148045324,
-                'countryCode': 'US',
-                'value': contact['mobilePhone'],
-                'skipValidation': 'false'
-            })
+        if re.fullmatch(r'\d{10}|\d{7}', contact['mobilePhone']):
+            paths.append(
+                {
+                    'waitTime': 0,
+                    'status': 'A',
+                    'pathId': 241901148045319,
+                    'countryCode': 'US',
+                    'value': contact['mobilePhone'],
+                    'skipValidation': 'false'
+                })
+            # Adds Work Cell SMS Path to contact
+            paths.append(
+                {
+                    'waitTime': 0,
+                    'status': 'A',
+                    'pathId': 241901148045324,
+                    'countryCode': 'US',
+                    'value': contact['mobilePhone'],
+                    'skipValidation': 'false'
+                })
+        else:
+            logging.warning("%s has invalid mobile phone number %s", contact["displayName"], contact['mobilePhone'])
     # Base info for Contact
     # Record Types are required for contact creation.
     # Record Types allow the org to categorize employees.

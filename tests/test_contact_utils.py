@@ -80,7 +80,7 @@ def test_convert_to_everbridge():
         'givenName': 'AAA',
         'surname': 'BBB',
         'userPrincipalName': 'AAA.BBB@hawaii.gov',
-        'businessPhones': ['8081112222', '8081113333'],
+        'businessPhones': ['8081112222x999', '8081113333x888'],
         'mobilePhone': '8081114444'}
     exp = {
         'firstName': 'AAA',
@@ -94,11 +94,13 @@ def test_convert_to_everbridge():
             },
             {
                 'waitTime': 0, 'status': 'A', 'pathId': 241901148045321,
-                'countryCode': 'US', 'value': '8081112222', 'skipValidation': 'false'
+                'countryCode': 'US', 'value': '8081112222', 'skipValidation': 'false',
+                'phoneExt': '999'
             },
             {
                 'waitTime': 0, 'status': 'A', 'pathId': 241901148045321,
-                'countryCode': 'US', 'value': '8081113333', 'skipValidation': 'false'
+                'countryCode': 'US', 'value': '8081113333', 'skipValidation': 'false',
+                'phoneExt': '888'
             },
             {
                 'waitTime': 0, 'status': 'A', 'pathId': 241901148045319,
@@ -110,4 +112,6 @@ def test_convert_to_everbridge():
             }
         ]}
     converted = convert_to_everbridge(con)
+    print(converted)
+    print(exp)
     assert converted == exp
