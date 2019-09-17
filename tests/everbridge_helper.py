@@ -1,10 +1,115 @@
 """
 Everbridge Test Helper
 """
+import base64
 from unittest.mock import MagicMock
+from requests import Response
 from api.everbridge import Everbridge
 from api.contact_utils import convert_to_everbridge
 from tests.azure_helper import create_azure_contact
+
+def expected_header(username=None, password=None):
+    """
+    Returns header
+    """
+    if not username:
+        username = 'user'
+    if not password:
+        password = 'pass'
+    auth = username + ':' + password
+    token = base64.b64encode(auth.encode('utf-8'))
+    return {
+        'Authorization': token,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'return-client-request-id': 'true'
+    }
+
+def create_session_mock(rtnval, code=None, method='GET'):
+    """
+    Sets up requests session mock
+    """
+    session = MagicMock()
+    session.headers.update = MagicMock()
+    if code:
+        # If code is provided, session.get returns Response that contains rtnval
+        res = Response()
+        res.status_code = code
+        res.json = MagicMock(return_value=rtnval)
+        if method == 'GET':
+            session.get = MagicMock(return_value=res)
+        elif method == 'POST':
+            session.post = MagicMock(return_value=res)
+        elif method == 'PUT':
+            session.put = MagicMock(return_value=res)
+        elif method == 'DELETE':
+            session.delete = MagicMock(return_value=res)
+        else:
+            raise Exception('Invalid Method: ' + method)
+    else:
+        # Without code, session.get returns side_effect
+        if method == 'GET':
+            session.get = MagicMock(side_effect=rtnval)
+        elif method == 'POST':
+            session.post = MagicMock(side_effect=rtnval)
+        elif method == 'PUT':
+            session.put = MagicMock(side_effect=rtnval)
+        elif method == 'DELETE':
+            session.delete = MagicMock(side_effect=rtnval)
+        else:
+            raise Exception('Invalid Method: ' + method)
+    return session
+
+def create_post_session_mock(rtnval, code=None):
+    """
+    Sets up requests session mock
+    """
+    session = MagicMock()
+    session.headers.update = MagicMock()
+    if code:
+        # If code is provided, session.get returns Response that contains rtnval
+        res = Response()
+        res.status_code = code
+        res.json = MagicMock(return_value=rtnval)
+        session.post = MagicMock(return_value=res)
+    else:
+        # Without code, session.get returns side_effect
+        session.post = MagicMock(side_effect=rtnval)
+    return session
+
+def create_put_session_mock(rtnval, code=None):
+    """
+    Sets up requests session mock
+    """
+    session = MagicMock()
+    session.headers.update = MagicMock()
+    if code:
+        # If code is provided, session.get returns Response that contains rtnval
+        res = Response()
+        res.status_code = code
+        res.json = MagicMock(return_value=rtnval)
+        session.put = MagicMock(return_value=res)
+    else:
+        # Without code, session.get returns side_effect
+        session.get = MagicMock(side_effect=rtnval)
+    return session
+
+def create_get_session_mock(rtnval, code=None):
+    """
+    Sets up requests session mock
+    """
+    session = MagicMock()
+    session.headers.update = MagicMock()
+    if code:
+        # If code is provided, session.get returns Response that contains rtnval
+        res = Response()
+        res.status_code = code
+        res.json = MagicMock(return_value=rtnval)
+        session.get = MagicMock(return_value=res)
+    else:
+        # Without code, session.get returns side_effect
+        session.get = MagicMock(side_effect=rtnval)
+    return session
 
 def create_everbridge_mock(data):
     """
