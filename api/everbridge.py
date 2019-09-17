@@ -2,7 +2,6 @@
 Requests Client Crediential Token and then performs API call to get Login Events
 """
 import base64
-import json
 import logging
 import requests
 
@@ -148,13 +147,12 @@ class Everbridge:
         """
         if not external_ids:
             raise Exception('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: No External IDs Provided')
-        url = self.contacts_url('?sortBy=externalId&direction=ASC&searchType=OR' + external_ids)
+        url = self.contacts_url('?sortBy=externalId&direction=ASC&searchType=AND' + external_ids)
         res = self._get(url)
         if 'page' in res:
             if 'data' in res['page']:
                 return res['page']['data']
-            else:
-                return []
+            return []
         logging.error('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: Unexpected Response')
         logging.error(res)
         raise Exception('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: Unexpected Response')
@@ -167,9 +165,9 @@ class Everbridge:
         if contacts is None:
             raise Exception('EVERBRIDGE.UPSERT_CONTACTS: No Contacts Provided')
         # TODO MAX contacts 1000
-        url = self.contacts_url("batch?version=1")
+        url = self.contacts_url('batch?version=1')
         rslt = self._post(url, data=contacts)
-        if not rslt or ('code' in rslt and rslt['code'] != 100):
+        if not rslt or 'code' not in rslt or rslt['code'] != 100:
             logging.error('EVERBRIDGE.UPSERT_CONTACTS: Unexpected Response')
             logging.error(rslt)
             raise Exception('EVERBRIDGE.UPSERT_CONTACTS: Unexpected Response')
@@ -181,8 +179,8 @@ class Everbridge:
         """
         if not contacts:
             raise Exception('EVERBRIDGE.DELETE_CONTACTS: No Contacts Provided')
-        rslt = self._delete(self.contacts_url("batch"), data=contacts)
-        if not rslt or ('code' in rslt and rslt['code'] != 100):
+        rslt = self._delete(self.contacts_url('batch'), data=contacts)
+        if not rslt or 'code' not in rslt or rslt['code'] != 100:
             logging.error('EVERBRIDGE.DELETE_CONTACTS: Unexpected Response')
             logging.error(rslt)
             raise Exception('EVERBRIDGE.DELETE_CONTACTS: Unexpected Response')
@@ -231,7 +229,7 @@ class Everbridge:
         """
         if not name:
             raise Exception('EVERBRIDGE.GET_GROUP_BY_NAME: No GroupName Provided')
-        params = f"/{name}?queryType=name"
+        params = f"{name}?queryType=name"
         url = self.groups_url(params)
         res = self._get(url)
         if 'result' in res:
@@ -266,8 +264,7 @@ class Everbridge:
         if 'page' in res:
             if 'data' in res['page']:
                 return res['page']['data']
-            else:
-                return []
+            return []
         logging.error('EVERBRIDGE.GET_GROUP_MEMBERS: Unexpected Response')
         logging.error(res)
         raise Exception('EVERBRIDGE.GET_GROUP_MEMBERS: Unexpected Response')
@@ -284,7 +281,7 @@ class Everbridge:
         params = 'contacts?byType=id&groupId=' + str(group_id) + '&idType=id'
         url = self.groups_url(params)
         rslt = self._delete(url, data=members)
-        if not rslt or ('code' in rslt and rslt['code'] != 100):
+        if not rslt or 'code' not in rslt or rslt['code'] != 100:
             logging.error('EVERBRIDGE.DELETE_MEMBERS_FROM_GROUP: Unexpected Response')
             logging.error(rslt)
             raise Exception('EVERBRIDGE.DELETE_MEMBERS_FROM_GROUP: Unexpected Response')
@@ -302,7 +299,7 @@ class Everbridge:
         params = 'contacts?byType=id&groupId=' + str(group_id) + '&idType=id'
         url = self.groups_url(params)
         rslt = self._post(url, data=members)
-        if not rslt or ('code' in rslt and rslt['code'] != 100):
+        if not rslt or 'code' not in rslt or rslt['code'] != 100:
             logging.error('EVERBRIDGE.ADD_MEMBERS_TO_GROUP: Unexpected Response')
             logging.error(rslt)
             raise Exception('EVERBRIDGE.ADD_MEMBERS_TO_GROUP: Unexpected Response')
