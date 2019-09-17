@@ -43,8 +43,8 @@ def create_azure_contact(seq):
         'displayName': f'AAA{padded} BBB{padded}',
         'givenName': f'AAA{padded}',
         'surname': f'BBB{padded}',
-        'businessPhones': ['808111' + padded],
-        'mobilePhone': '808222' + padded,
+        'businessPhones': ['808586' + padded],
+        'mobilePhone': '808587' + padded,
         'mail': f'aaabbb{padded}@xxx.com',
         'userPrincipalName': f'aaabbb{padded}@xxx.com'}
 
