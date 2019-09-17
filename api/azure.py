@@ -105,7 +105,7 @@ class Azure:
         """
         self.check_token()
         token = 'Bearer ' + self.token['accessToken']
-        session = requests.session()
+        session = requests.Session()
         session.headers.update({'Authorization': token,
                                 'Accept': 'application/json',
                                 'Content-Type': 'application/json',

@@ -66,7 +66,7 @@ class RequestsMock(BaseMock):
         """
         Sets up mocks
         """
-        orig_func = requests.session
+        orig_func = requests.Session
         session = MagicMock()
         session.headers.update = MagicMock()
         self.register('session.headers.update', session.headers.update)
@@ -80,8 +80,8 @@ class RequestsMock(BaseMock):
         else:
             # Without code, session.get returns side_effect
             session.get = MagicMock(side_effect=rtnval)
-        requests.session = MagicMock(return_value=session)
-        self.save(requests.session, orig_func)
+        requests.Session = MagicMock(return_value=session)
+        self.save(requests.Session, orig_func)
 
 def create_everbridge_mock(rtnval, code=None):
     """
