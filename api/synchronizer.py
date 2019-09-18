@@ -93,6 +93,7 @@ class Synchronizer:
             return new_group['id']
         logging.error("SYNCHRONIZER._CREATE_NEW_EVERBRIDGE_GROUP FAILED %s", group_name)
         logging.error(new_group)
+        raise Exception('SYNCHRONIZER._CREATE_NEW_EVERBRIDGE_GROUP FAILED ' + group_name)
 
     def _delete_everbridge_group(self, group_name):
         """
