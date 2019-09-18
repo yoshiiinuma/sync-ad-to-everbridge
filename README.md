@@ -1,31 +1,47 @@
 # sync-ad-to-everbridge
-Reads a Azure AD Group and inserts Everbridge Contacts into the selected Everbridge Group 
+Reads a Azure AD Group and inserts Everbridge Contacts into the selected Everbridge Group
 Requires a Azure Application that has permissions to read Groups(Requires Admin Consent)
 
-# How to install
-```bash
-$ pip -r requirements.txt 
-```
 # How to install (new)
 ```bash
 $ pip install pipenv
 $ cd sync-ad-to-everbridge
-$ pipenv install
+$ pipenv install --dev
 ```
+
+# How to generate requirements.txt
+```bash
+# For Production
+$ pipenv lock -r > requirements.txt
+
+# For development
+$ pipenv run pip freeze > requirements.txt
+```
+
+# How to set up the application running environment
+```bash
+# Run this command before running the app or tests
+$ pipenv shell
+```
+
 # How to test
 ```bash
+$ pipenv shell
 $ pytest
 ```
+
 # How to run
 ```bash
 $ pipenv shell
 $ python bin/main.py config/config.json
 ```
+
 # How to use pylint
 ```bash
 $ pipenv shell
 $ pylint path-to-file
 ```
+
 # How to deploy to Azure Functions
 1 - Install  Azure Functions Core Tools
 
@@ -60,18 +76,18 @@ pipenv shell
 pipenv install
 func start host
 ```
+
 # config.json format
 ```json
-{ 
-	"clientId":"", 
-	"clientSecret":"", 
-	"everbridgeUsername":"", 
-	"everbridgePassword":"", 
-	"everbridgeOrg":"", 
-	"everbridgeGroup":"", 
-	"adTenant":"", 
-	"adGroupId":[], 
-	"logFileName":"",
-	"logLevel":""
+{
+  "clientId":"Azure AD Client ID",
+  "clientSecret":"Azure AD Client Secret",
+  "everbridgeUsername":"EverBridge User Name",
+  "everbridgePassword":"EverBridge Password",
+  "everbridgeOrg":"EverBridge Org",
+  "adTenant":"Azure AD Tenant",
+  "adGroupId":["Azure AD Group ID1","Azure AD Group ID2"],
+	"logFileName":"logfile.txt",
+	"logLevel":"DEBUG|INFO|WARNING|ERROR"
 }
 ```
