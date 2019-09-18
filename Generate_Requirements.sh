@@ -1,1 +1,1 @@
-pipenv run pip freeze > EverbridgeHTTP/requirements.txt
+pipenv lock -r > EverbridgeHTTP/requirements.txt
