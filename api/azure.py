@@ -86,10 +86,7 @@ class Azure:
         """
         Returns group members api URL
         """
-        # Graph API currently does not support OrderBy
-        # Suppress OrderyBy parameter for now
-        #params = f"?$orderby=userPrincipalName&$top={self.pagesize}"
-        params = f"?$top={self.pagesize}"
+        params = f"?$orderby=userPrincipalName&$top={self.pagesize}"
         skip = self.pagesize * (page - 1)
         if skip > 0:
             params += f"&$skip={skip}"
@@ -119,6 +116,8 @@ class Azure:
         """
         Fetches Azure AD Group Members
         """
+        # Graph API currently does not support OrderBy
+        # Will get 400 BadRequest 'OrderBy not supported'
         if not group_id:
             logging.error('AZURE.GET_PAGED_GROUP_MEMBERS: Invalid Group ID')
             raise Exception('AZURE.GET_PAGED_GROUP_MEMBERS: Invalid Group ID')

@@ -69,41 +69,31 @@ def test_paged_group_members_url():
     """
     Should return expected URL with default value
     """
-    # Graph API currently does not support OrderBy
-    # Suppress OrderyBy parameter for now
     azure = create_azure_instance()
     gid = 'xxxx'
     base = "https://graph.microsoft.com/v1.0/groups/xxxx/members"
     url = azure.paged_group_members_url(gid, 1)
-    #assert url == base + '?$orderby=userPrincipalName&$top=100'
-    assert url == base + '?$top=100'
+    assert url == base + '?$orderby=userPrincipalName&$top=100'
     url = azure.paged_group_members_url(gid, 2)
-    #assert url == base + '?$orderby=userPrincipalName&$top=100&$skip=100'
-    assert url == base + '?$top=100&$skip=100'
+    assert url == base + '?$orderby=userPrincipalName&$top=100&$skip=100'
     url = azure.paged_group_members_url(gid, 3)
-    #assert url == base + '?$orderby=userPrincipalName&$top=100&$skip=200'
-    assert url == base + '?$top=100&$skip=200'
+    assert url == base + '?$orderby=userPrincipalName&$top=100&$skip=200'
 
 def test_paged_group_members_url_with_pagesize():
     """
     Should return expected URL with default value
 
     """
-    # Graph API currently does not support OrderBy
-    # Suppress OrderyBy parameter for now
     azure = create_azure_instance()
     azure.set_pagesize(5)
     gid = 'xxxx'
     base = "https://graph.microsoft.com/v1.0/groups/xxxx/members"
     url = azure.paged_group_members_url(gid, 1)
-    #assert url == base + '?$orderby=userPrincipalName&$top=5'
-    assert url == base + '?$top=5'
+    assert url == base + '?$orderby=userPrincipalName&$top=5'
     url = azure.paged_group_members_url(gid, 2)
-    #assert url == base + '?$orderby=userPrincipalName&$top=5&$skip=5'
-    assert url == base + '?$top=5&$skip=5'
+    assert url == base + '?$orderby=userPrincipalName&$top=5&$skip=5'
     url = azure.paged_group_members_url(gid, 3)
-    #assert url == base + '?$orderby=userPrincipalName&$top=5&$skip=10'
-    assert url == base + '?$top=5&$skip=10'
+    assert url == base + '?$orderby=userPrincipalName&$top=5&$skip=10'
 
 def test_get_token_with_invalid_parmeter():
     """

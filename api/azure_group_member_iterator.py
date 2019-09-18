@@ -26,7 +26,7 @@ class AzureGroupMemberIterator(BaseIterator):
 
     # Graph API currently does not support OrderBy
     # Use Azure.get_sorted_group_members instead of get_paged_group_members
-    # Delete after it does
+    # Delete this function after it does
     def _get_next_page(self):
         """
         Fetches paged group members

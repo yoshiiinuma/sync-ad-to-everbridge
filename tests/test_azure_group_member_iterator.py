@@ -17,7 +17,7 @@ def create_iterator(rtnvals):
     api.get_paged_group_members = MagicMock(side_effect=rtnvals)
     ####################################################################
     # Graph API currently does not support OrderBy
-    # Delete after it does
+    # Delete the following lines after it does
     #flattened = [item for sublist in rtnvals for item in sublist]
     flattened = [item for sublist in rtnvals for item in sublist]
     api.get_sorted_group_members = MagicMock(return_value=flattened)

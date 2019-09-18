@@ -17,8 +17,7 @@ def create_azure_mock(group_name, ids=None, data=None):
     azure.get_paged_group_members = MagicMock(side_effect=data)
     ####################################################################
     # Graph API currently does not support OrderBy
-    # Delete after it does
-    #flattened = [item for sublist in rtnvals for item in sublist]
+    # Delete the follwing lines after it does
     flattened = [item for sublist in data for item in sublist]
     azure.get_sorted_group_members = MagicMock(return_value=flattened)
     ####################################################################
