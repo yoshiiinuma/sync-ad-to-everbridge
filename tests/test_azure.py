@@ -8,7 +8,9 @@ from adal import AdalError
 from requests.exceptions import HTTPError, Timeout
 from api.azure import Azure
 from tests.mock_helper import AdalMock, RequestsMock
-from tests.azure_helper import create_azure_instance, create_azure_contacts
+from tests.azure_helper import create_azure_instance, \
+                               create_azure_instance_without_token, \
+                               create_azure_contacts
 # pylint: disable=unused-import
 import tests.log_helper
 
@@ -100,22 +102,22 @@ def test_get_token_with_invalid_parmeter():
     Should raise an exception with an empty parameter
     """
     with pytest.raises(Exception):
-        azure = create_azure_instance('aaa', 'bbb', None)
+        azure = Azure('aaa', 'bbb', None)
         azure.get_token()
     with pytest.raises(Exception):
-        azure = create_azure_instance('aaa', None, 'ccc')
+        azure = Azure('aaa', None, 'ccc')
         azure.get_token()
     with pytest.raises(Exception):
-        azure = create_azure_instance(None, 'bbb', 'ccc')
+        azure = Azure(None, 'bbb', 'ccc')
         azure.get_token()
     with pytest.raises(Exception):
-        azure = create_azure_instance('aaa', 'bbb', '')
+        azure = Azure('aaa', 'bbb', '')
         azure.get_token()
     with pytest.raises(Exception):
-        azure = create_azure_instance('aaa', '', 'ccc')
+        azure = Azure('aaa', '', 'ccc')
         azure.get_token()
     with pytest.raises(Exception):
-        azure = create_azure_instance('', 'bbb', 'ccc')
+        azure = Azure('', 'bbb', 'ccc')
         azure.get_token()
 
 def test_get_token_with_valid_params():
@@ -126,14 +128,14 @@ def test_get_token_with_valid_params():
     cid = 'clientid'
     secret = 'clientsecret'
     expected_res = {'accessToken':'XXXXTOKENXXX'}
-    azure = create_azure_instance(cid, secret, tenant, expected_res)
-    authority_url = azure.authority_url()
     api_url = Azure.API_BASE
     # Set up adal mock functions
     mock = AdalMock()
     mock.setup(expected_res)
     # Call get_token function
+    azure = create_azure_instance(cid, secret, tenant, expected_res)
     token = azure.get_token()
+    authority_url = azure.authority_url()
     # Check if arguments passed to adal functions are correct
     mock.access('adal.AuthenticationContext').assert_called_with(authority_url)
     mock.access('context.acquire_token_with_client_credentials') \
@@ -146,10 +148,11 @@ def test_get_token_with_httperror():
     """
     Should raise an exception
     """
-    azure = create_azure_instance()
     # Set up adal mock functions
     mock = AdalMock()
     mock.setup(HTTPError, True)
+    # Call get_token
+    azure = create_azure_instance()
     with pytest.raises(HTTPError):
         azure.get_token()
     # Reinstate mocked functions
@@ -159,10 +162,11 @@ def test_get_token_with_timeout():
     """
     Should raise an exception
     """
-    azure = create_azure_instance()
     # Set up adal mock functions
     mock = AdalMock()
-    mock.setup(Timeout, True)
+    mock.setup(Timeout('Timeout'), True)
+    # Call get_token
+    azure = create_azure_instance()
     with pytest.raises(Timeout):
         azure.get_token()
     # Reinstate mocked functions
@@ -172,10 +176,11 @@ def test_get_token_with_adalerror():
     """
     Should raise an exception
     """
-    azure = create_azure_instance()
     # Set up adal mock functions
     mock = AdalMock()
     mock.setup(AdalError('Invalid Client'), True)
+    # Call get_token
+    azure = create_azure_instance()
     with pytest.raises(AdalError):
         azure.get_token()
     # Reinstate mocked functions
@@ -257,14 +262,15 @@ def test_get_group_members_with_valid_params():
             }
         ]
     }
-    azure = create_azure_instance()
     expected = json.loads(json.dumps(raw))
-    expected_url = azure.group_members_url(gid)
     # Set up mocks
     mock = RequestsMock()
     mock.setup(expected, 200)
     # Call get_group_members
+    azure = create_azure_instance()
+    azure.setup()
     data = azure.get_group_members(gid, None)
+    expected_url = azure.group_members_url(gid)
     # Check if arguments passed to session.get are correct
     mock.access('session.get').assert_called_with(expected_url)
     mock.access('session.headers.update').assert_called_with({
@@ -284,12 +290,13 @@ def test_get_group_members_with_400():
     gid = "000abcde-f123-56gh-i789-000000000jkl"
     raw = {'error': {'code': 'Request_BadRequest',
                      'message': 'Invalid object identifier \'WrongGroupId\'.'}}
-    azure = create_azure_instance()
     expected = json.loads(json.dumps(raw))
     # Set up mocks
     mock = RequestsMock()
     mock.setup(expected, 400)
     # Call get_group_members
+    azure = create_azure_instance()
+    azure.setup()
     with pytest.raises(Exception):
         azure.get_group_members(gid, None)
     # Reinstate mocked functions
@@ -302,11 +309,12 @@ def test_get_group_members_with_401():
     gid = "000abcde-f123-56gh-i789-000000000jkl"
     raw = {'error': {'code': 'InvalidAuthenticationToken', 'message': 'Access token has expired.'}}
     expected = json.loads(json.dumps(raw))
-    azure = create_azure_instance()
     # Set up mocks
     mock = RequestsMock()
     mock.setup(expected, 401)
     # Call get_group_members
+    azure = create_azure_instance()
+    azure.setup()
     with pytest.raises(Exception):
         azure.get_group_members(gid, None)
     # Reinstate mocked functions
@@ -320,11 +328,12 @@ def test_get_group_members_with_404():
     raw = {'error': {'code': 'Request_ResourceNotFound',
                      'message': 'Resource \'0000aaa-bbbb-cccc\' does not exist'}}
     expected = json.loads(json.dumps(raw))
-    azure = create_azure_instance()
     # Set up mocks
     mock = RequestsMock()
     mock.setup(expected, 404)
     # Call get_group_members
+    azure = create_azure_instance()
+    azure.setup()
     with pytest.raises(Exception):
         azure.get_group_members(gid, None)
     # Reinstate mocked functions
@@ -338,9 +347,10 @@ def test_get_group_members_with_timeout():
     # Set up mocks
     mock = RequestsMock()
     mock.setup(Timeout)
+    # Call get_group_members
     azure = create_azure_instance()
+    azure.setup()
     with pytest.raises(Exception):
-        # Call get_group_members
         azure.get_group_members(gid, None)
     # Reinstate mocked functions
     mock.restore()
@@ -369,14 +379,15 @@ def test_get_paged_group_members_with_valid_params():
             }
         ]
     }
-    azure = create_azure_instance()
     expected = json.loads(json.dumps(raw))
-    expected_url = azure.paged_group_members_url(gid, 1)
     # Set up mocks
     mock = RequestsMock()
     mock.setup(expected, 200)
     # Call get_group_members
+    azure = create_azure_instance()
+    azure.setup()
     data = azure.get_paged_group_members(gid, 1)
+    expected_url = azure.paged_group_members_url(gid, 1)
     # Check if arguments passed to session.get are correct
     mock.access('session.get').assert_called_with(expected_url)
     mock.access('session.headers.update').assert_called_with({
@@ -427,7 +438,7 @@ def test_get_group_name_with_invalid_token():
     Should raise an exception with an empty parameter
     """
     with pytest.raises(Exception):
-        azure = create_azure_instance('cid', 'secret', 'tenant', None)
+        azure = create_azure_instance_without_token('cid', 'secret', 'tenant')
         azure.get_group_name('aaa')
     with pytest.raises(Exception):
         azure = create_azure_instance('cid', 'secret', 'tenant', {})
@@ -468,13 +479,14 @@ def test_get_group_name_with_valid_params():
         "onPremisesProvisioningErrors": []
     }
     expected = json.loads(json.dumps(raw))
-    azure = create_azure_instance()
-    expected_url = azure.group_url(gid)
     # Set up mocks
     mock = RequestsMock()
     mock.setup(expected, 200)
     # Call get_group_members
+    azure = create_azure_instance()
+    azure.setup()
     data = azure.get_group_name(gid)
+    expected_url = azure.group_url(gid)
     # Check if arguments passed to session.get are correct
     mock.access('session.get').assert_called_with(expected_url)
     mock.access('session.headers.update').assert_called_with({
@@ -504,9 +516,9 @@ def test_get_all_group_members():
         if data == 6:
             del ad_data["@odata.nextLink"]
         side_ad_list.append(ad_data)
+    # Call get_group_members
     azure = create_azure_instance()
     azure.get_group_members = MagicMock(side_effect=side_ad_list)
-    #azure = create_azure_group_members_mock(side_ad_list)
     data = azure.get_all_group_members("")
     assert len(data) == 21
     assert azure.get_group_members.call_count == 7

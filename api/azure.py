@@ -18,22 +18,53 @@ class Azure:
         self.secret = secret
         self.tenant = tenant
         self.token = None
+        self.session = None
         self.pagesize = Azure.DEFAULT_PAGESIZE
 
     def setup(self):
         """
-        Sets up token if it is empty; Must be called onece before any API calls
+        Sets up token and session
+        MUST BE cALLED ONECE before any API calls
         """
         if not self.token:
             self.reset_token()
+        self._setup_session()
 
-    def check_token(self):
+    def _setup_session(self):
+        """
+        Creates Rest session
+        """
+        if not self.token or not self.token['accessToken']:
+            return
+        token = 'Bearer ' + self.token['accessToken']
+        self.session = requests.Session()
+        self.session.headers.update({'Authorization': token,
+                                     'Accept': 'application/json',
+                                     'Content-Type': 'application/json',
+                                     'return-client-request-id': 'true'})
+
+    def _check_setup(self):
+        """
+        Raises an Exception if token or session is not set up
+        """
+        self._check_token()
+        self._check_session()
+
+    def _check_token(self):
         """
         Raises an Exception if token is not set
         """
         if not self.token or not self.token['accessToken']:
-            logging.error('AZURE.API.get_group_name: Invalid Token')
-            raise Exception('AZURE.API.get_group_name: Invalid Token')
+            logging.error('AZURE._CHECK_TOKEN: Invalid Token')
+            raise Exception('AZURE._CHECK_TOKEN: Invalid Token')
+
+    def _check_session(self):
+        """
+        Raises an Exception if session is not set
+        """
+        if not self.session:
+            logging.error('AZURE.API._CHECK_SESSION: Session Not Established')
+            raise Exception('AZURE.API._CHECK_SESSION: Session Not Established')
 
     def reset_token(self):
         """
@@ -99,19 +130,6 @@ class Azure:
         """
         return Azure.API_GROUPS + group_id + '/'
 
-    def setup_session(self):
-        """
-        Creates Rest session
-        """
-        self.check_token()
-        token = 'Bearer ' + self.token['accessToken']
-        session = requests.Session()
-        session.headers.update({'Authorization': token,
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json',
-                                'return-client-request-id': 'true'})
-        return session
-
     def get_paged_group_members(self, group_id, page):
         """
         Fetches Azure AD Group Members
@@ -124,12 +142,12 @@ class Azure:
         if not isinstance(page, int) or page < 1:
             logging.error('AZURE.PAGED_GROUP_MEMBERS_URL: Invalid Page')
             raise Exception('AZURE.PAGED_GROUP_MEMBERS_URL: Invalid Page')
-        session = self.setup_session()
+        self._check_setup()
         url = self.paged_group_members_url(group_id, page=1)
         print(url)
         # Will manually search through all groups if Group ID is empty
         try:
-            response = session.get(url)
+            response = self.session.get(url)
             if response.status_code == 200:
                 return response.json()['value']
             logging.error('AZURE.GET_PAGED_GROUP_MEMBERS: Unexpected Error')
@@ -147,14 +165,14 @@ class Azure:
         if not group_id:
             logging.error('AZURE.GET_GROUP_MEMBERS: Invalid Group ID')
             raise Exception('AZURE.GET_GROUP_MEMBERS: Invalid Group ID')
-        session = self.setup_session()
+        self._check_setup()
         url = self.group_members_url(group_id)
         #Adds Skip token for next page
         if skip_token is not None:
             url = self.group_members_url(group_id) + "?" + skip_token
         # Will manually search through all groups if Group ID is empty
         try:
-            response = session.get(url)
+            response = self.session.get(url)
             if response.status_code == 200:
                 return response.json()
             logging.error('AZURE.GET_GROUP_MEMBERS: Unexpected Error')
@@ -172,11 +190,11 @@ class Azure:
         if not group_id:
             logging.error('AZURE.get_group_name: Invalid Group ID')
             raise Exception('AZURE.GET_GROUP_NAME: Invalid Group ID')
-        session = self.setup_session()
+        self._check_setup()
         url = self.group_url(group_id)
         # Will manually search through all groups if Group ID is empty
         try:
-            response = session.get(url)
+            response = self.session.get(url)
             if response.status_code == 200:
                 return response.json()['displayName']
             logging.error('AZURE.GET_GROUP_NAME: Unexpected Error')

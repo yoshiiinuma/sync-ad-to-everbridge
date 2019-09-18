@@ -23,7 +23,7 @@ def create_azure_mock(group_name, ids=None, data=None):
     ####################################################################
     return azure
 
-def create_azure_instance(cid=None, secret=None, tenant=None, token=None):
+def create_azure_instance_without_token(cid=None, secret=None, tenant=None):
     """
     Returns Azure instance
     """
@@ -33,9 +33,16 @@ def create_azure_instance(cid=None, secret=None, tenant=None, token=None):
         secret = 'secret'
     if not tenant:
         tenant = 'tenant'
+    azure = Azure(cid, secret, tenant)
+    return azure
+
+def create_azure_instance(cid=None, secret=None, tenant=None, token=None):
+    """
+    Returns Azure instance
+    """
     if not token:
         token = {'accessToken': 'XXXTOKENXXX'}
-    azure = Azure(cid, secret, tenant)
+    azure = create_azure_instance_without_token(cid, secret, tenant)
     azure.set_token(token)
     return azure
 
