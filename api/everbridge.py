@@ -132,15 +132,6 @@ class Everbridge:
             logging.error(error)
             raise error
 
-    #def update_contacts(self, contacts):
-    #    """
-    #    Updates contacts paths
-    #    ?updateType determines to fully update all contact fields or certain feilds
-    #    ?idType determines to search by id or externalId
-    #    """
-    #    url = self.contacts_url("batch?idType=id&updateType=partial")
-    #    return self._put(url, data=contacts)
-
     def get_contacts_by_external_ids(self, external_ids):
         """
         Gets a list of contacts from Everbridge
@@ -149,13 +140,13 @@ class Everbridge:
             raise Exception('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: No External IDs Provided')
         url = self.contacts_url('?sortBy=externalId&direction=ASC&searchType=AND' + external_ids)
         res = self._get(url)
-        if 'page' in res:
-            if 'data' in res['page']:
-                return res['page']['data']
+        if 'page' not in res:
+            logging.error('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: Unexpected Response')
+            logging.error(res)
+            raise Exception('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: Unexpected Response')
+        if 'data' not in res['page']:
             return []
-        logging.error('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: Unexpected Response')
-        logging.error(res)
-        raise Exception('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: Unexpected Response')
+        return res['page']['data']
 
     def upsert_contacts(self, contacts):
         """
@@ -173,6 +164,15 @@ class Everbridge:
             raise Exception('EVERBRIDGE.UPSERT_CONTACTS: Unexpected Response')
         return rslt
 
+    #def update_contacts(self, contacts):
+    #    """
+    #    Updates contacts paths
+    #    ?updateType determines to fully update all contact fields or certain feilds
+    #    ?idType determines to search by id or externalId
+    #    """
+    #    url = self.contacts_url("batch?idType=id&updateType=partial")
+    #    return self._put(url, data=contacts)
+
     def delete_contacts(self, contacts):
         """
         Deletes users from the org if they don't belong in a group
@@ -186,42 +186,6 @@ class Everbridge:
             raise Exception('EVERBRIDGE.DELETE_CONTACTS: Unexpected Response')
         return rslt
 
-    #def get_group(self, group_id, page):
-    #    """
-    #    Gets Everbridge group contact
-    #    ?idType determines to get the group by id or name
-    #    """
-    #    #params = '?byType=id&groupId='+ str(group_id) + '&pageSize=100&pageNumber=' + str(page)
-    #    params = f"?byType=id&groupId={group_id}&pageSize={self.pagesize}&pageNumber={page}"
-    #    url = self.contacts_groups_url(params)
-    #    return self._get(url)
-
-    #def get_all_groups(self, page=1):
-    #    """
-    #    Gets Everbridge group contact
-    #    ?idType determines to get the group by id or name
-    #    """
-    #    params = f"?pageSize={self.pagesize}&pageNumber={page}"
-    #    url = self.groups_url(params)
-    #    res = self._get(url)
-    #    if 'page' in res and 'data' in res['page']:
-    #        return res['page']['data']
-    #    logging.error('EVERBRIDGE.GET_ALL_GROUP: Unexpected Response')
-    #    logging.error(res)
-    #    raise Exception('EVERBRIDGE.GET_ALL_GROUP: Unexpected Response')
-
-    #def get_group_by_id(self, gid):
-    #    """
-    #    Gets Everbridge group by id
-    #    """
-    #    url = self.groups_url(f"/{gid}")
-    #    res = self._get(url)
-    #    if 'result' in res:
-    #        return res['result']
-    #    logging.error('EVERBRIDGE.GET_GROUP_BY_ID: Unexpected Response')
-    #    logging.error(res)
-    #    raise Exception('EVERBRIDGE.GET_GROUP_BY_ID: Unexpected Response')
-
     def get_group_by_name(self, name):
         """
         Gets Everbridge group by name
@@ -232,11 +196,11 @@ class Everbridge:
         params = f"{name}?queryType=name"
         url = self.groups_url(params)
         res = self._get(url)
-        if 'result' in res:
-            return res['result']
-        logging.error('EVERBRIDGE.GET_GROUP_BY_NAME: Unexpected Response')
-        logging.error(res)
-        raise Exception('EVERBRIDGE.GET_GROUP_BY_NAME: Unexpected Response')
+        if 'result' not in res:
+            logging.error('EVERBRIDGE.GET_GROUP_BY_NAME: Unexpected Response')
+            logging.error(res)
+            raise Exception('EVERBRIDGE.GET_GROUP_BY_NAME: Unexpected Response')
+        return res['result']
 
     def get_group_id_by_name(self, name):
         """
@@ -245,11 +209,11 @@ class Everbridge:
         if not name:
             raise Exception('EVERBRIDGE.GET_GROUP_ID_BY_NAME: No GroupName Provided')
         res = self.get_group_by_name(name)
-        if 'id' in res:
-            return res['id']
-        logging.error('EVERBRIDGE.GET_GROUP_ID_BY_NAME: Unexpected Response')
-        logging.error(res)
-        raise Exception('EVERBRIDGE.GET_GROUP_ID_BY_NAME: Unexpected Response')
+        if 'id' not in res:
+            logging.error('EVERBRIDGE.GET_GROUP_ID_BY_NAME: Unexpected Response')
+            logging.error(res)
+            raise Exception('EVERBRIDGE.GET_GROUP_ID_BY_NAME: Unexpected Response')
+        return res['id']
 
     def get_paged_group_members(self, group_id, page=1):
         """
@@ -261,13 +225,13 @@ class Everbridge:
         params += "&sortBy=externalId&direction=ASC"
         url = self.contacts_url(params)
         res = self._get(url)
-        if 'page' in res:
-            if 'data' in res['page']:
-                return res['page']['data']
+        if 'page' not in res:
+            logging.error('EVERBRIDGE.GET_GROUP_MEMBERS: Unexpected Response')
+            logging.error(res)
+            raise Exception('EVERBRIDGE.GET_GROUP_MEMBERS: Unexpected Response')
+        if 'data' not in res['page']:
             return []
-        logging.error('EVERBRIDGE.GET_GROUP_MEMBERS: Unexpected Response')
-        logging.error(res)
-        raise Exception('EVERBRIDGE.GET_GROUP_MEMBERS: Unexpected Response')
+        return res['page']['data']
 
     def delete_members_from_group(self, group_id, members):
         """
