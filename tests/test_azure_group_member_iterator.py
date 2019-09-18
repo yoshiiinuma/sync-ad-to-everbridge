@@ -15,6 +15,13 @@ def create_iterator(rtnvals):
     api = MagicMock()
     api.set_pagesize = MagicMock()
     api.get_paged_group_members = MagicMock(side_effect=rtnvals)
+    ####################################################################
+    # Graph API currently does not support OrderBy
+    # Delete after it does
+    #flattened = [item for sublist in rtnvals for item in sublist]
+    flattened = [item for sublist in rtnvals for item in sublist]
+    api.get_sorted_group_members = MagicMock(return_value=flattened)
+    ####################################################################
     itr = AzureGroupMemberIterator(api, gid)
     return itr
 
@@ -35,7 +42,7 @@ def test_iterator_with_data():
     page2 = json.loads(json.dumps(raw2))
     page3 = json.loads(json.dumps(raw3))
     # Creates a mock
-    itr = create_iterator([page1, page2, page3, []])
+    itr = create_iterator([page1, page2, page3])
     itr.set_pagesize(2)
     assert next(itr) == {
         'id': '1',
