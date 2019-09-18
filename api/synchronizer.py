@@ -88,12 +88,12 @@ class Synchronizer:
         Creates a new Everbridge group
         """
         new_group = self.everbridge.add_group(group_name)
-        if new_group and 'id' in new_group:
-            logging.info("Created Everbridge Group %s", group_name)
-            return new_group['id']
-        logging.error("SYNCHRONIZER._CREATE_NEW_EVERBRIDGE_GROUP FAILED %s", group_name)
-        logging.error(new_group)
-        raise Exception('SYNCHRONIZER._CREATE_NEW_EVERBRIDGE_GROUP FAILED ' + group_name)
+        if not new_group or 'id' not in new_group:
+            logging.error("SYNCHRONIZER._CREATE_NEW_EVERBRIDGE_GROUP FAILED %s", group_name)
+            logging.error(new_group)
+            raise Exception('SYNCHRONIZER._CREATE_NEW_EVERBRIDGE_GROUP FAILED ' + group_name)
+        logging.info("Created Everbridge Group %s", group_name)
+        return new_group['id']
 
     def _delete_everbridge_group(self, group_name):
         """
