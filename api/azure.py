@@ -66,6 +66,16 @@ class Azure:
             logging.error('AZURE.API._CHECK_SESSION: Session Not Established')
             raise Exception('AZURE.API._CHECK_SESSION: Session Not Established')
 
+    @staticmethod
+    def _log_unexpected_response(caller, response):
+        """
+        Logs unexpected response
+        """
+        msg = 'AZURE.' + caller.upper() + ': Unexpected Response'
+        logging.error(msg)
+        logging.error(response.status_code)
+        logging.error(response.json())
+
     def reset_token(self):
         """
         Resets token
@@ -144,19 +154,15 @@ class Azure:
             raise Exception('AZURE.PAGED_GROUP_MEMBERS_URL: Invalid Page')
         self._check_setup()
         url = self.paged_group_members_url(group_id, page=1)
-        print(url)
-        # Will manually search through all groups if Group ID is empty
         try:
             response = self.session.get(url)
             if response.status_code == 200:
                 return response.json()['value']
-            logging.error('AZURE.GET_PAGED_GROUP_MEMBERS: Unexpected Error')
-            logging.error(response.status_code)
-            logging.error(response.json())
-            raise Exception('AZURE.GET_PAGED_GROUP_MEMBERS: Unexpected Error')
         except Exception as err:
             logging.error(err)
             raise err
+        Azure._log_unexpected_response('get_paged_group_members', response)
+        raise Exception('AZURE.GET_PAGED_GROUP_MEMBERS: Unexpected Response')
 
     def get_group_members(self, group_id, skip_token=None):
         """
@@ -175,13 +181,11 @@ class Azure:
             response = self.session.get(url)
             if response.status_code == 200:
                 return response.json()
-            logging.error('AZURE.GET_GROUP_MEMBERS: Unexpected Error')
-            logging.error(response.status_code)
-            logging.error(response.json())
-            raise Exception('AZURE.GET_GROUP_MEMBERS: Unexpected Error')
         except Exception as err:
             logging.error(err)
             raise err
+        Azure._log_unexpected_response('get_group_members', response)
+        raise Exception('AZURE.GET_GROUP_MEMBERS: Unexpected Response')
 
     def get_group_name(self, group_id):
         """
@@ -192,18 +196,15 @@ class Azure:
             raise Exception('AZURE.GET_GROUP_NAME: Invalid Group ID')
         self._check_setup()
         url = self.group_url(group_id)
-        # Will manually search through all groups if Group ID is empty
         try:
             response = self.session.get(url)
             if response.status_code == 200:
                 return response.json()['displayName']
-            logging.error('AZURE.GET_GROUP_NAME: Unexpected Error')
-            logging.error(response.status_code)
-            logging.error(response.json())
-            raise Exception('AZURE.GET_GROUP_NAME: Unexpected Error')
         except Exception as err:
             logging.error(err)
             raise err
+        Azure._log_unexpected_response('get_group_name', response)
+        raise Exception('AZURE.GET_GROUP_NAME: Unexpected Response')
 
     def get_all_group_members(self, group_id):
         """
@@ -221,7 +222,7 @@ class Azure:
         return ad_group_data
 
     # Graph API currently does not support OrderBy
-    # Delete after it does
+    # Delete this function after it does
     def get_sorted_group_members(self, group_id):
         """
         Fetches All Azure AD Group Members ordered by userPrincipalName
