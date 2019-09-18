@@ -2,7 +2,7 @@
 Gets AD Group and Syncs with Everbridge Group
 """
 import argparse
-from os.path import dirname, abspath
+from os.path import dirname, abspath, exists
 import sys
 sys.path.insert(0, dirname(dirname(abspath(__file__))))
 #pylint: disable=wrong-import-position
@@ -22,8 +22,11 @@ def main():
     Main Function
     """
     args = get_argparser().parse_args()
-    runner = SyncRunner(args.configfile)
-    runner.run()
+    if exists(args.configfile):
+        runner = SyncRunner(args.configfile)
+        runner.run()
+    else:
+        print('Config File Not Found: ' + args.configfile)
 
 if __name__ == '__main__':
     main()
