@@ -27,13 +27,11 @@ def setup_logger(filename=None, level=None):
     if filename:
         for handler in logging.root.handlers[:]:
             logging.root.removeHandler(handler)
-        path = join(dirname(dirname(abspath(__file__))), 'logs', filename)
-        logging.basicConfig(filename=path,
+        logfile = join(dirname(dirname(abspath(__file__))), 'logs', filename)
+        logging.basicConfig(filename=logfile,
                             level=level,
-                            format='%(asctime)s %(message)s',
-                            datefmt='%m/%d/%Y %I:%M:%S %p')
+                            format='%(asctime)s %(levelname)s %(message)s')
     else:
         logging.basicConfig(stream=sys.stdout,
                             level=level,
-                            format='%(asctime)s %(message)s',
-                            datefmt='%m/%d/%Y %I:%M:%S %p')
+                            format='%(asctime)s %(levelname)s %(message)s')

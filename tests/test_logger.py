@@ -28,8 +28,7 @@ def test_setup_logger_with_empty_filename():
     mock.access('logging.basicConfig').assert_called_with(
         stream=sys.stdout,
         level=20,
-        format='%(asctime)s %(message)s',
-        datefmt='%m/%d/%Y %I:%M:%S %p')
+        format='%(asctime)s %(levelname)s %(message)s')
     # Reinstate mocked functions
     mock.restore()
 
@@ -38,7 +37,7 @@ def test_setup_logger_with_filename():
     Should pass the path to the log file to logging.basicConfig
     """
     filename = 'xxxx.log'
-    path = dirname(dirname(abspath(__file__))) +'/logs/' + filename
+    logpath = dirname(dirname(abspath(__file__))) +'/logs/' + filename
     # Set up mock function
     mock = LoggingMock()
     mock.setup()
@@ -46,10 +45,9 @@ def test_setup_logger_with_filename():
     setup_logger(filename)
     # Check if correct args are passed
     mock.access('logging.basicConfig').assert_called_with(
-        filename=path,
+        filename=logpath,
         level=20,
-        format='%(asctime)s %(message)s',
-        datefmt='%m/%d/%Y %I:%M:%S %p')
+        format='%(asctime)s %(levelname)s %(message)s')
     # Reinstate mocked functions
     mock.restore()
 
@@ -59,7 +57,7 @@ def test_setup_logger_with_string_level():
     """
     level = 'warning'
     filename = 'xxxx.log'
-    path = dirname(dirname(abspath(__file__))) +'/logs/' + filename
+    logpath = dirname(dirname(abspath(__file__))) +'/logs/' + filename
     # Set up mock function
     mock = LoggingMock()
     mock.setup()
@@ -67,10 +65,9 @@ def test_setup_logger_with_string_level():
     setup_logger(filename, level)
     # Check if correct args are passed
     mock.access('logging.basicConfig').assert_called_with(
-        filename=path,
+        filename=logpath,
         level=30,
-        format='%(asctime)s %(message)s',
-        datefmt='%m/%d/%Y %I:%M:%S %p')
+        format='%(asctime)s %(levelname)s %(message)s')
     # Reinstate mocked functions
     mock.restore()
 
@@ -80,7 +77,7 @@ def test_setup_logger_with_numeric_level():
     """
     level = 40
     filename = 'xxxx.log'
-    path = dirname(dirname(abspath(__file__))) +'/logs/' + filename
+    logpath = dirname(dirname(abspath(__file__))) +'/logs/' + filename
     # Set up mock function
     mock = LoggingMock()
     mock.setup()
@@ -88,10 +85,9 @@ def test_setup_logger_with_numeric_level():
     setup_logger(filename, level)
     # Check if correct args are passed
     mock.access('logging.basicConfig').assert_called_with(
-        filename=path,
+        filename=logpath,
         level=40,
-        format='%(asctime)s %(message)s',
-        datefmt='%m/%d/%Y %I:%M:%S %p')
+        format='%(asctime)s %(levelname)s %(message)s')
     # Reinstate mocked functions
     mock.restore()
 
@@ -101,7 +97,7 @@ def test_setup_logger_with_empty_level():
     """
     level = None
     filename = 'xxxx.log'
-    path = dirname(dirname(abspath(__file__))) +'/logs/' + filename
+    logpath = dirname(dirname(abspath(__file__))) +'/logs/' + filename
     # Set up mock function
     mock = LoggingMock()
     mock.setup()
@@ -109,9 +105,8 @@ def test_setup_logger_with_empty_level():
     setup_logger(filename, level)
     # Check if correct args are passed
     mock.access('logging.basicConfig').assert_called_with(
-        filename=path,
+        filename=logpath,
         level=20,
-        format='%(asctime)s %(message)s',
-        datefmt='%m/%d/%Y %I:%M:%S %p')
+        format='%(asctime)s %(levelname)s %(message)s')
     # Reinstate mocked functions
     mock.restore()
