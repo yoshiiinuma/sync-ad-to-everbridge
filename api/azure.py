@@ -86,7 +86,10 @@ class Azure:
         """
         Returns group members api URL
         """
-        params = f"?$orderby=userPrincipalName&$top={self.pagesize}"
+        # Graph API currently does not support OrderBy
+        # Suppress OrderyBy parameter for now
+        #params = f"?$orderby=userPrincipalName&$top={self.pagesize}"
+        params = f"?$top={self.pagesize}"
         skip = self.pagesize * (page - 1)
         if skip > 0:
             params += f"&$skip={skip}"
@@ -114,7 +117,7 @@ class Azure:
 
     def get_paged_group_members(self, group_id, page):
         """
-        Fetches Azure AD Group Members with Adal
+        Fetches Azure AD Group Members
         """
         if not group_id:
             logging.error('AZURE.GET_PAGED_GROUP_MEMBERS: Invalid Group ID')
@@ -123,7 +126,8 @@ class Azure:
             logging.error('AZURE.PAGED_GROUP_MEMBERS_URL: Invalid Page')
             raise Exception('AZURE.PAGED_GROUP_MEMBERS_URL: Invalid Page')
         session = self.setup_session()
-        url = self.paged_group_members_url(group_id, page)
+        url = self.paged_group_members_url(group_id, page=1)
+        print(url)
         # Will manually search through all groups if Group ID is empty
         try:
             response = session.get(url)
@@ -139,7 +143,7 @@ class Azure:
 
     def get_group_members(self, group_id, skip_token=None):
         """
-        Fetches Azure AD Group Members with Adal
+        Fetches Azure AD Group Members
         """
         if not group_id:
             logging.error('AZURE.GET_GROUP_MEMBERS: Invalid Group ID')
@@ -164,7 +168,7 @@ class Azure:
 
     def get_group_name(self, group_id):
         """
-        Fetches Azure AD Group Members with Adal
+        Fetches Azure AD Group Members
         """
         if not group_id:
             logging.error('AZURE.get_group_name: Invalid Group ID')
@@ -198,3 +202,12 @@ class Azure:
                 data = self.get_group_members(group_id, skip_token[1])
                 ad_group_data = ad_group_data + data["value"]
         return ad_group_data
+
+    # Graph API currently does not support OrderBy
+    # Delete after it does
+    def get_sorted_group_members(self, group_id):
+        """
+        Fetches All Azure AD Group Members ordered by userPrincipalName
+        """
+        members = self.get_all_group_members(group_id)
+        return sorted(members, key=(lambda con: con.get('userPrincipalName')))

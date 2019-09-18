@@ -8,7 +8,7 @@ from adal import AdalError
 from requests.exceptions import HTTPError, Timeout
 from api.azure import Azure
 from tests.mock_helper import AdalMock, RequestsMock
-from tests.azure_helper import create_azure_instance
+from tests.azure_helper import create_azure_instance, create_azure_contacts
 # pylint: disable=unused-import
 import tests.log_helper
 
@@ -69,30 +69,41 @@ def test_paged_group_members_url():
     """
     Should return expected URL with default value
     """
+    # Graph API currently does not support OrderBy
+    # Suppress OrderyBy parameter for now
     azure = create_azure_instance()
     gid = 'xxxx'
     base = "https://graph.microsoft.com/v1.0/groups/xxxx/members"
     url = azure.paged_group_members_url(gid, 1)
-    assert url == base + '?$orderby=userPrincipalName&$top=100'
+    #assert url == base + '?$orderby=userPrincipalName&$top=100'
+    assert url == base + '?$top=100'
     url = azure.paged_group_members_url(gid, 2)
-    assert url == base + '?$orderby=userPrincipalName&$top=100&$skip=100'
+    #assert url == base + '?$orderby=userPrincipalName&$top=100&$skip=100'
+    assert url == base + '?$top=100&$skip=100'
     url = azure.paged_group_members_url(gid, 3)
-    assert url == base + '?$orderby=userPrincipalName&$top=100&$skip=200'
+    #assert url == base + '?$orderby=userPrincipalName&$top=100&$skip=200'
+    assert url == base + '?$top=100&$skip=200'
 
 def test_paged_group_members_url_with_pagesize():
     """
     Should return expected URL with default value
+
     """
+    # Graph API currently does not support OrderBy
+    # Suppress OrderyBy parameter for now
     azure = create_azure_instance()
     azure.set_pagesize(5)
     gid = 'xxxx'
     base = "https://graph.microsoft.com/v1.0/groups/xxxx/members"
     url = azure.paged_group_members_url(gid, 1)
-    assert url == base + '?$orderby=userPrincipalName&$top=5'
+    #assert url == base + '?$orderby=userPrincipalName&$top=5'
+    assert url == base + '?$top=5'
     url = azure.paged_group_members_url(gid, 2)
-    assert url == base + '?$orderby=userPrincipalName&$top=5&$skip=5'
+    #assert url == base + '?$orderby=userPrincipalName&$top=5&$skip=5'
+    assert url == base + '?$top=5&$skip=5'
     url = azure.paged_group_members_url(gid, 3)
-    assert url == base + '?$orderby=userPrincipalName&$top=5&$skip=10'
+    #assert url == base + '?$orderby=userPrincipalName&$top=5&$skip=10'
+    assert url == base + '?$top=5&$skip=10'
 
 def test_get_token_with_invalid_parmeter():
     """
@@ -509,3 +520,14 @@ def test_get_all_group_members():
     data = azure.get_all_group_members("")
     assert len(data) == 21
     assert azure.get_group_members.call_count == 7
+
+def test_get_sorted_group_members():
+    """
+    Should return contacts sorted by userPrincipalName
+    """
+    contacts = create_azure_contacts([5, 3, 2, 1, 4])
+    expected = create_azure_contacts([1, 2, 3, 4, 5])
+    azure = create_azure_instance()
+    azure.get_all_group_members = MagicMock(return_value=contacts)
+    sorted_contacts = azure.get_sorted_group_members(123)
+    assert sorted_contacts == expected
