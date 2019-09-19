@@ -221,6 +221,16 @@ class Azure:
                 ad_group_data = ad_group_data + data["value"]
         return ad_group_data
 
+    def get_all_group_members_map(self, group_id):
+        """
+        Returns the Dictionary(<userPrincipalName>, <Contact>) of all group members
+        """
+        dictionary = {}
+        members = self.get_all_group_members(group_id) 
+        for contact in members:
+            dictionary[contact['userPrincipalName']] = contact
+        return dictionary
+
     # Graph API currently does not support OrderBy
     # Delete this function after it does
     def get_sorted_group_members(self, group_id):

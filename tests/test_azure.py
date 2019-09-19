@@ -523,6 +523,22 @@ def test_get_all_group_members():
     assert len(data) == 21
     assert azure.get_group_members.call_count == 7
 
+def test_get_all_group_members_map():
+    """
+    Should return contacts sorted by userPrincipalName
+    """
+    contacts = create_azure_contacts([1, 2, 3, 4, 5])
+    expected_keys = [con['userPrincipalName'] for con in contacts]
+    azure = create_azure_instance()
+    azure.get_all_group_members = MagicMock(return_value=contacts)
+    rslt = azure.get_all_group_members_map(123)
+    print(expected_keys)
+    print(rslt.keys())
+    assert list(rslt.keys()) == expected_keys
+    for key in rslt.keys():
+        expected_contact = contacts.pop(0)
+        assert rslt[key] == expected_contact
+
 def test_get_sorted_group_members():
     """
     Should return contacts sorted by userPrincipalName
