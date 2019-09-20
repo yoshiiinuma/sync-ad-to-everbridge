@@ -7,6 +7,39 @@ from api.everbridge_group_member_iterator import EverbridgeGroupMemberIterator
 from api.contact_tracker import ContactTracker
 from api.contact_utils import convert_to_everbridge, is_different
 
+class AdContactMap:
+    """
+    AD group members dictionary wrapper
+    """
+    def __init__(self, group_id, members_map):
+        self.group_id = group_id
+        self.members_map = members_map
+        self.total = len(members_map)
+
+    def get_group_id(self):
+        """
+        Returns group ID
+        """
+        return self.group_id
+
+    def get_total(self):
+        """
+        Returns the total number of members
+        """
+        return self.total
+
+    def pop(self, key):
+        """
+        Returns contact popped from the map if key exists; None otherwise
+        """
+        return self.members_map.pop(key, None)
+
+    def values(self):
+        """
+        Returns all the contacts left in the map
+        """
+        return self.members_map.values()
+
 class Synchronizer:
     """
     Syncs Azure AD contacts to Everbridge
@@ -32,6 +65,32 @@ class Synchronizer:
             itr_ev = EverbridgeGroupMemberIterator(self.everbridge, gid_ev)
             # Sync AD group to Everbridge
             rslt = self.sync_group(itr_ad, itr_ev)
+            # Delete the group from Everbridge if no members exist
+            if rslt['everbridge_count'] + rslt['inserted_contacts'] - rslt['removed_members'] == 0:
+                self._delete_everbridge_group(gid_ev)
+                rslt['removed'] = True
+            self.report[name] = rslt
+            logging.info("Synched %s", name)
+            logging.info(rslt)
+        return self.report
+
+    def run_with_map(self, ad_group_ids):
+        """
+        Syncs Azure AD contacts to Everbridge
+        """
+        self.report = {}
+        for gid_ad in ad_group_ids:
+            name = self.azure.get_group_name(gid_ad)
+            gid_ev = self.everbridge.get_group_id_by_name(name)
+            # Create a Everbridge group if not exist
+            if not gid_ev:
+                gid_ev = self._create_new_everbridge_group(name)
+            # Create iterators
+            itr_ev = EverbridgeGroupMemberIterator(self.everbridge, gid_ev)
+            members_map = self.azure.get_all_group_members_map(gid_ad)
+            admap = AdContactMap(gid_ad, members_map)
+            # Sync AD group to Everbridge
+            rslt = self.sync_group_with_map(admap, itr_ev)
             # Delete the group from Everbridge if no members exist
             if rslt['everbridge_count'] + rslt['inserted_contacts'] - rslt['removed_members'] == 0:
                 self._delete_everbridge_group(gid_ev)
@@ -74,6 +133,28 @@ class Synchronizer:
         self._handle_delete(itr_ev.get_group_id(), tracker)
         self._handle_upsert(itr_ev.get_group_id(), tracker)
         return Synchronizer._enhance_report(tracker.report(), itr_ad, itr_ev)
+
+    def sync_group_with_map(self, admap, itr_ev):
+        """
+        Syncs specified AD Grdoup to Everbridge group
+        """
+        tracker = ContactTracker()
+        con_ev = next(itr_ev)
+        while con_ev:
+            con_ad = admap.pop(con_ev['externalId'])
+            if not con_ad:
+                # the contact exists only in Everbridge => Delete it
+                tracker.push(ContactTracker.REMOVE_MEMBER, con_ev)
+            elif con_ad['userPrincipalName'] == con_ev['externalId']:
+                converted = convert_to_everbridge(con_ad, con_ev['id'])
+                if is_different(converted, con_ev):
+                    tracker.push(ContactTracker.UPDATE_CONTACT, converted)
+            con_ev = next(itr_ev)
+        for con_ad in admap.values():
+            tracker.push(ContactTracker.INSERT_CONTACT, convert_to_everbridge(con_ad))
+        self._handle_delete(itr_ev.get_group_id(), tracker)
+        self._handle_upsert(itr_ev.get_group_id(), tracker)
+        return Synchronizer._enhance_report(tracker.report(), admap, itr_ev)
 
     @staticmethod
     def _enhance_report(report, itr_ad, itr_ev):

@@ -15,10 +15,11 @@ def create_azure_mock(group_name, ids=None, data=None):
     azure = create_azure_instance()
     azure.get_group_name = MagicMock(return_value=group_name)
     azure.get_paged_group_members = MagicMock(side_effect=data)
+    flattened = [item for sublist in data for item in sublist]
+    azure.get_all_group_members = MagicMock(side_effect=[flattened])
     ####################################################################
     # Graph API currently does not support OrderBy
     # Delete the follwing lines after it does
-    flattened = [item for sublist in data for item in sublist]
     azure.get_sorted_group_members = MagicMock(return_value=flattened)
     ####################################################################
     return azure
