@@ -4,7 +4,6 @@ Provides iterator for azure group members
 import math
 from api.base_iterator import BaseIterator
 from api.azure import Azure
-from api.contact_utils import fill_azure_contact
 
 class AzureGroupMemberIterator(BaseIterator):
     """
