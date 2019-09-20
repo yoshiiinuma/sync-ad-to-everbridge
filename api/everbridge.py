@@ -138,13 +138,15 @@ class Everbridge:
         Gets a list of contacts from Everbridge
         """
         if not external_ids:
-            raise EverbridgeException('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: No External IDs Provided')
+            msg = 'EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: No External IDs Provided'
+            raise EverbridgeException(msg)
         url = self.contacts_url('?sortBy=externalId&direction=ASC&searchType=AND' + external_ids)
         res = self._get(url)
         if 'page' not in res:
-            logging.error('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: Unexpected Response')
+            msg = 'EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: Unexpected Response'
+            logging.error(msg)
             logging.error(res)
-            raise EverbridgeException('EVERBRIDGE.GET_CONTACTS_BY_EXTERNAL_IDS: Unexpected Response')
+            raise EverbridgeException(msg)
         if 'data' not in res['page']:
             return []
         return res['page']['data']

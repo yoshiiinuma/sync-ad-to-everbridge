@@ -171,9 +171,10 @@ class Synchronizer:
         """
         new_group = self.everbridge.add_group(group_name)
         if not new_group or 'id' not in new_group:
-            logging.error("SYNCHRONIZER._CREATE_NEW_EVERBRIDGE_GROUP FAILED %s", group_name)
+            msg = 'SYNCHRONIZER._CREATE_NEW_EVERBRIDGE_GROUP FAILED ' + group_name
+            logging.error(msg)
             logging.error(new_group)
-            raise SynchronizerException('SYNCHRONIZER._CREATE_NEW_EVERBRIDGE_GROUP FAILED ' + group_name)
+            raise SynchronizerException(msg)
         logging.info("Created Everbridge Group %s", group_name)
         return new_group['id']
 

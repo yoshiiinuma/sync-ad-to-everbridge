@@ -536,7 +536,7 @@ def test_get_all_group_members_map():
     print(expected_keys)
     print(rslt.keys())
     assert list(rslt.keys()) == expected_keys
-    for key in rslt.keys():
+    for key in rslt:
         expected_contact = contacts.pop(0)
         assert rslt[key] == expected_contact
 
