@@ -47,47 +47,27 @@ def test_iterator_with_data():
     assert next(itr) == {
         'id': '1',
         'userPrincipalName': 'aaa1@test.com',
-        'displayName': 'bbb1 aaa1',
-        'businessPhones': [],
-        'mail': 'aaa1@test.com',
-        'givenName': 'bbb1',
-        'surname': 'aaa1'
+        'displayName': 'bbb1 aaa1'
     }
     assert next(itr) == {
         'id': '2',
         'userPrincipalName': 'aaa2@test.com',
-        'displayName': 'bbb2 aaa2',
-        'businessPhones': [],
-        'mail': 'aaa2@test.com',
-        'givenName': 'bbb2',
-        'surname': 'aaa2'
+        'displayName': 'bbb2 aaa2'
     }
     assert next(itr) == {
         'id': '3',
         'userPrincipalName': 'aaa3@test.com',
-        'displayName': 'bbb3 aaa3',
-        'businessPhones': [],
-        'mail': 'aaa3@test.com',
-        'givenName': 'bbb3',
-        'surname': 'aaa3'
+        'displayName': 'bbb3 aaa3'
     }
     assert next(itr) == {
         'id': '4',
         'userPrincipalName': 'aaa4@test.com',
-        'displayName': 'bbb4 aaa4',
-        'businessPhones': [],
-        'mail': 'aaa4@test.com',
-        'givenName': 'bbb4',
-        'surname': 'aaa4'
+        'displayName': 'bbb4 aaa4'
     }
     assert next(itr) == {
         'id': '5',
         'userPrincipalName': 'aaa5@test.com',
-        'displayName': 'bbb5 aaa5',
-        'businessPhones': [],
-        'mail': 'aaa5@test.com',
-        'givenName': 'bbb5',
-        'surname': 'aaa5'
+        'displayName': 'bbb5 aaa5'
     }
     assert next(itr) is None
     assert next(itr) is None
