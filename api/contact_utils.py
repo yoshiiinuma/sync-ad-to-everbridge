@@ -66,7 +66,28 @@ def is_different(con_ad, con_ev):
 def convert_to_everbridge(contact, ever_id=None):
     """
     Create New EverBridge Contact with Email Delivery and Phone Delivery if available
-    Contact Paths are the delivery methods for notifications in Everbridge.
+    """
+    # Base info for Contact
+    # Record Types are required for contact creation.
+    # Record Types allow the org to categorize employees.
+    # The static Record Type Id is the default 'Employee' record type.
+    # There is only 1 record type in the org but more can be added.
+    # To manage Record Types, go to Settings -> Contacts and Groups-> Contact Record Types.
+    # https://api.everbridge.net/rest/recordTypes/org
+    new_contact = {
+        'firstName': contact['givenName'],
+        'lastName': contact['surname'],
+        'externalId': contact['userPrincipalName'],
+        'recordTypeId': 892807736729062,
+        'paths': create_everbridge_contact_paths(contact)
+    }
+    if ever_id:
+        new_contact['id'] = ever_id
+    return new_contact
+
+def create_everbridge_contact_paths(contact):
+    """
+    Create EverBridge Contact Paths, which are the delivery methods for notifications
     Contact Paths can not be created or deleted through the API.
     To view paths in the org, go to Settings -> Notifications -> Delivery Methods
     https://api.everbridge.net/rest/contactPaths/org
@@ -127,20 +148,4 @@ def convert_to_everbridge(contact, ever_id=None):
         else:
             logging.warning("%s has invalid mobile phone number %s",
                             contact["displayName"], contact['mobilePhone'])
-    # Base info for Contact
-    # Record Types are required for contact creation.
-    # Record Types allow the org to categorize employees.
-    # The static Record Type Id is the default 'Employee' record type.
-    # There is only 1 record type in the org but more can be added.
-    # To manage Record Types, go to Settings -> Contacts and Groups-> Contact Record Types.
-    # https://api.everbridge.net/rest/recordTypes/org
-    new_contact = {
-        'firstName': contact['givenName'],
-        'lastName': contact['surname'],
-        'externalId': contact['userPrincipalName'],
-        'recordTypeId': 892807736729062,
-        'paths': paths
-    }
-    if ever_id:
-        new_contact['id'] = ever_id
-    return new_contact
+    return paths
