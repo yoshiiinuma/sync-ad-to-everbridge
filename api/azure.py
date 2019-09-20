@@ -226,7 +226,8 @@ class Azure:
         Returns the Dictionary(<userPrincipalName>, <Contact>) of all group members
         """
         dictionary = {}
-        members = self.get_all_group_members(group_id) 
+        members = self.get_all_group_members(group_id)
+        print(members)
         for contact in members:
             dictionary[contact['userPrincipalName']] = contact
         return dictionary
