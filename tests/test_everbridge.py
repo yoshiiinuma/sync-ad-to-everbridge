@@ -4,6 +4,7 @@ Tests Everbridge API Functions
 import json
 from unittest.mock import patch
 import pytest
+from api.exceptions import EverbridgeException
 from tests.everbridge_helper import create_everbridge_contacts, \
                                     create_everbridge_instance, \
                                     create_session_mock, \
@@ -75,7 +76,7 @@ def test_get_contacts_by_external_ids_with_no_external_ids():
     Should raise Exception
     """
     ever = create_everbridge_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.get_contacts_by_external_ids(None)
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -91,7 +92,7 @@ def test_get_contacts_by_external_ids_with_unexpected_response(mock_session):
     mock_session.return_value = session
     ever = create_everbridge_instance()
     # call get_contacts_by_external_ids
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.get_contacts_by_external_ids(extids)
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -118,7 +119,7 @@ def test_upsert_contacts_with_no_contacts():
     Should raise Exception
     """
     ever = create_everbridge_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.upsert_contacts(None)
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -134,7 +135,7 @@ def test_upsert_contacts_with_unexpected_response(mock_session):
     mock_session.return_value = session
     ever = create_everbridge_instance()
     # call upsert_contacts
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.upsert_contacts(contacts)
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -161,7 +162,7 @@ def test_delete_contacts_with_no_contacts():
     Should raise Exception
     """
     ever = create_everbridge_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.delete_contacts(None)
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -177,7 +178,7 @@ def test_delete_contacts_with_unexpected_result(mock_session):
     mock_session.return_value = session
     ever = create_everbridge_instance()
     # call upsert_contacts
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.delete_contacts(contacts)
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -203,9 +204,9 @@ def test_get_group_by_name_without_name():
     Should raise Exception
     """
     ever = create_everbridge_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.get_group_by_name(None)
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.get_group_by_name('')
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -220,7 +221,7 @@ def test_get_group_by_name_with_unexpected_response(mock_session):
     mock_session.return_value = session
     ever = create_everbridge_instance()
     # call upsert_contacts
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.get_group_by_name('name')
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -246,7 +247,7 @@ def test_get_group_id_by_name_with_no_group_id():
     Should raise Exception
     """
     ever = create_everbridge_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.get_group_id_by_name(None)
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -261,7 +262,7 @@ def test_get_group_id_by_name_with_unexpected_response(mock_session):
     mock_session.return_value = session
     ever = create_everbridge_instance()
     # call upsert_contacts
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.get_group_id_by_name('name')
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -288,7 +289,7 @@ def test_paged_group_members_with_no_group_id():
     Should raise Exception
     """
     ever = create_everbridge_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.get_paged_group_members(None)
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -303,7 +304,7 @@ def test_paged_group_members_with_unexpected_response(mock_session):
     mock_session.return_value = session
     ever = create_everbridge_instance()
     # call upsert_contacts
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.get_paged_group_members(123)
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -330,7 +331,7 @@ def test_delete_members_from_group_with_no_group_id():
     Should raise Exception
     """
     ever = create_everbridge_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.delete_members_from_group(None, [])
 
 def test_delete_members_from_group_with_no_members():
@@ -338,7 +339,7 @@ def test_delete_members_from_group_with_no_members():
     Should raise Exception
     """
     ever = create_everbridge_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.delete_members_from_group(123, None)
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -354,7 +355,7 @@ def test_delete_members_from_group_with_unexpected_result(mock_session):
     mock_session.return_value = session
     ever = create_everbridge_instance()
     # call upsert_contacts
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.delete_members_from_group(123, members)
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -381,7 +382,7 @@ def test_add_members_to_group_with_no_group_id():
     Should raise Exception
     """
     ever = create_everbridge_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.add_members_to_group(None, [])
 
 def test_add_members_to_group_with_no_members():
@@ -389,7 +390,7 @@ def test_add_members_to_group_with_no_members():
     Should raise Exception
     """
     ever = create_everbridge_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.add_members_to_group(123, None)
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -405,7 +406,7 @@ def test_add_members_to_group_with_unexpected_response(mock_session):
     mock_session.return_value = session
     ever = create_everbridge_instance()
     # call upsert_contacts
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.add_members_to_group(123, members)
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -432,9 +433,9 @@ def test_add_group_without_name():
     Should raise Exception
     """
     ever = create_everbridge_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.add_group(None)
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.add_group('')
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -449,7 +450,7 @@ def test_add_group_with_unexpected_response(mock_session):
     mock_session.return_value = session
     ever = create_everbridge_instance()
     # call upsert_contacts
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.add_group('name')
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -475,7 +476,7 @@ def test_delete_group_with_no_group_id():
     Should raise Exception
     """
     ever = create_everbridge_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.delete_group(None)
 
 @patch('api.everbridge.requests.Session', autospec=True)
@@ -490,5 +491,5 @@ def test_delete_group_with_unexpected_response(mock_session):
     mock_session.return_value = session
     ever = create_everbridge_instance()
     # call upsert_contacts
-    with pytest.raises(Exception):
+    with pytest.raises(EverbridgeException):
         ever.delete_group(123)

@@ -4,6 +4,8 @@ Requests Client Crediential Token and then performs API call to get Login Events
 import logging
 import requests
 import adal
+from api.exceptions import AzureException
+
 class Azure:
     """
     Handles Azure Graph API requests
@@ -56,7 +58,7 @@ class Azure:
         """
         if not self.token or not self.token['accessToken']:
             logging.error('AZURE._CHECK_TOKEN: Invalid Token')
-            raise Exception('AZURE._CHECK_TOKEN: Invalid Token')
+            raise AzureException('AZURE._CHECK_TOKEN: Invalid Token')
 
     def _check_session(self):
         """
@@ -64,7 +66,7 @@ class Azure:
         """
         if not self.session:
             logging.error('AZURE.API._CHECK_SESSION: Session Not Established')
-            raise Exception('AZURE.API._CHECK_SESSION: Session Not Established')
+            raise AzureException('AZURE.API._CHECK_SESSION: Session Not Established')
 
     @staticmethod
     def _log_unexpected_response(caller, response):
@@ -88,7 +90,7 @@ class Azure:
         """
         if not self.client_id or not self.secret or not self.tenant:
             logging.error('AZURE.API.get_token: Invalid Parameter')
-            raise Exception('AZURE.API.get_token: Invalid parameter')
+            raise AzureException('AZURE.API.get_token: Invalid parameter')
         context = adal.AuthenticationContext(self.authority_url())
         try:
             token = context.acquire_token_with_client_credentials(
@@ -96,7 +98,7 @@ class Azure:
             return token
         except Exception as err:
             logging.error(err)
-            raise err
+            raise AzureException() from err
 
     def set_token(self, token):
         """
@@ -148,10 +150,10 @@ class Azure:
         # Will get 400 BadRequest 'OrderBy not supported'
         if not group_id:
             logging.error('AZURE.GET_PAGED_GROUP_MEMBERS: Invalid Group ID')
-            raise Exception('AZURE.GET_PAGED_GROUP_MEMBERS: Invalid Group ID')
+            raise AzureException('AZURE.GET_PAGED_GROUP_MEMBERS: Invalid Group ID')
         if not isinstance(page, int) or page < 1:
             logging.error('AZURE.PAGED_GROUP_MEMBERS_URL: Invalid Page')
-            raise Exception('AZURE.PAGED_GROUP_MEMBERS_URL: Invalid Page')
+            raise AzureException('AZURE.PAGED_GROUP_MEMBERS_URL: Invalid Page')
         self._check_setup()
         url = self.paged_group_members_url(group_id, page=1)
         try:
@@ -160,9 +162,9 @@ class Azure:
                 return response.json()['value']
         except Exception as err:
             logging.error(err)
-            raise err
+            raise AzureException() from err
         Azure._log_unexpected_response('get_paged_group_members', response)
-        raise Exception('AZURE.GET_PAGED_GROUP_MEMBERS: Unexpected Response')
+        raise AzureException('AZURE.GET_PAGED_GROUP_MEMBERS: Unexpected Response')
 
     def get_group_members(self, group_id, skip_token=None):
         """
@@ -170,7 +172,7 @@ class Azure:
         """
         if not group_id:
             logging.error('AZURE.GET_GROUP_MEMBERS: Invalid Group ID')
-            raise Exception('AZURE.GET_GROUP_MEMBERS: Invalid Group ID')
+            raise AzureException('AZURE.GET_GROUP_MEMBERS: Invalid Group ID')
         self._check_setup()
         url = self.group_members_url(group_id)
         #Adds Skip token for next page
@@ -183,9 +185,9 @@ class Azure:
                 return response.json()
         except Exception as err:
             logging.error(err)
-            raise err
+            raise AzureException from err
         Azure._log_unexpected_response('get_group_members', response)
-        raise Exception('AZURE.GET_GROUP_MEMBERS: Unexpected Response')
+        raise AzureException('AZURE.GET_GROUP_MEMBERS: Unexpected Response')
 
     def get_group_name(self, group_id):
         """
@@ -193,7 +195,7 @@ class Azure:
         """
         if not group_id:
             logging.error('AZURE.get_group_name: Invalid Group ID')
-            raise Exception('AZURE.GET_GROUP_NAME: Invalid Group ID')
+            raise AzureException('AZURE.GET_GROUP_NAME: Invalid Group ID')
         self._check_setup()
         url = self.group_url(group_id)
         try:
@@ -202,9 +204,9 @@ class Azure:
                 return response.json()['displayName']
         except Exception as err:
             logging.error(err)
-            raise err
+            raise AzureException() from err
         Azure._log_unexpected_response('get_group_name', response)
-        raise Exception('AZURE.GET_GROUP_NAME: Unexpected Response')
+        raise AzureException('AZURE.GET_GROUP_NAME: Unexpected Response')
 
     def get_all_group_members(self, group_id):
         """

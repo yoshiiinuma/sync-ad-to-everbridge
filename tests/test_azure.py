@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 from adal import AdalError
 from requests.exceptions import HTTPError, Timeout
+from api.exceptions import AzureException
 from api.azure import Azure
 from tests.mock_helper import AdalMock, RequestsMock
 from tests.azure_helper import create_azure_instance, \
@@ -101,22 +102,22 @@ def test_get_token_with_invalid_parmeter():
     """
     Should raise an exception with an empty parameter
     """
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure = Azure('aaa', 'bbb', None)
         azure.get_token()
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure = Azure('aaa', None, 'ccc')
         azure.get_token()
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure = Azure(None, 'bbb', 'ccc')
         azure.get_token()
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure = Azure('aaa', 'bbb', '')
         azure.get_token()
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure = Azure('aaa', '', 'ccc')
         azure.get_token()
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure = Azure('', 'bbb', 'ccc')
         azure.get_token()
 
@@ -153,7 +154,7 @@ def test_get_token_with_httperror():
     mock.setup(HTTPError, True)
     # Call get_token
     azure = create_azure_instance()
-    with pytest.raises(HTTPError):
+    with pytest.raises(AzureException):
         azure.get_token()
     # Reinstate mocked functions
     mock.restore()
@@ -164,10 +165,10 @@ def test_get_token_with_timeout():
     """
     # Set up adal mock functions
     mock = AdalMock()
-    mock.setup(Timeout('Timeout'), True)
+    mock.setup(Timeout, True)
     # Call get_token
     azure = create_azure_instance()
-    with pytest.raises(Timeout):
+    with pytest.raises(AzureException):
         azure.get_token()
     # Reinstate mocked functions
     mock.restore()
@@ -181,7 +182,7 @@ def test_get_token_with_adalerror():
     mock.setup(AdalError('Invalid Client'), True)
     # Call get_token
     azure = create_azure_instance()
-    with pytest.raises(AdalError):
+    with pytest.raises(AzureException):
         azure.get_token()
     # Reinstate mocked functions
     mock.restore()
@@ -191,22 +192,22 @@ def test_get_group_members_with_invalid_groupid():
     Should raise an exception with an empty parameter
     """
     azure = create_azure_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure.get_group_members(None, None)
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure.get_group_members('', None)
 
 def test_get_group_members_with_invalid_token():
     """
     Should raise an exception with an empty parameter
     """
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure = create_azure_instance('cid', 'secret', 'tenant', None)
         azure.get_group_members('aaa', None)
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure = create_azure_instance('cid', 'secret', 'tenant', {})
         azure.get_group_members('aaa', None)
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure = create_azure_instance('cid', 'secret', 'tenant', {'accessToken':None})
         azure.get_group_members('aaa', None)
 
@@ -297,7 +298,7 @@ def test_get_group_members_with_400():
     # Call get_group_members
     azure = create_azure_instance()
     azure.setup()
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure.get_group_members(gid, None)
     # Reinstate mocked functions
     mock.restore()
@@ -315,7 +316,7 @@ def test_get_group_members_with_401():
     # Call get_group_members
     azure = create_azure_instance()
     azure.setup()
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure.get_group_members(gid, None)
     # Reinstate mocked functions
     mock.restore()
@@ -334,7 +335,7 @@ def test_get_group_members_with_404():
     # Call get_group_members
     azure = create_azure_instance()
     azure.setup()
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure.get_group_members(gid, None)
     # Reinstate mocked functions
     mock.restore()
@@ -350,7 +351,7 @@ def test_get_group_members_with_timeout():
     # Call get_group_members
     azure = create_azure_instance()
     azure.setup()
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure.get_group_members(gid, None)
     # Reinstate mocked functions
     mock.restore()
@@ -406,7 +407,7 @@ def test_get_paged_group_members_with_invalid_group_id():
     """
     # Set up mocks
     azure = create_azure_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure.get_paged_group_members(None, 1)
 
 def test_get_paged_group_members_with_invalid_page():
@@ -416,11 +417,11 @@ def test_get_paged_group_members_with_invalid_page():
     gid = "000abcde-f123-56gh-i789-000000000jkl"
     # Set up mocks
     azure = create_azure_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure.get_paged_group_members(gid, "1")
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure.get_paged_group_members(gid, 0)
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure.get_paged_group_members(gid, -1)
 
 def test_get_group_name_with_invalid_groupid():
@@ -428,22 +429,22 @@ def test_get_group_name_with_invalid_groupid():
     Should raise an exception with an empty parameter
     """
     azure = create_azure_instance()
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure.get_group_name(None)
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure.get_group_name('')
 
 def test_get_group_name_with_invalid_token():
     """
     Should raise an exception with an empty parameter
     """
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure = create_azure_instance_without_token('cid', 'secret', 'tenant')
         azure.get_group_name('aaa')
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure = create_azure_instance('cid', 'secret', 'tenant', {})
         azure.get_group_name('aaa')
-    with pytest.raises(Exception):
+    with pytest.raises(AzureException):
         azure = create_azure_instance('cid', 'secret', 'tenant', {'accessToken':None})
         azure.get_group_name('aaa')
 

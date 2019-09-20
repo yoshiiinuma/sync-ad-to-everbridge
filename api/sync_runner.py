@@ -5,6 +5,8 @@ import json
 import logging
 from os.path import exists
 from api.azure import Azure
+from api.exceptions import SyncRunnerException, SynchronizerException, AzureException, \
+                           EverbridgeException, ContactTrackerException
 from api.everbridge import Everbridge
 from api.synchronizer import Synchronizer
 from api.logger import setup_logger, SUPPORTED_LOGLEVELS
@@ -23,14 +25,22 @@ class SyncRunner:
         """
         Runs Sync application
         """
-        setup_logger()
-        self.conf = SyncRunner.load_config(self.configfile)
-        SyncRunner.check_config(self.conf)
-        setup_logger(self.conf.get('logFileName'), self.conf.get('logLevel'))
-        self._setup_azure_api()
-        self._setup_everbridge_api()
-        sync = Synchronizer(self.azure, self.everbridge)
-        sync.run(self.conf['adGroupId'])
+        # pylint: disable=broad-except
+        try:
+            setup_logger()
+            self.conf = SyncRunner.load_config(self.configfile)
+            SyncRunner.check_config(self.conf)
+            setup_logger(self.conf.get('logFileName'), self.conf.get('logLevel'))
+            self._setup_azure_api()
+            self._setup_everbridge_api()
+            sync = Synchronizer(self.azure, self.everbridge)
+            sync.run(self.conf['adGroupId'])
+        except (SyncRunnerException, SynchronizerException, AzureException,
+                EverbridgeException, ContactTrackerException):
+            logging.critical('SYNCRUNNER.RUN: Program Terminated Unexpectedly')
+        except Exception as err:
+            logging.critical('SYNCRUNNER.RUN: Unhandled Exception Found')
+            logging.critical(err)
 
     @staticmethod
     def load_config(configfile):
@@ -38,8 +48,9 @@ class SyncRunner:
         Creates conf object from config file
         """
         if not exists(configfile):
-            logging.error('SYNC_RUNNCER.LOAD_CONFIG: Config File Not Found: %s', configfile)
-            raise Exception('SYNC_RUNNCER.LOAD_CONFIG: Config File Not Found: ' + configfile)
+            msg = 'SYNC_RUNNCER.LOAD_CONFIG: Config File Not Found: ' + configfile
+            logging.error(msg)
+            raise SyncRunnerException(msg)
         return json.load(open(configfile))
 
     @staticmethod
@@ -56,7 +67,7 @@ class SyncRunner:
             errors.append('adTenant Not Found')
         if 'adGroupId' not in conf:
             errors.append('adGroupId Not Found')
-        if not isinstance(conf['adGroupId'], list):
+        elif not isinstance(conf['adGroupId'], list):
             errors.append('adGroupId Not List')
         if 'everbridgeOrg' not in conf:
             errors.append('everbridgeOrg Not Found')
@@ -70,7 +81,7 @@ class SyncRunner:
         if errors:
             for err in errors:
                 logging.error(err)
-            raise Exception('SYNC_RUNNCER.CHECK_CONFIG: Invalid Config File')
+            raise SyncRunnerException('SYNC_RUNNCER.CHECK_CONFIG: Invalid Config File')
 
     def _setup_azure_api(self):
         """

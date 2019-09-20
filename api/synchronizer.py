@@ -6,6 +6,7 @@ from api.azure_group_member_iterator import AzureGroupMemberIterator
 from api.everbridge_group_member_iterator import EverbridgeGroupMemberIterator
 from api.contact_tracker import ContactTracker
 from api.contact_utils import convert_to_everbridge, is_different
+from api.exceptions import SynchronizerException
 
 class AdContactMap:
     """
@@ -172,7 +173,7 @@ class Synchronizer:
         if not new_group or 'id' not in new_group:
             logging.error("SYNCHRONIZER._CREATE_NEW_EVERBRIDGE_GROUP FAILED %s", group_name)
             logging.error(new_group)
-            raise Exception('SYNCHRONIZER._CREATE_NEW_EVERBRIDGE_GROUP FAILED ' + group_name)
+            raise SynchronizerException('SYNCHRONIZER._CREATE_NEW_EVERBRIDGE_GROUP FAILED ' + group_name)
         logging.info("Created Everbridge Group %s", group_name)
         return new_group['id']
 

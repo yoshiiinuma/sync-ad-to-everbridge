@@ -3,6 +3,7 @@ Tests SyncRunner
 """
 from unittest.mock import MagicMock, patch
 import pytest
+from api.exceptions import SyncRunnerException
 from api.sync_runner import SyncRunner
 # pylint: disable=unused-import
 import tests.log_helper
@@ -59,7 +60,7 @@ def test_load_config_with_nonexistent_file():
     """
     Should return config object
     """
-    with pytest.raises(Exception):
+    with pytest.raises(SyncRunnerException):
         SyncRunner.load_config('NOTEXIST.json')
 
 def test_check_config():
@@ -87,7 +88,7 @@ def test_check_config_with_errors():
     """
     Should raise Exception when required param is missing
     """
-    with pytest.raises(Exception):
+    with pytest.raises(SyncRunnerException):
         SyncRunner.check_config({
             'clientSecret':'secret',
             'everbridgeUsername':'user',
@@ -96,7 +97,7 @@ def test_check_config_with_errors():
             'adTenant':'98765',
             'adGroupId':['group1', 'group2']
         })
-    with pytest.raises(Exception):
+    with pytest.raises(SyncRunnerException):
         SyncRunner.check_config({
             'clientId':'cid',
             'everbridgeUsername':'user',
@@ -105,7 +106,7 @@ def test_check_config_with_errors():
             'adTenant':'98765',
             'adGroupId':['group1', 'group2']
         })
-    with pytest.raises(Exception):
+    with pytest.raises(SyncRunnerException):
         SyncRunner.check_config({
             'clientId':'cid',
             'clientSecret':'secret',
@@ -114,7 +115,7 @@ def test_check_config_with_errors():
             'adTenant':'98765',
             'adGroupId':['group1', 'group2']
         })
-    with pytest.raises(Exception):
+    with pytest.raises(SyncRunnerException):
         SyncRunner.check_config({
             'clientId':'cid',
             'clientSecret':'secret',
@@ -123,7 +124,7 @@ def test_check_config_with_errors():
             'adTenant':'98765',
             'adGroupId':['group1', 'group2']
         })
-    with pytest.raises(Exception):
+    with pytest.raises(SyncRunnerException):
         SyncRunner.check_config({
             'clientId':'cid',
             'clientSecret':'secret',
@@ -132,7 +133,7 @@ def test_check_config_with_errors():
             'adTenant':'98765',
             'adGroupId':['group1', 'group2']
         })
-    with pytest.raises(Exception):
+    with pytest.raises(SyncRunnerException):
         SyncRunner.check_config({
             'clientId':'cid',
             'clientSecret':'secret',
@@ -141,7 +142,7 @@ def test_check_config_with_errors():
             'everbridgeOrg':'12345',
             'adGroupId':['group1', 'group2']
         })
-    with pytest.raises(Exception):
+    with pytest.raises(SyncRunnerException):
         SyncRunner.check_config({
             'clientId':'cid',
             'clientSecret':'secret',
@@ -150,7 +151,7 @@ def test_check_config_with_errors():
             'everbridgeOrg':'12345',
             'adTenant':'98765'
         })
-    with pytest.raises(Exception):
+    with pytest.raises(SyncRunnerException):
         SyncRunner.check_config({
             'clientId':'cid',
             'clientSecret':'secret',
@@ -160,7 +161,7 @@ def test_check_config_with_errors():
             'adTenant':'98765',
             'adGroupId':'group1'
         })
-    with pytest.raises(Exception):
+    with pytest.raises(SyncRunnerException):
         SyncRunner.check_config({
             'clientId':'cid',
             'clientSecret':'secret',
