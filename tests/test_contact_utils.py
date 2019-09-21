@@ -46,8 +46,8 @@ def test_fill_azure_contact_with_no_space_displayname():
     exp = {
         'displayName': 'AAA',
         'givenName': 'AAA',
-        'surname': 'None',
-        'userPrincipalName': 'XXX_MISSINGMAIL_XXX.AAA.None@hawaii.gov',
+        'surname': 'XXXXX',
+        'userPrincipalName': 'XXX_MISSINGMAIL_XXX.AAA.XXXXX@hawaii.gov',
         'businessPhones': []}
     fill_azure_contact(con)
     assert con == exp
@@ -68,7 +68,6 @@ def test_fill_azure_contact_with_anomalous_phonenumbers():
         'givenName': 'AAA',
         'surname': 'BBB',
         'userPrincipalName': 'AAA.BBB@hawaii.gov',
-        'mail': 'AAA.BBB@hawaii.gov',
         'businessPhones': ['8081112222', '8081113333'],
         'mobilePhone': '8081114444'}
     fill_azure_contact(con)

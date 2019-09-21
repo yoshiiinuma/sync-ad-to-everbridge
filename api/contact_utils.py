@@ -15,15 +15,63 @@ def normalize_phone(phone):
         phone = '808' + phone
     return phone
 
+def is_valid_phone(phone):
+    """
+    Returns True if phone number is valid; False otherwise
+    """
+    return not not re.fullmatch(r'\d{10}', phone)
+
+def is_valid_azure_contact(contact):
+    """
+    Returns True if contact is valid for upserting Everbridge; Error object otherwise
+    NOTE: Should call fill_azure_contact before this function
+    WARNING: Remove invalid phone number from contact
+    """
+    path_found = False
+    errors = []
+    warnings = []
+    if 'givenName' not in contact and 'surname' not in contact:
+        errors.append('NoNameFound')
+    elif contact['surname'] == 'XXXXX':
+        warnings.append('NoLastNameFound')
+    if 'userPrincipalName' in contact:
+        path_found = True
+    if 'businessPhones' in contact and contact['businessPhones']:
+        valid_phones = []
+        for phone in contact['businessPhones']:
+            if is_valid_phone(phone):
+                valid_phones.append(phone)
+            else:
+                warnings.append('InvalidBusinessPhone:' + phone)
+        if valid_phones:
+            contact['businessPhones'] = valid_phones
+            path_found = True
+    if 'mobilePhone' in contact and contact['mobilePhone']:
+        if is_valid_phone(contact['mobilePhone']):
+            path_found = True
+        else:
+            warnings.append('InvalidMobilePhone:' + contact['mobilePhone'])
+    if not path_found:
+        errors.append('NoPathFound')
+    if warnings:
+        msg = 'CONTACT_UTILS.IS_VALID_AZURE_CONTACT: ' + ', '.join(warnings)
+        logger.error(msg)
+    if errors:
+        msg = 'CONTACT_UTILS.IS_VALID_AZURE_CONTACT: ' + ', '.join(errors)
+        logger.error(msg)
+        return False
+    return True
+
 def fill_azure_contact(contact):
     """
     Fills missing info in AD Contact
+    NOTE: phone nubmers will be normalized
     """
     if not contact:
         return
     if 'givenName' not in contact:
         first = 'XXXXX'
-        last = 'None'
+        last = 'XXXXX'
         names = contact['displayName'].split(' ')
         logging.warning("%s has no first/last name. Adding in placeholder", contact['displayName'])
         if len(names) > 1:
@@ -32,20 +80,22 @@ def fill_azure_contact(contact):
         else:
             first = contact['displayName']
         contact['givenName'] = first
-        contact['surname'] = last
-    if 'userPrincipalName' in contact:
-        contact['mail'] = contact['userPrincipalName']
-    else:
-        if 'mail' not in contact:
+        if 'surname' not in contact or not contact['surname']:
+            if last == 'XXXXX':
+                msg = 'CONTACT_UTILS.FILL_AZURE_CONTACT: NoLastName '
+                logging.error(msg)
+            contact['surname'] = last
+    if 'userPrincipalName' not in contact:
+        if 'mail' in contact:
+            contact['userPrincipalName'] = contact['mail']
+        else:
             logging.warning("%s has no email. Adding in placeholder", contact['displayName'])
             contact['userPrincipalName'] = ('XXX_MISSINGMAIL_XXX.' + contact['givenName'] +
                                             '.' + contact['surname'] + '@hawaii.gov')
-        else:
-            contact['userPrincipalName'] = contact['mail']
     if 'businessPhones' in contact:
-        contact['businessPhones'] = list(map(normalize_phone, contact['businessPhones']))
+        if contact['businessPhones']:
+            contact['businessPhones'] = list(map(normalize_phone, contact['businessPhones']))
     else:
-        logging.warning("%s has no phone", contact['displayName'])
         contact['businessPhones'] = []
     if 'mobilePhone' in contact:
         contact['mobilePhone'] = normalize_phone(contact['mobilePhone'])
