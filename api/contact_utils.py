@@ -19,9 +19,86 @@ def is_valid_phone(phone):
     """
     Returns True if phone number is valid; False otherwise
     """
+    # pylint: disable=unneeded-not
     return not not re.fullmatch(r'\d{10}', phone)
 
-def is_valid_azure_contact(contact):
+def is_valid_email(email):
+    """
+    Returns True if email address is valid; False otherwise
+    """
+    # pylint: disable=unneeded-not
+    return not not re.fullmatch(r'^[^@ ]+@[^@ \.]+(\.[^@ \.]+)+$', email)
+
+def get_names_from_displayname(displayname):
+    """
+    Returns [firstName, lastName] extracted from displayName
+    """
+    #first = 'XXXXX'
+    #last = 'XXXXX'
+    first = None
+    last = None
+    names = re.split(' +', displayname.strip())
+    if len(names) > 1:
+        first = names.pop(0)
+        last = '.'.join(str(x) for x in names)
+    return [first, last]
+
+def validate_name(contact):
+    """
+    Validates name of given cotanct and returns error tracking object
+    NOTE
+    """
+    rslt = {'errors': [], 'warnings': []}
+    if 'userPrincipalName' in contact:
+        if not is_valid_email(contact['userPrincipalName']):
+            rslt['errors'].append('InvalidUserPrincipalName')
+    else:
+        if 'givenName' not in contact and 'surname' not in contact:
+            if 'displayName' not in contact:
+                rslt['errors'].append('NoNameFound')
+            else:
+                first, last = get_names_from_displayname(contact['displayName'])
+                if not first or not last:
+                    rslt['errors'].append('NoNameFound')
+        elif 'givenName' in contact and 'surname' in contact:
+            if not contact['givenName'] and not contact['surname']:
+                if 'displayName' not in contact:
+                    rslt['errors'].append('NoNameFound')
+                else:
+                    first, last = get_names_from_displayname(contact['displayName'])
+                    if not first or not last:
+                        rslt['errors'].append('NoNameFound')
+    return rslt
+
+def validate_paths(contact):
+    """
+    Validates paths of given cotanct and returns error tracking object
+    NOTE
+    """
+    path_found = False
+    rslt = {'errors': [], 'warnings': []}
+    if 'userPrincipalName' in contact:
+        path_found = True
+    if 'businessPhones' in contact and contact['businessPhones']:
+        valid_phones = []
+        for phone in contact['businessPhones']:
+            if is_valid_phone(phone):
+                valid_phones.append(phone)
+            else:
+                rslt['warnings'].append('InvalidBusinessPhone:' + phone)
+        if valid_phones:
+            contact['businessPhones'] = valid_phones
+            path_found = True
+    if 'mobilePhone' in contact and contact['mobilePhone']:
+        if is_valid_phone(contact['mobilePhone']):
+            path_found = True
+        else:
+            rslt['warnings'].append('InvalidMobilePhone:' + contact['mobilePhone'])
+    if not path_found:
+        rslt['errors'].append('NoPathFound')
+    return rslt
+
+def validate_azure_contact(contact):
     """
     Returns True if contact is valid for upserting Everbridge; Error object otherwise
     NOTE: Should call fill_azure_contact before this function
@@ -55,10 +132,10 @@ def is_valid_azure_contact(contact):
         errors.append('NoPathFound')
     if warnings:
         msg = 'CONTACT_UTILS.IS_VALID_AZURE_CONTACT: ' + ', '.join(warnings)
-        logger.error(msg)
+        logging.error(msg)
     if errors:
         msg = 'CONTACT_UTILS.IS_VALID_AZURE_CONTACT: ' + ', '.join(errors)
-        logger.error(msg)
+        logging.error(msg)
         return False
     return True
 

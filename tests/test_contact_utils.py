@@ -3,6 +3,12 @@ Tests Contact Utility functions
 """
 import copy
 from api.contact_utils import normalize_phone
+from api.contact_utils import is_valid_phone
+from api.contact_utils import is_valid_email
+from api.contact_utils import get_names_from_displayname
+from api.contact_utils import validate_name
+from api.contact_utils import validate_paths
+from api.contact_utils import validate_azure_contact
 from api.contact_utils import fill_azure_contact
 from api.contact_utils import convert_to_everbridge
 from api.contact_utils import extract_attributes_for_comparison
@@ -23,6 +29,92 @@ def test_normalzie_phone():
     assert normalize_phone(2222) == '2222'
     assert normalize_phone('') == ''
     assert normalize_phone(None) == ''
+
+def test_is_valid_phone():
+    """
+    Should return true if given phone number is valid
+    """
+    assert not is_valid_phone('1')
+    assert not is_valid_phone('12')
+    assert not is_valid_phone('123')
+    assert not is_valid_phone('123456789')
+    assert not is_valid_phone('12345678901')
+    assert is_valid_phone('1234567890')
+
+def test_is_valid_email():
+    """
+    Should return true if given email is valid
+    """
+    assert is_valid_email('abc.efg@test.com')
+    assert is_valid_email('Abc-Efg@test.com')
+    assert is_valid_email('abc.efg@test.co.jp')
+    assert not is_valid_email('@')
+    assert not is_valid_email('abc.efg@@test.com')
+    assert not is_valid_email('abc.efg@test..com')
+    assert not is_valid_email('abc efg@test.com')
+    assert not is_valid_email('abc.efg@ test.com')
+
+def test_get_names_from_displayname():
+    """
+    Should return first and last name extracted from displayName
+    """
+    assert get_names_from_displayname('Aaaa Bbbb') == ['Aaaa', 'Bbbb']
+    assert get_names_from_displayname('  Aaaa    Bbbb   ') == ['Aaaa', 'Bbbb']
+    assert get_names_from_displayname('Aaaa Bbbb Cccc') == ['Aaaa', 'Bbbb.Cccc']
+
+def test_validate_name():
+    """
+    Should return appropriate error messages
+    """
+    # Invalid userPrincipalName
+    con = {'userPrincipalName': 'abc.efg@test..com'}
+    exp = {'errors': ['InvalidUserPrincipalName'], 'warnings': []}
+    assert validate_name(con) == exp
+    con = {'userPrincipalName': ''}
+    exp = {'errors': ['InvalidUserPrincipalName'], 'warnings': []}
+    assert validate_name(con) == exp
+    # Valid userPrincipalName
+    con = {'userPrincipalName': 'abc.efg@test.com'}
+    exp = {'errors': [], 'warnings': []}
+    assert validate_name(con) == exp
+    # No Name Provided
+    con = {}
+    exp = {'errors': ['NoNameFound'], 'warnings': []}
+    assert validate_name(con) == exp
+    # Only Invalid displayName
+    con = {'displayName': 'Aaaa'}
+    exp = {'errors': ['NoNameFound'], 'warnings': []}
+    assert validate_name(con) == exp
+    # Valid displayName
+    con = {'displayName': 'Aaaa Bbbb Cccc'}
+    exp = {'errors': [], 'warnings': []}
+    assert validate_name(con) == exp
+    # Empty givenName and surname
+    con = {'givenName': '', 'surname': ''}
+    exp = {'errors': ['NoNameFound'], 'warnings': []}
+    assert validate_name(con) == exp
+    # Empty givenName and surname and displayName
+    con = {'givenName': '', 'surname': '', 'displayName': ''}
+    exp = {'errors': ['NoNameFound'], 'warnings': []}
+    assert validate_name(con) == exp
+    # Empty givenName and surname and Invalid displayName
+    con = {'givenName': '', 'surname': '', 'displayName': 'Aaaa'}
+    exp = {'errors': ['NoNameFound'], 'warnings': []}
+    assert validate_name(con) == exp
+
+def test_validate_paths():
+    """
+    Should return
+    """
+    con = {}
+    exp = {'errors': ['NoPathFound'], 'warnings': []}
+    assert validate_paths(con) == exp
+
+def test_validate_azure_contact():
+    """
+    Should return
+    """
+    pass
 
 def test_fill_azure_contact_with_multiple_space_displayname():
     """
