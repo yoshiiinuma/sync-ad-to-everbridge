@@ -83,9 +83,6 @@ def validate_name(contact, rslt):
     _setup_validation_result(rslt)
     rslt['first'] = None
     rslt['last'] = None
-    if 'userPrincipalName' in contact:
-        if not is_valid_email(contact['userPrincipalName']):
-            rslt['warnings'].append('UnexpectedUserPrincipalName')
     first = contact.get('givenName', '')
     last = contact.get('surname', '')
     if first and last:
@@ -141,9 +138,7 @@ def validate_paths(contact, rslt):
 
 def validate_azure_contact(contact):
     """
-    Returns True if contact is valid for upserting Everbridge; Error object otherwise
-    NOTE: Should call fill_azure_contact before this function
-    WARNING: Remove invalid phone number from contact
+    Checks if the contact is valid for upserting, and returns the result
     """
     rslt = {}
     _setup_validation_result(rslt)
@@ -155,8 +150,7 @@ def validate_azure_contact(contact):
     if rslt['errors']:
         msg = 'CONTACT_UTILS.VALIDATE_AZURE_CONTACT: ' + ', '.join(rslt['errors'])
         logging.error(msg)
-        return False
-    return True
+    return rslt
 
 def fill_azure_contact(contact):
     """

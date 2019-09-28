@@ -114,14 +114,14 @@ def test_validate_name_with_invalid_data():
     rslt = {'errors': [], 'warnings': []}
     con = {'userPrincipalName': 'abcefg@test..com'}
     exp = {'errors': ['NoNameFound'],
-           'warnings': ['UnexpectedUserPrincipalName'],
+           'warnings': [],
            'first': None, 'last': None}
     validate_name(con, rslt)
     assert rslt == exp
     # Empty userPrincipalName
     rslt = {'errors': [], 'warnings': []}
     con = {'userPrincipalName': ''}
-    exp = {'errors': ['NoNameFound'], 'warnings': ['UnexpectedUserPrincipalName'],
+    exp = {'errors': ['NoNameFound'], 'warnings': [],
            'first': None, 'last': None}
     validate_name(con, rslt)
     assert rslt == exp
@@ -253,7 +253,25 @@ def test_validate_paths_with_invalid_mobile_phone():
     validate_paths(con, rslt)
     assert rslt == exp
 
-def test_validate_azure_contact():
+def test_validate_azure_contact_with_valid_data():
+    """
+    Should return true if contact is valid
+    """
+    # Valid contact
+    con = {'userPrincipalName': 'abc.def@test.com',
+           'givenName': 'abc',
+           'surname': 'def',
+           'displayName': 'abc def',
+           'businessPhones': ['1234567890', '1234567891'],
+           'mobilePhone': '1234567892'}
+    exp = {'errors': [],
+           'warnings': [],
+           'valid_paths': ['abc.def@test.com', '1234567890', '1234567891', '1234567892'],
+           'first': 'abc', 'last': 'def'}
+    rslt = validate_azure_contact(con)
+    assert rslt == exp
+
+def test_validate_azure_contact_with_invalid_data():
     """
     Should return true if contact is valid
     """
@@ -262,12 +280,21 @@ def test_validate_azure_contact():
            'displayName': 'abcdef',
            'businessPhones': ['1234567890', '1234567891'],
            'mobilePhone': '1234567892'}
-    assert not validate_azure_contact(con)
+    exp = {'errors': ['NoNameFound'],
+           'warnings': ['InvalidUserPrincipalName:abcdef@test...com'],
+           'valid_paths': ['1234567890', '1234567891', '1234567892'],
+           'first': None, 'last': None}
+    rslt = validate_azure_contact(con)
+    assert rslt == exp
     # No valid name
-    con = {'userPrincipalName': 'abc.def@test.com',
+    con = {'userPrincipalName': 'abcdef@test.com',
            'businessPhones': ['1234567890', '1234567891'],
            'mobilePhone': '1234567892'}
-    assert validate_azure_contact(con)
+    exp = {'errors': ['NoNameFound'], 'warnings': [],
+           'valid_paths': ['abcdef@test.com', '1234567890', '1234567891', '1234567892'],
+           'first': None, 'last': None}
+    rslt = validate_azure_contact(con)
+    assert rslt == exp
     # No valid path
     con = {'userPrincipalName': 'abc.def@test..com',
            'givenName': 'abc',
@@ -275,21 +302,28 @@ def test_validate_azure_contact():
            'displayName': 'abc def',
            'businessPhones': ['123456789X', '123456789Y'],
            'mobilePhone': '123456789Z'}
-    assert not validate_azure_contact(con)
+    exp = {'errors': ['NoPathFound'],
+           'warnings': [
+               'InvalidUserPrincipalName:abc.def@test..com',
+               'InvalidBusinessPhone:123456789X',
+               'InvalidBusinessPhone:123456789Y',
+               'InvalidMobilePhone:123456789Z',
+           ],
+           'valid_paths': [],
+           'first': 'abc', 'last': 'def'}
+    rslt = validate_azure_contact(con)
+    assert rslt == exp
     # One valid path
     con = {'givenName': 'abc',
            'surname': 'def',
-           'businessPhones': ['123456789x', '123456789y'],
+           'businessPhones': ['123456789X', '123456789Y'],
            'mobilePhone': '1234567892'}
-    assert validate_azure_contact(con)
-    # Valid contact
-    con = {'userPrincipalName': 'abc.def@test.com',
-           'givenName': 'abc',
-           'surname': 'def',
-           'displayName': 'abc def',
-           'businessPhones': ['1234567890', '1234567891'],
-           'mobilePhone': '1234567892'}
-    assert validate_azure_contact(con)
+    exp = {'errors': [],
+           'warnings': ['InvalidBusinessPhone:123456789X', 'InvalidBusinessPhone:123456789Y'],
+           'valid_paths': ['1234567892'],
+           'first': 'abc', 'last': 'def'}
+    rslt = validate_azure_contact(con)
+    assert rslt == exp
 
 def test_fill_azure_contact_with_multiple_space_displayname():
     """
