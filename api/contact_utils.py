@@ -4,6 +4,57 @@ Contact Utility Functions
 import re
 import logging
 
+class ContactValidationResult:
+    """
+    Keeps track of Azure contact validation results
+    """
+    def __init__(self):
+        self.errors = []
+        self.warnings = []
+        self.vaid_paths = []
+        self.first = None
+        self.last = None
+        self.valid_email = None
+        self.valid_business_phonese = []
+        self.valid_mobile_phone = None
+
+    def append_error(err):
+        """
+        Set an error
+        """
+        self.errors.append(err)
+
+    def append_warning(warn):
+        """
+        Set an warning
+        """
+        self.warnings.append(warn)
+
+    def set_valid_name(first, last):
+        """
+        Set a valid name
+        """
+        self.first = first
+        self.last = last
+
+    def set_valid_email(email):
+        """
+        Set a valid email
+        """
+        self.valid_email = email
+
+    def append_valid_business_phone(phone):
+        """
+        Set a valid business phone
+        """
+        self.valid_business_phones.appned(phone)
+
+    def set_valid_business_phones(phone):
+        """
+        Set a valid mobile phone
+        """
+        self.valid_mobile_phone = phone
+
 def normalize_phone(phone):
     """
     Normalizes phone number
