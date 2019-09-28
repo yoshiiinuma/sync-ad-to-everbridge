@@ -152,6 +152,12 @@ def validate_azure_contact(contact):
         logging.error(msg)
     return rslt
 
+def fix_azure_contact(contact):
+    """
+    Fixes invalid values in AD Contact
+    """
+    pass
+
 def fill_azure_contact(contact):
     """
     Fills missing info in AD Contact

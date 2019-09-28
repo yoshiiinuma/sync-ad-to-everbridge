@@ -325,6 +325,12 @@ def test_validate_azure_contact_with_invalid_data():
     rslt = validate_azure_contact(con)
     assert rslt == exp
 
+def test_fix_azure_contact():
+    """
+    Should fix invalid valuds in AD Contact
+    """
+    pass
+
 def test_fill_azure_contact_with_multiple_space_displayname():
     """
     Should fill missing info in AD Contact
