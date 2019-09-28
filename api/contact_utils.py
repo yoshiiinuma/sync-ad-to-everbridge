@@ -65,12 +65,22 @@ def get_names_from_displayname(displayname):
         last = '.'.join(str(x) for x in names)
     return [first, last]
 
+def _setup_validation_result(rslt):
+    """
+    Sets up common attributes of validation result
+    """
+    if 'errors' not in rslt:
+        rslt['errors'] = []
+    if 'warnings' not in rslt:
+        rslt['warnings'] = []
+
 def validate_name(contact, rslt):
     """
     Validates name of given cotanct and returns error tracking object
     Errors => Cannot insert into Everbridge contact
     Warnings => Can insert into Everbridge contact but needs to be updated
     """
+    _setup_validation_result(rslt)
     rslt['first'] = None
     rslt['last'] = None
     if 'userPrincipalName' in contact:
@@ -104,6 +114,7 @@ def validate_paths(contact, rslt):
     Errors => Cannot insert into Everbridge contact
     Warnings => Can insert into Everbridge contact but needs to be updated
     """
+    _setup_validation_result(rslt)
     rslt['valid_paths'] = []
     if 'userPrincipalName' in contact:
         if is_valid_email(contact['userPrincipalName']):
@@ -134,10 +145,10 @@ def validate_azure_contact(contact):
     NOTE: Should call fill_azure_contact before this function
     WARNING: Remove invalid phone number from contact
     """
-    rslt = {'errors': [], 'warnings': []}
+    rslt = {}
+    _setup_validation_result(rslt)
     validate_name(contact, rslt)
     validate_paths(contact, rslt)
-    print(rslt)
     if rslt['warnings']:
         msg = 'CONTACT_UTILS.VALIDATE_AZURE_CONTACT: ' + ', '.join(rslt['warnings'])
         logging.error(msg)

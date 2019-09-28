@@ -76,7 +76,37 @@ def test_get_names_from_displayname():
     assert get_names_from_displayname('  Aaaa    Bbbb   ') == ['Aaaa', 'Bbbb']
     assert get_names_from_displayname('Aaaa Bbbb Cccc') == ['Aaaa', 'Bbbb.Cccc']
 
-def test_validate_name():
+
+def test_validate_name_with_valid_name():
+    """
+    Should return no error messages but valid name
+    """
+    # Valid userPrincipalName
+    rslt = {'errors': [], 'warnings': []}
+    con = {'userPrincipalName': 'abc.efg@test.com'}
+    exp = {'errors': [], 'warnings': ['NameExtractedFromEmail'], 'first': 'abc', 'last': 'efg'}
+    validate_name(con, rslt)
+    assert rslt == exp
+    # Valid displayName
+    rslt = {'errors': [], 'warnings': []}
+    con = {'displayName': 'Aaaa Bbbb Cccc'}
+    exp = {'errors': [], 'warnings': ['NameExtractedFromDisplayName'],
+           'first': 'Aaaa', 'last': 'Bbbb.Cccc'}
+    validate_name(con, rslt)
+    assert rslt == exp
+    # Valid name
+    rslt = {'errors': [], 'warnings': []}
+    con = {'userPrincipalName': 'abc.def@test.com',
+           'givenName': 'Aaaa',
+           'surname': 'Bbbb',
+           'displayName': 'Ccc Ddd',
+           'businessPhones': ['123456789X', '123456789Y'],
+           'mobilePhone': '123456789Z'}
+    exp = {'errors': [], 'warnings': [], 'first': 'Aaaa', 'last': 'Bbbb'}
+    validate_name(con, rslt)
+    assert rslt == exp
+
+def test_validate_name_with_invalid_data():
     """
     Should return appropriate error messages
     """
@@ -88,17 +118,11 @@ def test_validate_name():
            'first': None, 'last': None}
     validate_name(con, rslt)
     assert rslt == exp
+    # Empty userPrincipalName
     rslt = {'errors': [], 'warnings': []}
-    rslt = {'errors': [], 'warnings': [], 'first': None, 'last': None}
     con = {'userPrincipalName': ''}
     exp = {'errors': ['NoNameFound'], 'warnings': ['UnexpectedUserPrincipalName'],
            'first': None, 'last': None}
-    validate_name(con, rslt)
-    assert rslt == exp
-    # Valid userPrincipalName
-    rslt = {'errors': [], 'warnings': []}
-    con = {'userPrincipalName': 'abc.efg@test.com'}
-    exp = {'errors': [], 'warnings': ['NameExtractedFromEmail'], 'first': 'abc', 'last': 'efg'}
     validate_name(con, rslt)
     assert rslt == exp
     # No Name Provided
@@ -111,13 +135,6 @@ def test_validate_name():
     rslt = {'errors': [], 'warnings': []}
     con = {'displayName': 'Aaaa'}
     exp = {'errors': ['NoNameFound'], 'warnings': [], 'first': None, 'last': None}
-    validate_name(con, rslt)
-    assert rslt == exp
-    # Valid displayName
-    rslt = {'errors': [], 'warnings': []}
-    con = {'displayName': 'Aaaa Bbbb Cccc'}
-    exp = {'errors': [], 'warnings': ['NameExtractedFromDisplayName'],
-           'first': 'Aaaa', 'last': 'Bbbb.Cccc'}
     validate_name(con, rslt)
     assert rslt == exp
     # Empty givenName and surname
