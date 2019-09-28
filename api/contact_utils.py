@@ -11,16 +11,27 @@ def normalize_phone(phone):
     if not phone:
         return ''
     phone = re.sub(r'-|\s|\(|\)|\+1', '', str(phone))
+    ext = ''
+    if 'x' in phone:
+        matched = re.match(r'(\d+)x(\d+)', phone)
+        if matched:
+            phone = matched.group(1)
+            ext = matched.group(2)
     if len(phone) == 7:
         phone = '808' + phone
+    if ext:
+        phone += 'x' + ext
     return phone
 
 def is_valid_phone(phone):
     """
     Returns True if phone number is valid; False otherwise
+    A phone number must be 10 digits exclude extension
+    'x' + Extension may follow the phone number
     """
+    phone = normalize_phone(phone)
     # pylint: disable=unneeded-not
-    return not not re.fullmatch(r'\d{10}', phone)
+    return not not re.fullmatch(r'\d{10}(x\d+)?', phone)
 
 def is_valid_email(email):
     """
@@ -29,74 +40,93 @@ def is_valid_email(email):
     # pylint: disable=unneeded-not
     return not not re.fullmatch(r'^[^@ ]+@[^@ \.]+(\.[^@ \.]+)+$', email)
 
+def get_names_from_email(email):
+    """
+    Returns [firstName, lastName] extracted from email (userPrincipalName)
+    """
+    first = None
+    last = None
+    if '@' in email:
+        name = re.sub(r'@.*$', '', email.strip())
+        if '.' in name:
+            # pylint: disable=unused-variable
+            first, *ignore, last = re.split(r'\.', name)
+    return [first, last]
+
 def get_names_from_displayname(displayname):
     """
     Returns [firstName, lastName] extracted from displayName
     """
-    #first = 'XXXXX'
-    #last = 'XXXXX'
     first = None
     last = None
-    names = re.split(' +', displayname.strip())
+    names = re.split(r' +', displayname.strip())
     if len(names) > 1:
         first = names.pop(0)
         last = '.'.join(str(x) for x in names)
     return [first, last]
 
-def validate_name(contact):
+def validate_name(contact, rslt):
     """
     Validates name of given cotanct and returns error tracking object
-    NOTE
+    Errors => Cannot insert into Everbridge contact
+    Warnings => Can insert into Everbridge contact but needs to be updated
     """
-    rslt = {'errors': [], 'warnings': []}
+    rslt['first'] = None
+    rslt['last'] = None
     if 'userPrincipalName' in contact:
         if not is_valid_email(contact['userPrincipalName']):
-            rslt['errors'].append('InvalidUserPrincipalName')
-    else:
-        if 'givenName' not in contact and 'surname' not in contact:
-            if 'displayName' not in contact:
-                rslt['errors'].append('NoNameFound')
-            else:
-                first, last = get_names_from_displayname(contact['displayName'])
-                if not first or not last:
-                    rslt['errors'].append('NoNameFound')
-        elif 'givenName' in contact and 'surname' in contact:
-            if not contact['givenName'] and not contact['surname']:
-                if 'displayName' not in contact:
-                    rslt['errors'].append('NoNameFound')
-                else:
-                    first, last = get_names_from_displayname(contact['displayName'])
-                    if not first or not last:
-                        rslt['errors'].append('NoNameFound')
-    return rslt
+            rslt['warnings'].append('UnexpectedUserPrincipalName')
+    first = contact.get('givenName', '')
+    last = contact.get('surname', '')
+    if first and last:
+        rslt['first'] = first
+        rslt['last'] = last
+        return
+    if 'userPrincipalName' in contact:
+        first, last = get_names_from_email(contact['userPrincipalName'])
+        if first and last:
+            rslt['first'] = first
+            rslt['last'] = last
+            rslt['warnings'].append('NameExtractedFromEmail')
+            return
+    if 'displayName' in contact:
+        first, last = get_names_from_displayname(contact['displayName'])
+        if first and last:
+            rslt['first'] = first
+            rslt['last'] = last
+            rslt['warnings'].append('NameExtractedFromDisplayName')
+            return
+    rslt['errors'].append('NoNameFound')
 
-def validate_paths(contact):
+def validate_paths(contact, rslt):
     """
     Validates paths of given cotanct and returns error tracking object
-    NOTE
+    Errors => Cannot insert into Everbridge contact
+    Warnings => Can insert into Everbridge contact but needs to be updated
     """
-    path_found = False
-    rslt = {'errors': [], 'warnings': []}
+    rslt['valid_paths'] = []
     if 'userPrincipalName' in contact:
-        path_found = True
+        if is_valid_email(contact['userPrincipalName']):
+            rslt['valid_paths'].append(contact['userPrincipalName'])
+        else:
+            rslt['warnings'].append('InvalidUserPrincipalName:' + contact['userPrincipalName'])
     if 'businessPhones' in contact and contact['businessPhones']:
         valid_phones = []
         for phone in contact['businessPhones']:
             if is_valid_phone(phone):
                 valid_phones.append(phone)
+                rslt['valid_paths'].append(phone)
             else:
                 rslt['warnings'].append('InvalidBusinessPhone:' + phone)
         if valid_phones:
             contact['businessPhones'] = valid_phones
-            path_found = True
-    if 'mobilePhone' in contact and contact['mobilePhone']:
-        if is_valid_phone(contact['mobilePhone']):
-            path_found = True
+    if 'mobilePhone' in contact:
+        if contact['mobilePhone'] and is_valid_phone(contact['mobilePhone']):
+            rslt['valid_paths'].append(contact['mobilePhone'])
         else:
             rslt['warnings'].append('InvalidMobilePhone:' + contact['mobilePhone'])
-    if not path_found:
+    if not rslt['valid_paths']:
         rslt['errors'].append('NoPathFound')
-    return rslt
 
 def validate_azure_contact(contact):
     """
@@ -104,37 +134,15 @@ def validate_azure_contact(contact):
     NOTE: Should call fill_azure_contact before this function
     WARNING: Remove invalid phone number from contact
     """
-    path_found = False
-    errors = []
-    warnings = []
-    if 'givenName' not in contact and 'surname' not in contact:
-        errors.append('NoNameFound')
-    elif contact['surname'] == 'XXXXX':
-        warnings.append('NoLastNameFound')
-    if 'userPrincipalName' in contact:
-        path_found = True
-    if 'businessPhones' in contact and contact['businessPhones']:
-        valid_phones = []
-        for phone in contact['businessPhones']:
-            if is_valid_phone(phone):
-                valid_phones.append(phone)
-            else:
-                warnings.append('InvalidBusinessPhone:' + phone)
-        if valid_phones:
-            contact['businessPhones'] = valid_phones
-            path_found = True
-    if 'mobilePhone' in contact and contact['mobilePhone']:
-        if is_valid_phone(contact['mobilePhone']):
-            path_found = True
-        else:
-            warnings.append('InvalidMobilePhone:' + contact['mobilePhone'])
-    if not path_found:
-        errors.append('NoPathFound')
-    if warnings:
-        msg = 'CONTACT_UTILS.IS_VALID_AZURE_CONTACT: ' + ', '.join(warnings)
+    rslt = {'errors': [], 'warnings': []}
+    validate_name(contact, rslt)
+    validate_paths(contact, rslt)
+    print(rslt)
+    if rslt['warnings']:
+        msg = 'CONTACT_UTILS.VALIDATE_AZURE_CONTACT: ' + ', '.join(rslt['warnings'])
         logging.error(msg)
-    if errors:
-        msg = 'CONTACT_UTILS.IS_VALID_AZURE_CONTACT: ' + ', '.join(errors)
+    if rslt['errors']:
+        msg = 'CONTACT_UTILS.VALIDATE_AZURE_CONTACT: ' + ', '.join(rslt['errors'])
         logging.error(msg)
         return False
     return True
