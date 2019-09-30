@@ -120,50 +120,29 @@ def get_names_from_displayname(displayname):
         last = '.'.join(str(x) for x in names)
     return [first, last]
 
-#def _setup_validation_result(rslt):
-#    """
-#    Sets up common attributes of validation result
-#    """
-#    if 'errors' not in rslt:
-#        rslt['errors'] = []
-#    if 'warnings' not in rslt:
-#        rslt['warnings'] = []
-
 def validate_name(contact, rslt):
     """
     Validates name of given cotanct and returns error tracking object
     Errors => Cannot insert into Everbridge contact
     Warnings => Can insert into Everbridge contact but needs to be updated
     """
-    #_setup_validation_result(rslt)
-    #rslt['first'] = None
-    #rslt['last'] = None
     first = contact.get('givenName', '')
     last = contact.get('surname', '')
     if first and last:
         rslt.set_name(first, last)
-        #rslt['first'] = first
-        #rslt['last'] = last
         return
     if 'userPrincipalName' in contact:
         first, last = get_names_from_email(contact['userPrincipalName'])
         if first and last:
             rslt.set_name(first, last)
             rslt.append_warning('NameExtractedFromEmail')
-            #rslt['first'] = first
-            #rslt['last'] = last
-            #rslt['warnings'].append('NameExtractedFromEmail')
             return
     if 'displayName' in contact:
         first, last = get_names_from_displayname(contact['displayName'])
         if first and last:
             rslt.set_name(first, last)
             rslt.append_warning('NameExtractedFromDisplayName')
-            #rslt['first'] = first
-            #rslt['last'] = last
-            #rslt['warnings'].append('NameExtractedFromDisplayName')
             return
-    #rslt['errors'].append('NoNameFound')
     rslt.append_error('NoNameFound')
 
 def validate_paths(contact, rslt):
@@ -172,37 +151,23 @@ def validate_paths(contact, rslt):
     Errors => Cannot insert into Everbridge contact
     Warnings => Can insert into Everbridge contact but needs to be updated
     """
-    #_setup_validation_result(rslt)
-    #rslt['valid_paths'] = []
     if 'userPrincipalName' in contact:
         if is_valid_email(contact['userPrincipalName']):
-            #rslt['valid_paths'].append(contact['userPrincipalName'])
             rslt.set_email(contact['userPrincipalName'])
         else:
-            #rslt['warnings'].append('InvalidUserPrincipalName:' + contact['userPrincipalName'])
             rslt.append_warning('InvalidUserPrincipalName:' + contact['userPrincipalName'])
     if 'businessPhones' in contact and contact['businessPhones']:
-        #valid_phones = []
         for phone in contact['businessPhones']:
             if is_valid_phone(phone):
-                #valid_phones.append(phone)
-                #rslt['valid_paths'].append(phone)
                 rslt.append_business_phone(phone)
             else:
-                #rslt['warnings'].append('InvalidBusinessPhone:' + phone)
                 rslt.append_warning('InvalidBusinessPhone:' + phone)
-        #if valid_phones:
-        #    contact['businessPhones'] = valid_phones
     if 'mobilePhone' in contact:
         if contact['mobilePhone'] and is_valid_phone(contact['mobilePhone']):
-            #rslt['valid_paths'].append(contact['mobilePhone'])
             rslt.set_mobile_phone(contact['mobilePhone'])
         else:
-            #rslt['warnings'].append('InvalidMobilePhone:' + contact['mobilePhone'])
             rslt.append_warning('InvalidMobilePhone:' + contact['mobilePhone'])
-    #if not rslt['valid_paths']:
     if not rslt.valid_paths:
-        #rslt['errors'].append('NoPathFound')
         rslt.append_error('NoPathFound')
 
 def validate_azure_contact(contact):
@@ -210,18 +175,12 @@ def validate_azure_contact(contact):
     Checks if the contact is valid for upserting, and returns the result
     """
     rslt = ContactValidationResult()
-    #rslt = {}
-    #_setup_validation_result(rslt)
     validate_name(contact, rslt)
     validate_paths(contact, rslt)
-    #if rslt['warnings']:
     if rslt.warnings:
-        #msg = 'CONTACT_UTILS.VALIDATE_AZURE_CONTACT: ' + ', '.join(rslt['warnings'])
         msg = 'CONTACT_UTILS.VALIDATE_AZURE_CONTACT: ' + ', '.join(rslt.warnings)
         logging.error(msg)
-    #if rslt['errors']:
     if rslt.errors:
-        #msg = 'CONTACT_UTILS.VALIDATE_AZURE_CONTACT: ' + ', '.join(rslt['errors'])
         msg = 'CONTACT_UTILS.VALIDATE_AZURE_CONTACT: ' + ', '.join(rslt.errors)
         logging.error(msg)
     return rslt
