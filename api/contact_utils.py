@@ -194,7 +194,16 @@ def fix_azure_contact(contact, validated):
     """
     Fixes invalid values in AD Contact
     """
-    pass
+    if validated.first:
+        contact['givenName'] = validated.first
+    if validated.last:
+        contact['surname'] = validated.last
+    if validated.email:
+        contact['userPrincipalName'] = validated.email
+    if validated.business_phones:
+        contact['businessPhones'] = list(map(normalize_phone, validated.business_phones))
+    if validated.mobile_phone:
+        contact['mobilePhone'] = normalize_phone(validated.mobile_phone)
 
 def fill_azure_contact(contact):
     """

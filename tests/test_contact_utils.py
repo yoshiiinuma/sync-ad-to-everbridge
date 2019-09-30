@@ -10,6 +10,7 @@ from api.contact_utils import get_names_from_displayname
 from api.contact_utils import validate_name
 from api.contact_utils import validate_paths
 from api.contact_utils import validate_azure_contact
+from api.contact_utils import fix_azure_contact
 from api.contact_utils import fill_azure_contact
 from api.contact_utils import convert_to_everbridge
 from api.contact_utils import extract_attributes_for_comparison
@@ -411,7 +412,16 @@ def test_fix_azure_contact():
     """
     Should fix invalid valuds in AD Contact
     """
-    pass
+    con = {'userPrincipalName': 'abc.def@test.com',
+           'businessPhones': ['+1(808)1234567', '567-9999', '1234444 x 888'],
+           'mobilePhone': '+1 (808) 123 - 4567 x 9999'}
+    validated = validate_azure_contact(con)
+    fix_azure_contact(con, validated)
+    assert con['userPrincipalName'] == 'abc.def@test.com'
+    assert con['givenName'] == 'abc'
+    assert con['surname'] == 'def'
+    assert con['businessPhones'] == ['8081234567', '8085679999', '8081234444x888']
+    assert con['mobilePhone'] == '8081234567x9999'
 
 def test_fill_azure_contact_with_multiple_space_displayname():
     """
