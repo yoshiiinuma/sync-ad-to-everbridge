@@ -4,7 +4,6 @@ Contact Utility Functions
 import re
 import logging
 
-# pylint: disable=too-many-instance-attributes
 class ContactValidationResult:
     """
     Keeps track of Azure contact validation results
@@ -14,10 +13,17 @@ class ContactValidationResult:
         self.warnings = []
         self.first = None
         self.last = None
-        self.valid_paths = []
         self.email = None
         self.business_phones = []
         self.mobile_phone = None
+
+    def has_valid_paths(self):
+        """
+        Returns True if valid path exists; False otherwise
+        """
+        if self.email or self.business_phones or self.mobile_phone:
+            return True
+        return False
 
     def append_error(self, err):
         """
@@ -42,21 +48,18 @@ class ContactValidationResult:
         """
         Set a valid email
         """
-        self.valid_paths.append(email)
         self.email = email
 
     def append_business_phone(self, phone):
         """
         Set a valid business phone
         """
-        self.valid_paths.append(phone)
         self.business_phones.append(phone)
 
     def set_mobile_phone(self, phone):
         """
         Set a valid mobile phone
         """
-        self.valid_paths.append(phone)
         self.mobile_phone = phone
 
 def normalize_phone(phone):
@@ -167,7 +170,7 @@ def validate_paths(contact, rslt):
             rslt.set_mobile_phone(contact['mobilePhone'])
         else:
             rslt.append_warning('InvalidMobilePhone:' + contact['mobilePhone'])
-    if not rslt.valid_paths:
+    if not rslt.has_valid_paths():
         rslt.append_error('NoPathFound')
 
 def validate_azure_contact(contact):
@@ -183,9 +186,11 @@ def validate_azure_contact(contact):
     if rslt.errors:
         msg = 'CONTACT_UTILS.VALIDATE_AZURE_CONTACT: ' + ', '.join(rslt.errors)
         logging.error(msg)
+    if rslt.warnings or rslt.errors:
+        logging.error(contact)
     return rslt
 
-def fix_azure_contact(contact):
+def fix_azure_contact(contact, validated):
     """
     Fixes invalid values in AD Contact
     """
