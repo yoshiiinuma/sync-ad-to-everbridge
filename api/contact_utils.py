@@ -17,6 +17,14 @@ class ContactValidationResult:
         self.business_phones = []
         self.mobile_phone = None
 
+    def has_valid_name(self):
+        """
+        Returns True if valid name exists; False otherwise
+        """
+        if self.first and self.last:
+            return True
+        return False
+
     def has_valid_paths(self):
         """
         Returns True if valid path exists; False otherwise
