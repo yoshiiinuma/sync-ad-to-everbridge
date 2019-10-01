@@ -51,7 +51,7 @@ def test_run():
     assert rslt == {
         'GROUP1': {
             'azure_group_id': 123, 'everbridge_group_id': 123,
-            'azure_count': 6, 'everbridge_count': 5,
+            'azure_count': 6, 'everbridge_count': 5, 'error_contacts': 0,
             'inserted_contacts': 3, 'updated_contacts': 2, 'removed_members': 2,
             'deleted_contacts': 2, 'added_members': 3}
         }
@@ -87,7 +87,7 @@ def test_run_add_group():
     assert rslt == {
         'GROUP1': {
             'azure_group_id': 123, 'everbridge_group_id': 123,
-            'azure_count': 2, 'everbridge_count': 0,
+            'azure_count': 2, 'everbridge_count': 0, 'error_contacts': 0,
             'inserted_contacts': 2, 'updated_contacts': 0, 'removed_members': 0,
             'deleted_contacts': 0, 'added_members': 2}
         }
@@ -118,7 +118,7 @@ def test_run_delete_group():
     assert rslt == {
         'GROUP1': {
             'azure_group_id': 123, 'everbridge_group_id': 123,
-            'azure_count': 0, 'everbridge_count': 3,
+            'azure_count': 0, 'everbridge_count': 3, 'error_contacts': 0,
             'inserted_contacts': 0, 'updated_contacts': 0, 'removed_members': 3,
             'deleted_contacts': 3, 'added_members': 0, 'removed': True}
         }
@@ -154,7 +154,7 @@ def test_sync_group_with_map_insert_and_delete():
     assert rslt == {
         'azure_group_id': 123, 'everbridge_group_id': 123, 'azure_count': 4, 'everbridge_count': 5,
         'inserted_contacts': 2, 'updated_contacts': 0, 'removed_members': 3,
-        'deleted_contacts': 0, 'added_members': 2
+        'deleted_contacts': 0, 'added_members': 2, 'error_contacts': 0
     }
 
 def test_sync_group_with_map_upadte():
@@ -185,7 +185,7 @@ def test_sync_group_with_map_upadte():
     assert rslt == {
         'azure_group_id': 123, 'everbridge_group_id': 123, 'azure_count': 4, 'everbridge_count': 4,
         'inserted_contacts': 0, 'updated_contacts': 2, 'removed_members': 0,
-        'deleted_contacts': 0, 'added_members': 0
+        'deleted_contacts': 0, 'added_members': 0, 'error_contacts': 0
     }
 
 def test_sync_group_with_map_only_everbridge():
@@ -215,7 +215,7 @@ def test_sync_group_with_map_only_everbridge():
     assert rslt == {
         'azure_group_id': 123, 'everbridge_group_id': 123, 'azure_count': 0, 'everbridge_count': 3,
         'inserted_contacts': 0, 'updated_contacts': 0, 'removed_members': 3,
-        'deleted_contacts': 2, 'added_members': 0
+        'deleted_contacts': 2, 'added_members': 0, 'error_contacts': 0
     }
 
 def test_sync_group_with_map_only_ad():
@@ -250,7 +250,7 @@ def test_sync_group_with_map_only_ad():
     assert rslt == {
         'azure_group_id': 123, 'everbridge_group_id': 123, 'azure_count': 3, 'everbridge_count': 0,
         'inserted_contacts': 3, 'updated_contacts': 0, 'removed_members': 0,
-        'deleted_contacts': 0, 'added_members': 3
+        'deleted_contacts': 0, 'added_members': 3, 'error_contacts': 0
     }
 
 def test_sync_group_insert_and_delete():
@@ -283,7 +283,7 @@ def test_sync_group_insert_and_delete():
     assert rslt == {
         'azure_group_id': 123, 'everbridge_group_id': 123, 'azure_count': 4, 'everbridge_count': 5,
         'inserted_contacts': 2, 'updated_contacts': 0, 'removed_members': 3,
-        'deleted_contacts': 0, 'added_members': 2
+        'deleted_contacts': 0, 'added_members': 2, 'error_contacts': 0
     }
 
 def test_sync_group_upadte():
@@ -313,7 +313,7 @@ def test_sync_group_upadte():
     assert rslt == {
         'azure_group_id': 123, 'everbridge_group_id': 123, 'azure_count': 4, 'everbridge_count': 4,
         'inserted_contacts': 0, 'updated_contacts': 2, 'removed_members': 0,
-        'deleted_contacts': 0, 'added_members': 0
+        'deleted_contacts': 0, 'added_members': 0, 'error_contacts': 0
     }
 
 def test_sync_group_only_everbridge():
@@ -343,7 +343,7 @@ def test_sync_group_only_everbridge():
     assert rslt == {
         'azure_group_id': 123, 'everbridge_group_id': 123, 'azure_count': 0, 'everbridge_count': 3,
         'inserted_contacts': 0, 'updated_contacts': 0, 'removed_members': 3,
-        'deleted_contacts': 2, 'added_members': 0
+        'deleted_contacts': 2, 'added_members': 0, 'error_contacts': 0
     }
 
 def test_sync_group_only_ad():
@@ -377,7 +377,7 @@ def test_sync_group_only_ad():
     assert rslt == {
         'azure_group_id': 123, 'everbridge_group_id': 123, 'azure_count': 3, 'everbridge_count': 0,
         'inserted_contacts': 3, 'updated_contacts': 0, 'removed_members': 0,
-        'deleted_contacts': 0, 'added_members': 3
+        'deleted_contacts': 0, 'added_members': 3, 'error_contacts': 0
     }
 
 def test_sync_group_no_data():
@@ -404,5 +404,5 @@ def test_sync_group_no_data():
     assert rslt == {
         'azure_group_id': 123, 'everbridge_group_id': 123, 'azure_count': 0, 'everbridge_count': 0,
         'inserted_contacts': 0, 'updated_contacts': 0, 'removed_members': 0,
-        'deleted_contacts': 0, 'added_members': 0
+        'deleted_contacts': 0, 'added_members': 0, 'error_contacts': 0
     }

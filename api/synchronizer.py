@@ -34,10 +34,7 @@ class AdContactMap:
         """
         Returns contact popped from the map if key exists; None otherwise
         """
-        contact = self.members_map.pop(key, None)
-        if contact:
-            validate_and_fix_azure_contact(contact)
-        return contact
+        return self.members_map.pop(key, None)
 
     def values(self):
         """
@@ -151,12 +148,21 @@ class Synchronizer:
                 # the contact exists only in Everbridge => Delete it
                 tracker.push(ContactTracker.REMOVE_MEMBER, con_ev)
             elif con_ad['userPrincipalName'] == con_ev['externalId']:
+                validate_and_fix_azure_contact(con_ad)
                 converted = convert_to_everbridge(con_ad, con_ev['id'])
                 if is_different(converted, con_ev):
-                    tracker.push(ContactTracker.UPDATE_CONTACT, converted)
+                    if con_ad['errors']:
+                        tracker.push(ContactTracker.ERROR_CONTACT, converted)
+                    else:
+                        tracker.push(ContactTracker.UPDATE_CONTACT, converted)
             con_ev = next(itr_ev)
         for con_ad in admap.values():
-            tracker.push(ContactTracker.INSERT_CONTACT, convert_to_everbridge(con_ad))
+            validate_and_fix_azure_contact(con_ad)
+            converted = convert_to_everbridge(con_ad)
+            if con_ad['errors']:
+                tracker.push(ContactTracker.ERROR_CONTACT, converted)
+            else:
+                tracker.push(ContactTracker.INSERT_CONTACT, converted)
         self._handle_delete(itr_ev.get_group_id(), tracker)
         self._handle_upsert(itr_ev.get_group_id(), tracker)
         return Synchronizer._enhance_report(tracker.report(), admap, itr_ev)

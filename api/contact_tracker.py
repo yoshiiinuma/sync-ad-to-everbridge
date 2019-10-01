@@ -8,11 +8,13 @@ class ContactTracker:
     """
     Keeps track of contacts in the list according to the operation
     """
+    ERROR_CONTACT = 'ERROR_CONTACT'
     INSERT_CONTACT = 'INSERT_CONTACT'
     UPDATE_CONTACT = 'UPDATE_CONTACT'
     REMOVE_MEMBER = 'REMOVE_MEMBER'
 
     def __init__(self):
+        self.error_contacts = []
         self.new_contacts = []
         self.updated_contacts = []
         self.obsolete_contacts = []
@@ -35,6 +37,8 @@ class ContactTracker:
             self.updated_contacts.append(contact)
         elif optype == ContactTracker.REMOVE_MEMBER:
             self.obsolete_members.append(contact)
+        elif optype == ContactTracker.ERROR_CONTACT:
+            self.error_contacts.append(contact)
         else:
             raise ContactTrackerException('CONTACT_TRACKER.PUSH: OPTYPE NOT SUPPORTED ' + optype)
 
@@ -48,6 +52,8 @@ class ContactTracker:
             return self.updated_contacts
         if optype == ContactTracker.REMOVE_MEMBER:
             return self.obsolete_members
+        if optype == ContactTracker.ERROR_CONTACT:
+            return self.error_contacts
         raise ContactTrackerException('CONTACT_TRACKER.GET: OPTYPE NOT SUPPORTED ' + optype)
 
     def get_upsert_contacts(self):
@@ -102,4 +108,5 @@ class ContactTracker:
             'updated_contacts': len(self.updated_contacts),
             'deleted_contacts': len(self.obsolete_contacts),
             'added_members': len(self.new_members),
-            'removed_members': len(self.obsolete_members)}
+            'removed_members': len(self.obsolete_members),
+            'error_contacts': len(self.error_contacts)}

@@ -225,6 +225,7 @@ def fix_azure_contact(contact, validated):
         if 'mobilePhone' not in contact or contact['mobilePhone'] != normalized_phone:
             contact['fixed'] = True
             contact['mobilePhone'] = normalize_phone(validated.mobile_phone)
+    return contact
 
 def validate_and_fix_azure_contact(contact):
     """
@@ -234,7 +235,7 @@ def validate_and_fix_azure_contact(contact):
     contact['errors'] = True
     if rslt.has_valid_name() and rslt.has_valid_paths():
         contact['errors'] = False
-    fix_azure_contact(contact, rslt)
+    return fix_azure_contact(contact, rslt)
 
 def fill_azure_contact(contact):
     """
