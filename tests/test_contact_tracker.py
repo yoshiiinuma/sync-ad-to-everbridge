@@ -119,5 +119,5 @@ def test_report():
     rslt = tracker.report()
     exp = {
         'inserted_contacts': 3, 'removed_members': 3, 'updated_contacts': 3,
-        'deleted_contacts': 0, 'added_members': 0}
+        'deleted_contacts': 0, 'added_members': 0, 'error_contacts': 0}
     assert rslt == exp
