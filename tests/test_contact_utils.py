@@ -13,6 +13,11 @@ from api.contact_utils import validate_azure_contact
 from api.contact_utils import fix_azure_contact
 from api.contact_utils import validate_and_fix_azure_contact
 from api.contact_utils import convert_to_everbridge
+from api.contact_utils import create_everbridge_contact_paths
+from api.contact_utils import create_email_path
+from api.contact_utils import create_business_phone_path
+from api.contact_utils import create_mobile_phone_path
+from api.contact_utils import create_sms_path
 from api.contact_utils import extract_attributes_for_comparison
 from api.contact_utils import is_different
 from api.contact_utils import ContactValidationResult
@@ -555,6 +560,58 @@ def test_convert_to_everbridge():
         ]}
     converted = convert_to_everbridge(con)
     assert converted == exp
+
+
+def test_create_email_path():
+    """
+    Should Everbridge Email path
+    """
+    email = 'AAA.BBB@hawaii.gov'
+    exp = {
+        'waitTime': 0, 'status': 'A', 'pathId': 241901148045316,
+        'value': 'AAA.BBB@hawaii.gov', 'skipValidation': False
+    }
+    assert create_email_path(email) == exp
+
+def test_create_business_phone_path():
+    """
+    Should Everbridge business phone path
+    """
+    phone = '8081112222x999'
+    exp = {
+        'waitTime': 0, 'status': 'A', 'pathId': 241901148045321,
+        'countryCode': 'US', 'value': '8081112222', 'skipValidation': False,
+        'phoneExt': '999'
+    }
+    assert create_business_phone_path(phone) == exp
+    phone = '8081114444'
+    exp = {
+        'waitTime': 0, 'status': 'A', 'pathId': 241901148045321,
+        'countryCode': 'US', 'value': '8081114444', 'skipValidation': False
+    }
+    assert create_business_phone_path(phone) == exp
+
+def test_create_mobile_phone_path():
+    """
+    Should Everbridge mobile phone path
+    """
+    phone = '8081114444'
+    exp = {
+        'waitTime': 0, 'status': 'A', 'pathId': 241901148045319,
+        'countryCode': 'US', 'value': '8081114444', 'skipValidation': False
+    }
+    assert create_mobile_phone_path(phone) == exp
+
+def test_create_sms_path():
+    """
+    Should Everbridge SMS path
+    """
+    phone = '8081114444'
+    exp = {
+        'waitTime': 0, 'status': 'A', 'pathId': 241901148045324,
+        'countryCode': 'US', 'value': '8081114444', 'skipValidation': False
+    }
+    assert create_sms_path(phone) == exp
 
 def test_extract_attributes_for_comparison():
     """
