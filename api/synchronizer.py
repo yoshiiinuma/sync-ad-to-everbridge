@@ -116,12 +116,21 @@ class Synchronizer:
                 con_ev = next(itr_ev)
             elif con_ad and not con_ev:
                 # the contact exists only in AD => Insert it
-                tracker.push(ContactTracker.INSERT_CONTACT, convert_to_everbridge(con_ad))
+                validate_and_fix_azure_contact(con_ad)
+                converted = convert_to_everbridge(con_ad)
+                if con_ad['errors']:
+                    tracker.push(ContactTracker.ERROR_CONTACT, converted)
+                else:
+                    tracker.push(ContactTracker.INSERT_CONTACT, converted)
                 con_ad = next(itr_ad)
             elif con_ad['userPrincipalName'] == con_ev['externalId']:
+                validate_and_fix_azure_contact(con_ad)
                 converted = convert_to_everbridge(con_ad, con_ev['id'])
                 if is_different(converted, con_ev):
-                    tracker.push(ContactTracker.UPDATE_CONTACT, converted)
+                    if con_ad['errors']:
+                        tracker.push(ContactTracker.ERROR_CONTACT, converted)
+                    else:
+                        tracker.push(ContactTracker.UPDATE_CONTACT, converted)
                 con_ad = next(itr_ad)
                 con_ev = next(itr_ev)
             elif con_ad['userPrincipalName'] > con_ev['externalId']:
@@ -130,7 +139,12 @@ class Synchronizer:
                 con_ev = next(itr_ev)
             else:
                 # the contact exists only in AD => Insert it
-                tracker.push(ContactTracker.INSERT_CONTACT, convert_to_everbridge(con_ad))
+                validate_and_fix_azure_contact(con_ad)
+                converted = convert_to_everbridge(con_ad)
+                if con_ad['errors']:
+                    tracker.push(ContactTracker.ERROR_CONTACT, converted)
+                else:
+                    tracker.push(ContactTracker.INSERT_CONTACT, converted)
                 con_ad = next(itr_ad)
         self._handle_delete(itr_ev.get_group_id(), tracker)
         self._handle_upsert(itr_ev.get_group_id(), tracker)
