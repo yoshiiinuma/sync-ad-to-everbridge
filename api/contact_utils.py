@@ -283,60 +283,70 @@ def create_everbridge_contact_paths(contact):
     To view paths in the org, go to Settings -> Notifications -> Delivery Methods
     https://api.everbridge.net/rest/contactPaths/org
     """
-    paths = [
-        # Add Email Contact Path to the new contact
-        {
-            'waitTime': 0,
-            'status': 'A',
-            'pathId': 241901148045316,
-            'value': contact['userPrincipalName'],
-            'skipValidation': False
-        }
-    ]
-    if contact['businessPhones']:
+    paths = []
+    if 'userPrincipalName' in contact:
+        paths.append(create_email_path(contact['userPrincipalName']))
+    if 'businessPhones' in contact:
         for phone in contact['businessPhones']:
-            #Checks to see if phone has extension
-            extension = None
-            # pylint: disable=unused-variable
-            if 'x' in phone:
-                phone, extension, *ignore = phone.split('x')
-            path = {
-                'waitTime': 0,
-                'status': 'A',
-                'pathId': 241901148045321,
-                'countryCode': 'US',
-                'value': phone,
-                'skipValidation': False}
-            if extension:
-                path['phoneExt'] = extension
-            if re.fullmatch(r'\d{10}|\d{7}', phone):
-                paths.append(path)
-            else:
-                logging.warning("%s has invalid working phone number %s",
-                                contact["displayName"], phone)
-    # Adds Work Cell Path to contact if mobile phone number is present
-    if contact.get('mobilePhone'):
-        if re.fullmatch(r'\d{10}|\d{7}', contact['mobilePhone']):
-            paths.append(
-                {
-                    'waitTime': 0,
-                    'status': 'A',
-                    'pathId': 241901148045319,
-                    'countryCode': 'US',
-                    'value': contact['mobilePhone'],
-                    'skipValidation': False
-                })
-            # Adds Work Cell SMS Path to contact
-            paths.append(
-                {
-                    'waitTime': 0,
-                    'status': 'A',
-                    'pathId': 241901148045324,
-                    'countryCode': 'US',
-                    'value': contact['mobilePhone'],
-                    'skipValidation': False
-                })
-        else:
-            logging.warning("%s has invalid mobile phone number %s",
-                            contact["displayName"], contact['mobilePhone'])
+            paths.append(create_business_phone_path(phone))
+    if 'mobilePhone' in contact:
+        paths.append(create_mobile_phone_path(contact['mobilePhone']))
+        paths.append(create_sms_path(contact['mobilePhone']))
     return paths
+
+def create_email_path(email):
+    """
+    Creates EverBridge Email path
+    """
+    return {
+        'waitTime': 0,
+        'status': 'A',
+        'pathId': 241901148045316,
+        'value': email,
+        'skipValidation': False
+    }
+
+def create_business_phone_path(phone):
+    """
+    Creates EverBridge business phone path
+    """
+    extension = None
+    # pylint: disable=unused-variable
+    if 'x' in phone:
+        phone, extension, *ignore = phone.split('x')
+    path = {
+        'waitTime': 0,
+        'status': 'A',
+        'pathId': 241901148045321,
+        'countryCode': 'US',
+        'value': phone,
+        'skipValidation': False}
+    if extension:
+        path['phoneExt'] = extension
+    return path
+
+def create_mobile_phone_path(mobile_phone):
+    """
+    Creates EverBridge business phone path
+    """
+    return {
+        'waitTime': 0,
+        'status': 'A',
+        'pathId': 241901148045319,
+        'countryCode': 'US',
+        'value': mobile_phone,
+        'skipValidation': False
+    }
+
+def create_sms_path(mobile_phone):
+    """
+    Creates EverBridge SMS path
+    """
+    return {
+        'waitTime': 0,
+        'status': 'A',
+        'pathId': 241901148045324,
+        'countryCode': 'US',
+        'value': mobile_phone,
+        'skipValidation': False
+    }
