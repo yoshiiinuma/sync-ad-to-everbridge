@@ -4,7 +4,6 @@ Provides iterator for azure group members
 import math
 from api.base_iterator import BaseIterator
 from api.azure import Azure
-from api.contact_utils import validate_and_fix_azure_contact
 
 class AzureGroupMemberIterator(BaseIterator):
     """
@@ -33,12 +32,3 @@ class AzureGroupMemberIterator(BaseIterator):
         else:
             self.nom = 0
             self.no_more_data = True
-
-    def __next__(self):
-        """
-        Returns next group member object
-        """
-        next_obj = super().__next__()
-        if next_obj:
-            validate_and_fix_azure_contact(next_obj)
-        return next_obj
