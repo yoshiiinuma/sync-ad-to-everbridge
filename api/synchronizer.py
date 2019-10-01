@@ -6,6 +6,7 @@ from api.azure_group_member_iterator import AzureGroupMemberIterator
 from api.everbridge_group_member_iterator import EverbridgeGroupMemberIterator
 from api.contact_tracker import ContactTracker
 from api.contact_utils import convert_to_everbridge, is_different
+from api.contact_utils import validate_and_fix_azure_contact
 from api.exceptions import SynchronizerException
 
 class AdContactMap:
@@ -33,7 +34,10 @@ class AdContactMap:
         """
         Returns contact popped from the map if key exists; None otherwise
         """
-        return self.members_map.pop(key, None)
+        contact = self.members_map.pop(key, None)
+        if contact:
+            validate_and_fix_azure_contact(contact)
+        return contact
 
     def values(self):
         """
