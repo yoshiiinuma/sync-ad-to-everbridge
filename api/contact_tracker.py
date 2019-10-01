@@ -31,16 +31,22 @@ class ContactTracker:
         """
         Keeps track of contacts in the list according to the operation
         """
-        if optype == ContactTracker.INSERT_CONTACT:
-            self.new_contacts.append(contact)
-        elif optype == ContactTracker.UPDATE_CONTACT:
-            self.updated_contacts.append(contact)
-        elif optype == ContactTracker.REMOVE_MEMBER:
-            self.obsolete_members.append(contact)
-        elif optype == ContactTracker.ERROR_CONTACT:
+        if contact.get('errors', False):
+            del contact['errors']
             self.error_contacts.append(contact)
         else:
-            raise ContactTrackerException('CONTACT_TRACKER.PUSH: OPTYPE NOT SUPPORTED ' + optype)
+            contact.pop('errors', None)
+            if optype == ContactTracker.INSERT_CONTACT:
+                self.new_contacts.append(contact)
+            elif optype == ContactTracker.UPDATE_CONTACT:
+                self.updated_contacts.append(contact)
+            elif optype == ContactTracker.REMOVE_MEMBER:
+                self.obsolete_members.append(contact)
+            elif optype == ContactTracker.ERROR_CONTACT:
+                self.error_contacts.append(contact)
+            else:
+                msg = 'CONTACT_TRACKER.PUSH: OPTYPE NOT SUPPORTED ' + optype
+                raise ContactTrackerException(msg)
 
     def get_contacts(self, optype):
         """

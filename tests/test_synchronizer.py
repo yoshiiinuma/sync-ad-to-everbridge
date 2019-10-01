@@ -30,9 +30,9 @@ def test_run():
     upsert_data = update_data + insert_data
     inserted_data = [create_everbridge_contacts(insert_ids, True)]
     inserted_exids = (
-        '&externalIds=aaabbb0004@xxx.com' +
-        '&externalIds=aaabbb0006@xxx.com' +
-        '&externalIds=aaabbb0007@xxx.com')
+        '&externalIds=aaa.bbb0004@xxx.com' +
+        '&externalIds=aaa.bbb0006@xxx.com' +
+        '&externalIds=aaa.bbb0007@xxx.com')
     ever = create_everbridge_mock(data)
     ever.get_contacts_by_external_ids = MagicMock(side_effect=inserted_data)
     app = Synchronizer(azure, ever)
@@ -66,7 +66,7 @@ def test_run_add_group():
     insert_ids = [1, 2]
     insert_data = create_everbridge_contacts(insert_ids, False)
     inserted_data = [create_everbridge_contacts(insert_ids, True)]
-    inserted_exids = ('&externalIds=aaabbb0001@xxx.com&externalIds=aaabbb0002@xxx.com')
+    inserted_exids = ('&externalIds=aaa.bbb0001@xxx.com&externalIds=aaa.bbb0002@xxx.com')
     ever = create_everbridge_mock(data)
     ever.add_group = MagicMock(return_value={'id': 123})
     ever.get_group_id_by_name = MagicMock(return_value=None)
@@ -134,7 +134,7 @@ def test_sync_group_with_map_insert_and_delete():
     upsert_ids = [2, 9]
     upsert_data = create_everbridge_contacts(upsert_ids, False)
     inserted_data = [create_everbridge_contacts(upsert_ids, True)]
-    inserted_exids = '&externalIds=aaabbb0002@xxx.com&externalIds=aaabbb0009@xxx.com'
+    inserted_exids = '&externalIds=aaa.bbb0002@xxx.com&externalIds=aaa.bbb0009@xxx.com'
     ever = create_everbridge_mock(data)
     ever.get_contacts_by_external_ids = MagicMock(side_effect=inserted_data)
     members_map = azure.get_all_group_members_map(gid)
@@ -228,9 +228,9 @@ def test_sync_group_with_map_only_ad():
     upsert_ids = [1, 2, 3]
     upsert_data = create_everbridge_contacts(upsert_ids, False)
     inserted_data = [create_everbridge_contacts(upsert_ids, True)]
-    inserted_exids = ('&externalIds=aaabbb0001@xxx.com' +
-                      '&externalIds=aaabbb0002@xxx.com' +
-                      '&externalIds=aaabbb0003@xxx.com')
+    inserted_exids = ('&externalIds=aaa.bbb0001@xxx.com' +
+                      '&externalIds=aaa.bbb0002@xxx.com' +
+                      '&externalIds=aaa.bbb0003@xxx.com')
     ever = create_everbridge_mock(data)
     ever.get_contacts_by_external_ids = MagicMock(side_effect=inserted_data)
     members_map = azure.get_all_group_members_map(gid)
@@ -264,7 +264,7 @@ def test_sync_group_insert_and_delete():
     upsert_ids = [2, 9]
     upsert_data = create_everbridge_contacts(upsert_ids, False)
     inserted_data = [create_everbridge_contacts(upsert_ids, True)]
-    inserted_exids = '&externalIds=aaabbb0002@xxx.com&externalIds=aaabbb0009@xxx.com'
+    inserted_exids = '&externalIds=aaa.bbb0002@xxx.com&externalIds=aaa.bbb0009@xxx.com'
     ever = create_everbridge_mock(data)
     ever.get_contacts_by_external_ids = MagicMock(side_effect=inserted_data)
     itr_ad = AzureGroupMemberIterator(azure, gid)
@@ -296,6 +296,7 @@ def test_sync_group_upadte():
     upsert_ids = [2, 4]
     modify_everbridge_data(data[0], upsert_ids, 'phone', '8087779999')
     upsert_data = create_everbridge_contacts(upsert_ids, True)
+    print(upsert_data)
     ever = create_everbridge_mock(data)
     itr_ad = AzureGroupMemberIterator(azure, gid)
     itr_ev = EverbridgeGroupMemberIterator(ever, gid)
@@ -356,9 +357,9 @@ def test_sync_group_only_ad():
     upsert_ids = [1, 2, 3]
     upsert_data = create_everbridge_contacts(upsert_ids, False)
     inserted_data = [create_everbridge_contacts(upsert_ids, True)]
-    inserted_exids = ('&externalIds=aaabbb0001@xxx.com' +
-                      '&externalIds=aaabbb0002@xxx.com' +
-                      '&externalIds=aaabbb0003@xxx.com')
+    inserted_exids = ('&externalIds=aaa.bbb0001@xxx.com' +
+                      '&externalIds=aaa.bbb0002@xxx.com' +
+                      '&externalIds=aaa.bbb0003@xxx.com')
     ever = create_everbridge_mock(data)
     ever.get_contacts_by_external_ids = MagicMock(side_effect=inserted_data)
     itr_ad = AzureGroupMemberIterator(azure, gid)

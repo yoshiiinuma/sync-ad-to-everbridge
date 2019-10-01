@@ -54,13 +54,13 @@ def create_azure_contact(seq):
     padded = str(seq).zfill(4)
     return {
         'id': seq,
-        'displayName': f'AAA{padded} BBB{padded}',
-        'givenName': f'AAA{padded}',
+        'displayName': f'AAA BBB{padded}',
+        'givenName': f'AAA',
         'surname': f'BBB{padded}',
         'businessPhones': ['808586' + padded],
         'mobilePhone': '808587' + padded,
-        'mail': f'aaabbb{padded}@xxx.com',
-        'userPrincipalName': f'aaabbb{padded}@xxx.com'}
+        'mail': f'aaa.bbb{padded}@xxx.com',
+        'userPrincipalName': f'aaa.bbb{padded}@xxx.com'}
 
 def create_azure_contacts(ids):
     """

@@ -564,6 +564,7 @@ def test_convert_to_everbridge():
         'businessPhones': ['8081112222x999', '8081113333x888'],
         'mobilePhone': '8081114444'}
     exp = {
+        'errors': False,
         'firstName': 'AAA',
         'lastName': 'BBB',
         'externalId': 'AAA.BBB@hawaii.gov',

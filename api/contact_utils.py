@@ -286,7 +286,9 @@ def is_different(con_ad, con_ev):
     """
     Returns True if Everbridge Contact is different from AD Contact
     """
-    return con_ad != extract_attributes_for_comparison(con_ev)
+    extracted_ad = extract_attributes_for_comparison(con_ad)
+    extracted_ev = extract_attributes_for_comparison(con_ev)
+    return extracted_ad != extracted_ev
 
 def convert_to_everbridge(contact, ever_id=None):
     """
@@ -300,6 +302,7 @@ def convert_to_everbridge(contact, ever_id=None):
     # To manage Record Types, go to Settings -> Contacts and Groups-> Contact Record Types.
     # https://api.everbridge.net/rest/recordTypes/org
     #fill_azure_contact(contact)
+    validate_and_fix_azure_contact(contact)
     new_contact = {
         'firstName': contact['givenName'],
         'lastName': contact['surname'],
@@ -307,6 +310,7 @@ def convert_to_everbridge(contact, ever_id=None):
         'recordTypeId': 892807736729062,
         'paths': create_everbridge_contact_paths(contact)
     }
+    new_contact['errors'] = contact.get('errors', False)
     if ever_id:
         new_contact['id'] = ever_id
     return new_contact

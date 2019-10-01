@@ -108,7 +108,9 @@ def create_everbridge_contact(seq, eid=None):
     """
     Returns Everbridge Contact Object
     """
-    return convert_to_everbridge(create_azure_contact(seq), eid)
+    contact = convert_to_everbridge(create_azure_contact(seq), eid)
+    contact.pop('errors', None)
+    return contact
 
 def create_everbridge_contacts(ad_ids, need_ever_id=False):
     """
