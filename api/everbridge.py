@@ -167,15 +167,6 @@ class Everbridge:
             raise EverbridgeException('EVERBRIDGE.UPSERT_CONTACTS: Unexpected Response')
         return rslt
 
-    #def update_contacts(self, contacts):
-    #    """
-    #    Updates contacts paths
-    #    ?updateType determines to fully update all contact fields or certain feilds
-    #    ?idType determines to search by id or externalId
-    #    """
-    #    url = self.contacts_url("batch?idType=id&updateType=partial")
-    #    return self._put(url, data=contacts)
-
     def delete_contacts(self, contacts):
         """
         Deletes users from the org if they don't belong in a group
