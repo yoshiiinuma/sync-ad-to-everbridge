@@ -115,7 +115,7 @@ def test_validate_name_with_valid_name():
     assert rslt.last == 'Bbbb'
     assert rslt.has_valid_name()
 
-def test_validate_name_with_invalid_data():
+def test_validate_name_with_invalid_userprincipalname():
     """
     Should return appropriate error messages
     """
@@ -137,18 +137,28 @@ def test_validate_name_with_invalid_data():
     assert not rslt.first
     assert not rslt.last
     assert not rslt.has_valid_name()
-    # No Name Provided
+
+def test_validate_name_with_invalid_displayname():
+    """
+    Should return appropriate error messages
+    """
+    # Only Invalid displayName
     rslt = ContactValidationResult()
-    con = {}
+    con = {'displayName': 'Aaaa'}
     validate_name(con, rslt)
     assert rslt.errors == ['NoNameFound']
     assert rslt.warnings == []
     assert not rslt.first
     assert not rslt.last
     assert not rslt.has_valid_name()
-    # Only Invalid displayName
+
+def test_validate_name_without_name():
+    """
+    Should return appropriate error messages
+    """
+    # No Name Provided
     rslt = ContactValidationResult()
-    con = {'displayName': 'Aaaa'}
+    con = {}
     validate_name(con, rslt)
     assert rslt.errors == ['NoNameFound']
     assert rslt.warnings == []
