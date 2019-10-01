@@ -12,7 +12,6 @@ from api.contact_utils import validate_paths
 from api.contact_utils import validate_azure_contact
 from api.contact_utils import fix_azure_contact
 from api.contact_utils import validate_and_fix_azure_contact
-from api.contact_utils import fill_azure_contact
 from api.contact_utils import convert_to_everbridge
 from api.contact_utils import extract_attributes_for_comparison
 from api.contact_utils import is_different
@@ -502,55 +501,6 @@ def test_validate_and_fix_azure_contact_with_errors():
     assert con['mobilePhone'] == '8081234567x9999'
     assert con['fixed']
     assert con['errors']
-
-def test_fill_azure_contact_with_multiple_space_displayname():
-    """
-    Should fill missing info in AD Contact
-    """
-    con = {'displayName': 'AAA BBB CCC DDD'}
-    exp = {
-        'displayName': 'AAA BBB CCC DDD',
-        'givenName': 'AAA',
-        'surname': 'BBBCCCDDD',
-        'userPrincipalName': 'XXX_MISSINGMAIL_XXX.AAA.BBBCCCDDD@hawaii.gov',
-        'businessPhones': []}
-    fill_azure_contact(con)
-    assert con == exp
-
-def test_fill_azure_contact_with_no_space_displayname():
-    """
-    Should fill missing info in AD Contact
-    """
-    con = {'displayName': 'AAA'}
-    exp = {
-        'displayName': 'AAA',
-        'givenName': 'AAA',
-        'surname': 'XXXXX',
-        'userPrincipalName': 'XXX_MISSINGMAIL_XXX.AAA.XXXXX@hawaii.gov',
-        'businessPhones': []}
-    fill_azure_contact(con)
-    assert con == exp
-
-def test_fill_azure_contact_with_anomalous_phonenumbers():
-    """
-    Should normalize phone numbers
-    """
-    con = {
-        'displayName': 'AAA BBB',
-        'givenName': 'AAA',
-        'surname': 'BBB',
-        'userPrincipalName': 'AAA.BBB@hawaii.gov',
-        'businessPhones': [' +1 (808) 111-2222 ', '111-3333'],
-        'mobilePhone': ' +1 (808) 111-4444 '}
-    exp = {
-        'displayName': 'AAA BBB',
-        'givenName': 'AAA',
-        'surname': 'BBB',
-        'userPrincipalName': 'AAA.BBB@hawaii.gov',
-        'businessPhones': ['8081112222', '8081113333'],
-        'mobilePhone': '8081114444'}
-    fill_azure_contact(con)
-    assert con == exp
 
 def test_convert_to_everbridge():
     """

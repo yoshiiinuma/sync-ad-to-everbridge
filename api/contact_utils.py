@@ -237,44 +237,6 @@ def validate_and_fix_azure_contact(contact):
         contact['errors'] = False
     return fix_azure_contact(contact, rslt)
 
-def fill_azure_contact(contact):
-    """
-    Fills missing info in AD Contact
-    NOTE: phone nubmers will be normalized
-    """
-    if not contact:
-        return
-    if 'givenName' not in contact:
-        first = 'XXXXX'
-        last = 'XXXXX'
-        names = contact['displayName'].split(' ')
-        logging.warning("%s has no first/last name. Adding in placeholder", contact['displayName'])
-        if len(names) > 1:
-            first = names.pop(0)
-            last = ''.join(str(x) for x in names)
-        else:
-            first = contact['displayName']
-        contact['givenName'] = first
-        if 'surname' not in contact or not contact['surname']:
-            if last == 'XXXXX':
-                msg = 'CONTACT_UTILS.FILL_AZURE_CONTACT: NoLastName '
-                logging.error(msg)
-            contact['surname'] = last
-    if 'userPrincipalName' not in contact:
-        if 'mail' in contact:
-            contact['userPrincipalName'] = contact['mail']
-        else:
-            logging.warning("%s has no email. Adding in placeholder", contact['displayName'])
-            contact['userPrincipalName'] = ('XXX_MISSINGMAIL_XXX.' + contact['givenName'] +
-                                            '.' + contact['surname'] + '@hawaii.gov')
-    if 'businessPhones' in contact:
-        if contact['businessPhones']:
-            contact['businessPhones'] = list(map(normalize_phone, contact['businessPhones']))
-    else:
-        contact['businessPhones'] = []
-    if 'mobilePhone' in contact:
-        contact['mobilePhone'] = normalize_phone(contact['mobilePhone'])
-
 def extract_attributes_for_comparison(contact):
     """
     Returns Everbridge Contact which has the minimum set of attributes needed for comparison
@@ -301,7 +263,6 @@ def convert_to_everbridge(contact, ever_id=None):
     # There is only 1 record type in the org but more can be added.
     # To manage Record Types, go to Settings -> Contacts and Groups-> Contact Record Types.
     # https://api.everbridge.net/rest/recordTypes/org
-    #fill_azure_contact(contact)
     validate_and_fix_azure_contact(contact)
     new_contact = {
         'firstName': contact['givenName'],
