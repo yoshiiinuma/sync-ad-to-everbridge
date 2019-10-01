@@ -34,7 +34,8 @@ class SyncRunner:
             self._setup_azure_api()
             self._setup_everbridge_api()
             sync = Synchronizer(self.azure, self.everbridge)
-            sync.run(self.conf['adGroupId'])
+            #sync.run(self.conf['adGroupId'])
+            sync.run_with_map(self.conf['adGroupId'])
         except (SyncRunnerException, SynchronizerException, AzureException,
                 EverbridgeException, ContactTrackerException):
             logging.critical('SYNCRUNNER.RUN: Program Terminated Unexpectedly')
