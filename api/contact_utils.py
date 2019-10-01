@@ -202,16 +202,39 @@ def fix_azure_contact(contact, validated):
     """
     Fixes invalid values in AD Contact
     """
+    contact['fixed'] = False
     if validated.first:
-        contact['givenName'] = validated.first
+        if 'givenName' not in contact or contact['givenName'] != validated.first:
+            contact['fixed'] = True
+            contact['givenName'] = validated.first
     if validated.last:
-        contact['surname'] = validated.last
+        if 'surname' not in contact or contact['surname'] != validated.last:
+            contact['fixed'] = True
+            contact['surname'] = validated.last
     if validated.email:
-        contact['userPrincipalName'] = validated.email
+        if 'userPrincipalName' not in contact or contact['userPrincipalName'] != validated.email:
+            contact['fixed'] = True
+            contact['userPrincipalName'] = validated.email
     if validated.business_phones:
-        contact['businessPhones'] = list(map(normalize_phone, validated.business_phones))
+        fixed_phones = list(map(normalize_phone, validated.business_phones))
+        if 'businessPhones' not in contact or contact['businessPhones'] != fixed_phones:
+            contact['fixed'] = True
+            contact['businessPhones'] = fixed_phones
     if validated.mobile_phone:
-        contact['mobilePhone'] = normalize_phone(validated.mobile_phone)
+        normalized_phone = normalize_phone(validated.mobile_phone)
+        if 'mobilePhone' not in contact or contact['mobilePhone'] != normalized_phone:
+            contact['fixed'] = True
+            contact['mobilePhone'] = normalize_phone(validated.mobile_phone)
+
+def validate_and_fix_azure_contact(contact):
+    """
+    Validates valuees in AD Contact and fixes errors if possible
+    """
+    rslt = validate_azure_contact(contact)
+    contact['errors'] = True
+    if rslt.has_valid_name() and rslt.has_valid_paths():
+        contact['errors'] = False
+    fix_azure_contact(contact, rslt)
 
 def fill_azure_contact(contact):
     """
