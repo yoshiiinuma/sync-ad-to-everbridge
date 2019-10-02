@@ -105,31 +105,31 @@ class Synchronizer:
         """
         Syncs specified AD Grdoup to Everbridge group
         """
-        tracker = contactTracker.ContactTracker()
+        tracker = contact_tracker.ContactTracker()
         con_ad = next(itr_ad)
         con_ev = next(itr_ev)
         while con_ad or con_ev:
             if not con_ad and con_ev:
                 # the contact exists only in Everbridge => Delete it
-                tracker.push(contactTracker.ContactTracker.REMOVE_MEMBER, con_ev)
+                tracker.push(contact_tracker.ContactTracker.REMOVE_MEMBER, con_ev)
                 con_ev = next(itr_ev)
             elif con_ad and not con_ev:
                 # the contact exists only in AD => Insert it
-                tracker.push(contactTracker.ContactTracker.INSERT_CONTACT, contact_utils.convert_to_everbridge(con_ad))
+                tracker.push(contact_tracker.ContactTracker.INSERT_CONTACT, contact_utils.convert_to_everbridge(con_ad))
                 con_ad = next(itr_ad)
             elif con_ad['userPrincipalName'] == con_ev['externalId']:
                 converted = contact_utils.convert_to_everbridge(con_ad, con_ev['id'])
                 if contact_utils.is_different(converted, con_ev):
-                    tracker.push(contactTracker.ContactTracker.UPDATE_CONTACT, converted)
+                    tracker.push(contact_tracker.ContactTracker.UPDATE_CONTACT, converted)
                 con_ad = next(itr_ad)
                 con_ev = next(itr_ev)
             elif con_ad['userPrincipalName'] > con_ev['externalId']:
                 # the contact exists only in Everbridge => Delete it
-                tracker.push(contactTracker.ContactTracker.REMOVE_MEMBER, con_ev)
+                tracker.push(contact_tracker.ContactTracker.REMOVE_MEMBER, con_ev)
                 con_ev = next(itr_ev)
             else:
                 # the contact exists only in AD => Insert it
-                tracker.push(contactTracker.ContactTracker.INSERT_CONTACT, contact_utils.convert_to_everbridge(con_ad))
+                tracker.push(contact_tracker.ContactTracker.INSERT_CONTACT, contact_utils.convert_to_everbridge(con_ad))
                 con_ad = next(itr_ad)
         self._handle_delete(itr_ev.get_group_id(), tracker)
         self._handle_upsert(itr_ev.get_group_id(), tracker)
@@ -139,20 +139,20 @@ class Synchronizer:
         """
         Syncs specified AD Grdoup to Everbridge group
         """
-        tracker = contactTracker.ContactTracker()
+        tracker = contact_tracker.ContactTracker()
         con_ev = next(itr_ev)
         while con_ev:
             con_ad = admap.pop(con_ev['externalId'])
             if not con_ad:
                 # the contact exists only in Everbridge => Delete it
-                tracker.push(contactTracker.ContactTracker.REMOVE_MEMBER, con_ev)
+                tracker.push(contact_tracker.ContactTracker.REMOVE_MEMBER, con_ev)
             elif con_ad['userPrincipalName'] == con_ev['externalId']:
                 converted = contact_utils.convert_to_everbridge(con_ad, con_ev['id'])
                 if contact_utils.is_different(converted, con_ev):
-                    tracker.push(contactTracker.ContactTracker.UPDATE_CONTACT, converted)
+                    tracker.push(contact_tracker.ContactTracker.UPDATE_CONTACT, converted)
             con_ev = next(itr_ev)
         for con_ad in admap.values():
-            tracker.push(contactTracker.ContactTracker.INSERT_CONTACT, contact_utils.convert_to_everbridge(con_ad))
+            tracker.push(contact_tracker.ContactTracker.INSERT_CONTACT, contact_utils.convert_to_everbridge(con_ad))
         self._handle_delete(itr_ev.get_group_id(), tracker)
         self._handle_upsert(itr_ev.get_group_id(), tracker)
         return Synchronizer._enhance_report(tracker.report(), admap, itr_ev)
