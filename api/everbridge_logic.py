@@ -4,7 +4,7 @@ Logic to handle the Everbridge Contacts
 import base64
 import re
 import logging
-from .everbridge_api import Session
+from . import everbridge_api
 def create_authheader(username, password):
     """
     Creates Header for HTTP CALLS, Creates base64 encode for auth
@@ -339,7 +339,7 @@ def sync_everbridge_group(username, password, org, group_data, group_name):
         logging.error('sync_everbridge_group: Invalid Parameter')
         raise Exception('Async_everbridge_group: Invalid parameter')
     # Convert username and password to base64
-    everbridge_session = Session(org, create_authheader(username, password))
+    everbridge_session = everbridge_api.Session(org, create_authheader(username, password))
     # Checks to see if group exists in Everbridge Org
     group_id = check_group(group_name, everbridge_session)
     # Create the search query for the group Everbridge Contacts

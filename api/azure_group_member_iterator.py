@@ -2,16 +2,16 @@
 Provides iterator for azure group members
 """
 import math
-from api.base_iterator import BaseIterator
-from api.azure import Azure
+from . import base_iterator 
+from . import azure
 
-class AzureGroupMemberIterator(BaseIterator):
+class AzureGroupMemberIterator(base_iterator.BaseIterator):
     """
     Iterates azure group members
     """
     def __init__(self, api, group_id):
         super().__init__(api, group_id)
-        self.pagesize = Azure.DEFAULT_PAGESIZE
+        self.pagesize = azure.Azure.DEFAULT_PAGESIZE
         self.first_time = True
 
     # Graph API currently does not support OrderBy

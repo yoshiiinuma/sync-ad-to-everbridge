@@ -1,7 +1,7 @@
 """
 Keeps track of contacts in the list according to the operation
 """
-from api.exceptions import ContactTrackerException
+from . import exceptions 
 
 
 class ContactTracker:
@@ -46,7 +46,7 @@ class ContactTracker:
                 self.error_contacts.append(contact)
             else:
                 msg = 'CONTACT_TRACKER.PUSH: OPTYPE NOT SUPPORTED ' + optype
-                raise ContactTrackerException(msg)
+                raise exceptions.ContactTrackerException(msg)
 
     def get_contacts(self, optype):
         """
@@ -60,7 +60,7 @@ class ContactTracker:
             return self.obsolete_members
         if optype == ContactTracker.ERROR_CONTACT:
             return self.error_contacts
-        raise ContactTrackerException('CONTACT_TRACKER.GET: OPTYPE NOT SUPPORTED ' + optype)
+        raise exceptions.ContactTrackerException('CONTACT_TRACKER.GET: OPTYPE NOT SUPPORTED ' + optype)
 
     def get_upsert_contacts(self):
         """

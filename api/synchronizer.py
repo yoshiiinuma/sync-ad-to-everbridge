@@ -2,11 +2,11 @@
 Syncs Azure AD contacts to Everbridge
 """
 import logging
-from api.azure_group_member_iterator import AzureGroupMemberIterator
-from api.everbridge_group_member_iterator import EverbridgeGroupMemberIterator
-from api.contact_tracker import ContactTracker
-from api.contact_utils import convert_to_everbridge, is_different
-from api.exceptions import SynchronizerException
+from . import azure_group_member_iterator
+from . import everbridge_group_member_iterator 
+from . import contact_tracker 
+from . import contact_utils
+from . import exceptions 
 
 class AdContactMap:
     """
@@ -62,8 +62,8 @@ class Synchronizer:
             if not gid_ev:
                 gid_ev = self._create_new_everbridge_group(name)
             # Create iterators
-            itr_ad = AzureGroupMemberIterator(self.azure, gid_ad)
-            itr_ev = EverbridgeGroupMemberIterator(self.everbridge, gid_ev)
+            itr_ad = azure_group_member_iterator.AzureGroupMemberIterator(self.azure, gid_ad)
+            itr_ev = everbridge_group_member_iterator.EverbridgeGroupMemberIterator(self.everbridge, gid_ev)
             # Sync AD group to Everbridge
             rslt = self.sync_group(itr_ad, itr_ev)
             # Delete the group from Everbridge if no members exist
@@ -87,7 +87,7 @@ class Synchronizer:
             if not gid_ev:
                 gid_ev = self._create_new_everbridge_group(name)
             # Create iterators
-            itr_ev = EverbridgeGroupMemberIterator(self.everbridge, gid_ev)
+            itr_ev = everbridge_group_member_iterator.EverbridgeGroupMemberIterator(self.everbridge, gid_ev)
             members_map = self.azure.get_all_group_members_map(gid_ad)
             admap = AdContactMap(gid_ad, members_map)
             # Sync AD group to Everbridge
@@ -105,31 +105,31 @@ class Synchronizer:
         """
         Syncs specified AD Grdoup to Everbridge group
         """
-        tracker = ContactTracker()
+        tracker = contactTracker.ContactTracker()
         con_ad = next(itr_ad)
         con_ev = next(itr_ev)
         while con_ad or con_ev:
             if not con_ad and con_ev:
                 # the contact exists only in Everbridge => Delete it
-                tracker.push(ContactTracker.REMOVE_MEMBER, con_ev)
+                tracker.push(contactTracker.ContactTracker.REMOVE_MEMBER, con_ev)
                 con_ev = next(itr_ev)
             elif con_ad and not con_ev:
                 # the contact exists only in AD => Insert it
-                tracker.push(ContactTracker.INSERT_CONTACT, convert_to_everbridge(con_ad))
+                tracker.push(contactTracker.ContactTracker.INSERT_CONTACT, contact_utils.convert_to_everbridge(con_ad))
                 con_ad = next(itr_ad)
             elif con_ad['userPrincipalName'] == con_ev['externalId']:
-                converted = convert_to_everbridge(con_ad, con_ev['id'])
-                if is_different(converted, con_ev):
-                    tracker.push(ContactTracker.UPDATE_CONTACT, converted)
+                converted = contact_utils.convert_to_everbridge(con_ad, con_ev['id'])
+                if contact_utils.is_different(converted, con_ev):
+                    tracker.push(contactTracker.ContactTracker.UPDATE_CONTACT, converted)
                 con_ad = next(itr_ad)
                 con_ev = next(itr_ev)
             elif con_ad['userPrincipalName'] > con_ev['externalId']:
                 # the contact exists only in Everbridge => Delete it
-                tracker.push(ContactTracker.REMOVE_MEMBER, con_ev)
+                tracker.push(contactTracker.ContactTracker.REMOVE_MEMBER, con_ev)
                 con_ev = next(itr_ev)
             else:
                 # the contact exists only in AD => Insert it
-                tracker.push(ContactTracker.INSERT_CONTACT, convert_to_everbridge(con_ad))
+                tracker.push(contactTracker.ContactTracker.INSERT_CONTACT, contact_utils.convert_to_everbridge(con_ad))
                 con_ad = next(itr_ad)
         self._handle_delete(itr_ev.get_group_id(), tracker)
         self._handle_upsert(itr_ev.get_group_id(), tracker)
@@ -139,20 +139,20 @@ class Synchronizer:
         """
         Syncs specified AD Grdoup to Everbridge group
         """
-        tracker = ContactTracker()
+        tracker = contactTracker.ContactTracker()
         con_ev = next(itr_ev)
         while con_ev:
             con_ad = admap.pop(con_ev['externalId'])
             if not con_ad:
                 # the contact exists only in Everbridge => Delete it
-                tracker.push(ContactTracker.REMOVE_MEMBER, con_ev)
+                tracker.push(contactTracker.ContactTracker.REMOVE_MEMBER, con_ev)
             elif con_ad['userPrincipalName'] == con_ev['externalId']:
-                converted = convert_to_everbridge(con_ad, con_ev['id'])
-                if is_different(converted, con_ev):
-                    tracker.push(ContactTracker.UPDATE_CONTACT, converted)
+                converted = contact_utils.convert_to_everbridge(con_ad, con_ev['id'])
+                if contact_utils.is_different(converted, con_ev):
+                    tracker.push(contactTracker.ContactTracker.UPDATE_CONTACT, converted)
             con_ev = next(itr_ev)
         for con_ad in admap.values():
-            tracker.push(ContactTracker.INSERT_CONTACT, convert_to_everbridge(con_ad))
+            tracker.push(contactTracker.ContactTracker.INSERT_CONTACT, contact_utils.convert_to_everbridge(con_ad))
         self._handle_delete(itr_ev.get_group_id(), tracker)
         self._handle_upsert(itr_ev.get_group_id(), tracker)
         return Synchronizer._enhance_report(tracker.report(), admap, itr_ev)
@@ -174,7 +174,7 @@ class Synchronizer:
             msg = 'SYNCHRONIZER._CREATE_NEW_EVERBRIDGE_GROUP FAILED ' + group_name
             logging.error(msg)
             logging.error(new_group)
-            raise SynchronizerException(msg)
+            raise exceptions.SynchronizerException(msg)
         logging.info("Created Everbridge Group %s", group_name)
         return new_group['id']
 

@@ -1,7 +1,7 @@
 """
 Contact Utility Functions
 """
-from api.contact_validator import validate_and_fix_azure_contact
+from . import contact_validator
 
 def extract_attributes_for_comparison(contact):
     """
@@ -29,7 +29,7 @@ def convert_to_everbridge(contact, ever_id=None):
     # There is only 1 record type in the org but more can be added.
     # To manage Record Types, go to Settings -> Contacts and Groups-> Contact Record Types.
     # https://api.everbridge.net/rest/recordTypes/org
-    validate_and_fix_azure_contact(contact)
+    contact_validator.validate_and_fix_azure_contact(contact)
     new_contact = {
         'firstName': contact['givenName'],
         'lastName': contact['surname'],

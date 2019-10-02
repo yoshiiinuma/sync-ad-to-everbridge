@@ -4,13 +4,11 @@ Runs Sync application
 import json
 import logging
 from os.path import exists
-from api.azure import Azure
-from api.exceptions import SyncRunnerException, SynchronizerException, AzureException, \
-                           EverbridgeException, ContactTrackerException
-from api.everbridge import Everbridge
-from api.synchronizer import Synchronizer
-from api.logger import setup_logger, SUPPORTED_LOGLEVELS
-
+from . import azure
+from . import exceptions
+from . import everbridge
+from . import synchronizer 
+from . import logger
 class SyncRunner:
     """
     Runs Sync application
@@ -27,22 +25,21 @@ class SyncRunner:
         """
         # pylint: disable=broad-except
         try:
-            setup_logger()
+            logger.setup_logger()
             self.conf = SyncRunner.load_config(self.configfile)
             SyncRunner.check_config(self.conf)
-            setup_logger(self.conf.get('logFileName'), self.conf.get('logLevel'))
+            logger.setup_logger(self.conf.get('logFileName'), self.conf.get('logLevel'))
             self._setup_azure_api()
             self._setup_everbridge_api()
-            sync = Synchronizer(self.azure, self.everbridge)
+            sync = synchronizer.Synchronizer(self.azure, self.everbridge)
             #sync.run(self.conf['adGroupId'])
             sync.run_with_map(self.conf['adGroupId'])
-        except (SyncRunnerException, SynchronizerException, AzureException,
-                EverbridgeException, ContactTrackerException):
+        except (exceptions.SyncRunnerException, exceptions.SynchronizerException, exceptions.AzureException,
+                exceptions.EverbridgeException, exceptions.ContactTrackerException):
             logging.critical('SYNCRUNNER.RUN: Program Terminated Unexpectedly')
         except Exception as err:
             logging.critical('SYNCRUNNER.RUN: Unhandled Exception Found')
             logging.critical(err)
-
     @staticmethod
     def load_config(configfile):
         """
@@ -51,7 +48,7 @@ class SyncRunner:
         if not exists(configfile):
             msg = 'SYNC_RUNNCER.LOAD_CONFIG: Config File Not Found: ' + configfile
             logging.error(msg)
-            raise SyncRunnerException(msg)
+            raise exceptions.SyncRunnerException(msg)
         return json.load(open(configfile))
 
     @staticmethod
@@ -77,18 +74,18 @@ class SyncRunner:
         if 'everbridgePassword' not in conf:
             errors.append('everbridgePassword Not Found')
         if 'logLevel' in conf:
-            if conf['logLevel'] not in SUPPORTED_LOGLEVELS:
+            if conf['logLevel'] not in logger.SUPPORTED_LOGLEVELS:
                 errors.append('LogLevel Not Supported: ' + conf['logLevel'])
         if errors:
             for err in errors:
                 logging.error(err)
-            raise SyncRunnerException('SYNC_RUNNCER.CHECK_CONFIG: Invalid Config File')
+            raise exceptions.SyncRunnerException('SYNC_RUNNCER.CHECK_CONFIG: Invalid Config File')
 
     def _setup_azure_api(self):
         """
         Sets up Azure API
         """
-        self.azure = Azure(self.conf['clientId'],
+        self.azure = azure.Azure(self.conf['clientId'],
                            self.conf['clientSecret'],
                            self.conf['adTenant'])
         self.azure.setup() # Retrieves token; call once before any API calls
@@ -97,6 +94,6 @@ class SyncRunner:
         """
         Sets up Everbridge API
         """
-        self.everbridge = Everbridge(self.conf['everbridgeOrg'],
+        self.everbridge = everbridge.Everbridge(self.conf['everbridgeOrg'],
                                      self.conf['everbridgeUsername'],
                                      self.conf['everbridgePassword'])

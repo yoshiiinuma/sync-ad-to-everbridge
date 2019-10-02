@@ -20,3 +20,5 @@ logs/*
 /EverbridgeHTTP/Pipfile.lock
 .vscode/
 /EverbridgeHTTP/requirements.txt
+/EverbridgeHTTP/EverbridgeTest/api/
+/EverbridgeHTTP/EverbridgeTest/config/

@@ -40,6 +40,7 @@ def main():
     #Function will not run if number of ADGroups does not match Evergroups
     azure = Azure(CONFIG["clientId"], CONFIG["clientSecret"], CONFIG["adTenant"])
     azure.set_token(azure.get_token())
+    azure.setup()
     for group in CONFIG["adGroupId"]:
         group_name = azure.get_group_name(group)
         data = azure.get_all_group_members(group)
