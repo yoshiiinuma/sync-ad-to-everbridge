@@ -1,8 +1,6 @@
 """
 Contact Utility Functions
 """
-from . import contact_validator
-
 def extract_attributes_for_comparison(contact):
     """
     Returns Everbridge Contact which has the minimum set of attributes needed for comparison
@@ -29,7 +27,6 @@ def convert_to_everbridge(contact, ever_id=None):
     # There is only 1 record type in the org but more can be added.
     # To manage Record Types, go to Settings -> Contacts and Groups-> Contact Record Types.
     # https://api.everbridge.net/rest/recordTypes/org
-    contact_validator.validate_and_fix_azure_contact(contact)
     new_contact = {
         'firstName': contact['givenName'],
         'lastName': contact['surname'],
@@ -50,12 +47,12 @@ def create_everbridge_contact_paths(contact):
     https://api.everbridge.net/rest/contactPaths/org
     """
     paths = []
-    if 'userPrincipalName' in contact:
+    if 'userPrincipalName' in contact and contact['userPrincipalName']:
         paths.append(create_email_path(contact['userPrincipalName']))
-    if 'businessPhones' in contact:
+    if 'businessPhones' in contact and contact['businessPhones']:
         for phone in contact['businessPhones']:
             paths.append(create_business_phone_path(phone))
-    if 'mobilePhone' in contact:
+    if 'mobilePhone' in contact and contact['mobilePhone']:
         paths.append(create_mobile_phone_path(contact['mobilePhone']))
         paths.append(create_sms_path(contact['mobilePhone']))
     return paths

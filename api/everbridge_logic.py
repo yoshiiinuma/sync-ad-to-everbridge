@@ -191,7 +191,7 @@ def fill_contact(contact):
         logging.warning("%s has no last name ONLY. Adding in placeholder", contact["displayName"])
     if contact.get("userPrincipalName") is None and contact["mail"] is None:
         logging.warning("%s has no email. Adding in placeholder", contact["displayName"])
-        contact["userPrincipalName"] = "missingmail" + contact["givenName"] +"@hawaii.gov"
+        return False
     elif contact.get("userPrincipalName") is None and contact["mail"] is not None:
         contact["userPrincipalName"] = contact["mail"]
     else:
@@ -199,6 +199,7 @@ def fill_contact(contact):
     if contact.get("businessPhones") is None:
         logging.warning("%s has no phone", contact["displayName"])
         contact["businessPhones"] = []
+    return True
 def create_query(group_data):
     """
     Create query using externalId

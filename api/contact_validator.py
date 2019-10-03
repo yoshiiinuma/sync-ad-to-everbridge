@@ -76,17 +76,26 @@ def normalize_phone(phone):
     """
     if not phone:
         return ''
-    phone = re.sub(r'-|\s|\(|\)|\+1', '', str(phone))
+    phone = re.sub(r'-|\s|\(|\)|\+1|\.', '', str(phone))
     ext = ''
     if 'x' in phone:
         matched = re.match(r'(\d+)x(\d+)', phone)
         if matched:
             phone = matched.group(1)
             ext = matched.group(2)
+    #Checks if number did not use x for extension
+    elif len(phone) >= 13:
+        matched = re.match(r'(\d{10})(\d+)', phone)
+        if matched:
+            phone = matched.group(1)
+            ext = matched.group(2)
     if len(phone) == 7:
         phone = '808' + phone
+    #Remove empty extensions
     if ext:
         phone += 'x' + ext
+    else:
+        phone = re.sub(r'x', '', str(phone))
     return phone
 
 def is_valid_phone(phone):
@@ -129,6 +138,14 @@ def get_names_from_displayname(displayname):
     if len(names) > 1:
         first = names.pop(0)
         last = '.'.join(str(x) for x in names)
+    #For cases that have no spaces in display name
+    else:
+        word_length = len(displayname)
+        word_list = list(displayname)
+        first_list = word_list[:word_length//2]
+        last_list = word_list[word_length//2:]
+        first = ''.join(first_list)
+        last = ''.join(last_list)
     return [first, last]
 
 def validate_name(contact, rslt):
@@ -167,17 +184,25 @@ def validate_paths(contact, rslt):
             rslt.set_email(contact['userPrincipalName'])
         else:
             rslt.append_warning('InvalidUserPrincipalName:' + contact['userPrincipalName'])
+    else:
+        rslt.append_warning('No UserPrincipalName')
+        rslt.set_email(contact["mail"])
     if 'businessPhones' in contact and contact['businessPhones']:
         for phone in contact['businessPhones']:
             if is_valid_phone(phone):
                 rslt.append_business_phone(phone)
             else:
+                #Removes invalid phone numbers to allow insertion
+                contact['businessPhones'].remove(phone)
                 rslt.append_warning('InvalidBusinessPhone:' + phone)
     if 'mobilePhone' in contact:
         if contact['mobilePhone'] and is_valid_phone(contact['mobilePhone']):
             rslt.set_mobile_phone(contact['mobilePhone'])
         else:
-            rslt.append_warning('InvalidMobilePhone:' + contact['mobilePhone'])
+            #Removes invalid mobile phone numbers to allow insertion
+            if contact["mobilePhone"] is not None:
+                contact["mobilePhone"] = None
+            rslt.append_warning('InvalidMobilePhone:' + str(contact['mobilePhone']))
     if not rslt.has_valid_paths():
         rslt.append_error('NoPathFound')
 

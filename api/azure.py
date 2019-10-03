@@ -5,7 +5,7 @@ import logging
 import requests
 import adal
 from . import exceptions
-
+from . import contact_validator
 class Azure:
     """
     Handles Azure Graph API requests
@@ -230,6 +230,7 @@ class Azure:
         dictionary = {}
         members = self.get_all_group_members(group_id)
         for contact in members:
+            contact = contact_validator.validate_and_fix_azure_contact(contact)
             dictionary[contact['userPrincipalName']] = contact
         return dictionary
 
