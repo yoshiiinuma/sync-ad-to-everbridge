@@ -13,6 +13,7 @@ class Azure:
     LOGIN = 'https://login.microsoftonline.com/'
     API_BASE = 'https://graph.microsoft.com/'
     API_GROUPS = API_BASE + 'v1.0/groups/'
+    API_USERS = API_BASE + 'v1.0/users/'
     DEFAULT_PAGESIZE = 100
 
     def __init__(self, client_id, secret, tenant):
@@ -242,3 +243,26 @@ class Azure:
         """
         members = self.get_all_group_members(group_id)
         return sorted(members, key=(lambda con: con.get('userPrincipalName')))
+    def user_url(self, user_id):
+        """
+        Returns group info api URL
+        """
+        return Azure.API_USERS + user_id + '/'
+    def get_user(self, user_id):
+        """
+        Fetches individual user
+        """
+        if not user_id:
+            logging.error('AZURE.get_group_name: Invalid User ID')
+            raise exceptions.AzureException('AZURE.GET_USER: Invalid User ID')
+        self._check_setup()
+        url = self.group_url(user_id)
+        try:
+            response = self.session.get(url)
+            if response.status_code == 200:
+                return response.json()
+        except Exception as err:
+            logging.error(err)
+            raise exceptions.AzureException() from err
+        Azure._log_unexpected_response('get_user', response)
+        raise exceptions.AzureException('AZURE.GET_USER: Unexpected Response')
