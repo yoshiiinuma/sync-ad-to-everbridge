@@ -256,7 +256,7 @@ class Azure:
             logging.error('AZURE.get_group_name: Invalid User ID')
             raise exceptions.AzureException('AZURE.GET_USER: Invalid User ID')
         self._check_setup()
-        url = self.group_url(user_id)
+        url = self.user_url(user_id)
         try:
             response = self.session.get(url)
             if response.status_code == 200:

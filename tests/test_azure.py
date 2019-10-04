@@ -550,3 +550,66 @@ def test_get_sorted_group_members():
     azure.get_all_group_members = MagicMock(return_value=contacts)
     sorted_contacts = azure.get_sorted_group_members(123)
     assert sorted_contacts == expected
+def test_get_user_with_invalid_groupid():
+    """
+    Should raise an exception with an empty parameter
+    """
+    azure = create_azure_instance()
+    with pytest.raises(AzureException):
+        azure.get_user(None)
+    with pytest.raises(AzureException):
+        azure.get_user('')
+
+def test_get_user_with_invalid_token():
+    """
+    Should raise an exception with an empty parameter
+    """
+    with pytest.raises(AzureException):
+        azure = create_azure_instance_without_token('cid', 'secret', 'tenant')
+        azure.get_user('aaa')
+    with pytest.raises(AzureException):
+        azure = create_azure_instance('cid', 'secret', 'tenant', {})
+        azure.get_user('aaa')
+    with pytest.raises(AzureException):
+        azure = create_azure_instance('cid', 'secret', 'tenant', {'accessToken':None})
+        azure.get_user('aaa')
+
+def test_get_user_with_valid_params():
+    """
+    Should return group member data
+    """
+    gid = "000abcde-f123-56gh-i789-000000000jkl"
+    raw = {
+        "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users/$entity",
+        "businessPhones": [],
+        "displayName": "TESTUSER",
+        "givenName": "",
+        "jobTitle": "",
+        "mail": "TESTUSER@hawaii.gov",
+        "mobilePhone": "",
+        "officeLocation": "",
+        "preferredLanguage": "",
+        "surname": "",
+        "userPrincipalName": "TESTUSER@hawaii.gov",
+        "id": "f12665e7-1ecf-4a3c-b3b0-59c0776251b2"
+    }
+    expected = json.loads(json.dumps(raw))
+    # Set up mocks
+    mock = RequestsMock()
+    mock.setup(expected, 200)
+    # Call get_group_members
+    azure = create_azure_instance()
+    azure.setup()
+    data = azure.get_user(gid)
+    expected_url = azure.user_url(gid)
+    # Check if arguments passed to session.get are correct
+    mock.access('session.get').assert_called_with(expected_url)
+    mock.access('session.headers.update').assert_called_with({
+        'Authorization': 'Bearer XXXTOKENXXX',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'return-client-request-id': 'true'
+    })
+    assert data["displayName"] == expected["displayName"]
+    # Reinstate mocked functions
+    mock.restore()
