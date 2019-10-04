@@ -4,10 +4,10 @@ Runs Sync application
 import json
 import logging
 from os.path import exists
-from . import azure
+from . import azure as Azure
 from . import exceptions
-from . import everbridge
-from . import synchronizer 
+from . import everbridge as Everbridge
+from . import synchronizer as Synchronizer
 from . import logger
 class SyncRunner:
     """
@@ -31,7 +31,7 @@ class SyncRunner:
             logger.setup_logger(self.conf.get('logFileName'), self.conf.get('logLevel'))
             self._setup_azure_api()
             self._setup_everbridge_api()
-            sync = synchronizer.Synchronizer(self.azure, self.everbridge)
+            sync = Synchronizer.Synchronizer(self.azure, self.everbridge)
             #sync.run(self.conf['adGroupId'])
             sync.run_with_map(self.conf['adGroupId'])
         except (exceptions.SyncRunnerException, exceptions.SynchronizerException, exceptions.AzureException,
@@ -85,7 +85,7 @@ class SyncRunner:
         """
         Sets up Azure API
         """
-        self.azure = azure.Azure(self.conf['clientId'],
+        self.azure = Azure.Azure(self.conf['clientId'],
                            self.conf['clientSecret'],
                            self.conf['adTenant'])
         self.azure.setup() # Retrieves token; call once before any API calls
@@ -94,6 +94,6 @@ class SyncRunner:
         """
         Sets up Everbridge API
         """
-        self.everbridge = everbridge.Everbridge(self.conf['everbridgeOrg'],
+        self.everbridge = Everbridge.Everbridge(self.conf['everbridgeOrg'],
                                      self.conf['everbridgeUsername'],
                                      self.conf['everbridgePassword'])

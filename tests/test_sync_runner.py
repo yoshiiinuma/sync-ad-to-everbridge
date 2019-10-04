@@ -19,24 +19,24 @@ def test_run(mock_sync, mock_ever, mock_azure):
     # Create mocks
     azure = MagicMock()
     azure.setup = MagicMock()
-    mock_azure.return_value = azure
+    mock_azure.Azure.return_value = azure
     everbridge = MagicMock()
-    mock_ever.return_value = everbridge
+    mock_ever.Everbridge.return_value = everbridge
     sync = MagicMock()
-    sync.run = MagicMock()
-    mock_sync.return_value = sync
+    sync.run_with_map = MagicMock()
+    mock_sync.Synchronizer.return_value = sync
     # Call SyncRuunner#run
     runner = SyncRunner('./config/sampleConfig.json')
     runner.run()
     # Test if each function is called properly
-    mock_azure.assert_called_with(conf['clientId'],
+    mock_azure.Azure.assert_called_with(conf['clientId'],
                                   conf['clientSecret'],
                                   conf['adTenant'])
-    mock_ever.assert_called_with(conf['everbridgeOrg'],
+    mock_ever.Everbridge.assert_called_with(conf['everbridgeOrg'],
                                  conf['everbridgeUsername'],
                                  conf['everbridgePassword'])
-    mock_sync.assert_called_with(azure, everbridge)
-    sync.run.assert_called_with(conf['adGroupId'])
+    mock_sync.Synchronizer.assert_called_with(azure, everbridge)
+    sync.run_with_map.assert_called_with(conf['adGroupId'])
 
 def test_load_config():
     """
