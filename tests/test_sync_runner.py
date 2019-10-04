@@ -50,6 +50,7 @@ def test_load_config():
         'everbridgePassword':'EverBridge Password',
         'everbridgeOrg':'EverBridge Org',
         'adTenant':'Azure AD Tenant',
+        'adMemberId':['Azure AD Member ID1', 'Azure AD Member ID2'],
         'adGroupId':['Azure AD Group ID1', 'Azure AD Group ID2'],
         'logFileName':'test.log',
         'logLevel':'DEBUG'
