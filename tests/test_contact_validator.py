@@ -134,20 +134,6 @@ def test_validate_name_with_invalid_userprincipalname():
     assert not rslt.last
     assert not rslt.has_valid_name()
 
-def test_validate_name_with_invalid_displayname():
-    """
-    Should return appropriate error messages
-    """
-    # Only Invalid displayName
-    rslt = ContactValidationResult()
-    con = {'displayName': 'Aaaa'}
-    validate_name(con, rslt)
-    assert rslt.errors == ['NoNameFound']
-    assert rslt.warnings == []
-    assert not rslt.first
-    assert not rslt.last
-    assert not rslt.has_valid_name()
-
 def test_validate_name_without_name():
     """
     Should return appropriate error messages
@@ -179,15 +165,6 @@ def test_validate_name_without_name():
     assert not rslt.first
     assert not rslt.last
     assert not rslt.has_valid_name()
-    # Empty givenName and surname and Invalid displayName
-    rslt = ContactValidationResult()
-    con = {'givenName': '', 'surname': '', 'displayName': 'Aaaa'}
-    validate_name(con, rslt)
-    assert rslt.errors == ['NoNameFound']
-    assert rslt.warnings == []
-    assert not rslt.first
-    assert not rslt.last
-    assert not rslt.has_valid_name()
 
 def test_validate_paths_with_valid_data():
     """
@@ -209,7 +186,7 @@ def test_validate_paths_with_valid_data():
     con = {'businessPhones': ['1234567890', '1234567891']}
     validate_paths(con, rslt)
     assert rslt.errors == []
-    assert rslt.warnings == []
+    assert rslt.warnings == ['NoUserPrincipalName']
     assert rslt.has_valid_paths()
     assert rslt.business_phones == ['1234567890', '1234567891']
     assert not rslt.email
@@ -220,7 +197,7 @@ def test_validate_paths_with_valid_data():
     con = {'mobilePhone': '1234567890'}
     validate_paths(con, rslt)
     assert rslt.errors == []
-    assert rslt.warnings == []
+    assert rslt.warnings == ['NoUserPrincipalName']
     assert rslt.has_valid_paths()
     assert rslt.business_phones == []
     assert not rslt.email
@@ -236,7 +213,7 @@ def test_validate_paths_without_path_data():
     con = {}
     validate_paths(con, rslt)
     assert rslt.errors == ['NoPathFound']
-    assert rslt.warnings == []
+    assert rslt.warnings == ['NoUserPrincipalName']
     assert not rslt.has_valid_paths()
     assert rslt.business_phones == []
     assert not rslt.email
@@ -284,7 +261,7 @@ def test_validate_paths_without_business_phones():
     con = {'businessPhones': []}
     validate_paths(con, rslt)
     assert rslt.errors == ['NoPathFound']
-    assert rslt.warnings == []
+    assert rslt.warnings == ["NoUserPrincipalName"]
     assert not rslt.has_valid_paths()
     assert rslt.business_phones == []
     assert not rslt.email
@@ -300,7 +277,7 @@ def test_validate_paths_with_blank_business_phones():
     con = {'businessPhones': ['']}
     validate_paths(con, rslt)
     assert rslt.errors == ['NoPathFound']
-    assert rslt.warnings == ['InvalidBusinessPhone:']
+    assert rslt.warnings == ['NoUserPrincipalName','InvalidBusinessPhone:']
     assert not rslt.has_valid_paths()
     assert rslt.business_phones == []
     assert not rslt.email
@@ -316,7 +293,7 @@ def test_validate_paths_with_invalid_business_phone():
     con = {'businessPhones': ['12345']}
     validate_paths(con, rslt)
     assert rslt.errors == ['NoPathFound']
-    assert rslt.warnings == ['InvalidBusinessPhone:12345']
+    assert rslt.warnings == ['NoUserPrincipalName','InvalidBusinessPhone:12345']
     assert not rslt.has_valid_paths()
     assert rslt.business_phones == []
     assert not rslt.email
@@ -327,7 +304,7 @@ def test_validate_paths_with_invalid_business_phone():
     con = {'businessPhones': ['abcde', '1234567890']}
     validate_paths(con, rslt)
     assert rslt.errors == []
-    assert rslt.warnings == ['InvalidBusinessPhone:abcde']
+    assert rslt.warnings == ['NoUserPrincipalName','InvalidBusinessPhone:abcde']
     assert rslt.has_valid_paths()
     assert rslt.business_phones == ['1234567890']
     assert not rslt.email
@@ -345,7 +322,7 @@ def test_validate_paths_with_invalid_mobile_phone():
     con = {'mobilePhone': '12345'}
     validate_paths(con, rslt)
     assert rslt.errors == ['NoPathFound']
-    assert rslt.warnings == ['InvalidMobilePhone:12345']
+    assert rslt.warnings == ['NoUserPrincipalName','InvalidMobilePhone:12345']
     assert not rslt.has_valid_paths()
     assert rslt.business_phones == []
     assert not rslt.email
@@ -355,7 +332,7 @@ def test_validate_paths_with_invalid_mobile_phone():
     con = {'businessPhones': ['1234567890'], 'mobilePhone': '12345'}
     validate_paths(con, rslt)
     assert rslt.errors == []
-    assert rslt.warnings == ['InvalidMobilePhone:12345']
+    assert rslt.warnings == ['NoUserPrincipalName','InvalidMobilePhone:12345']
     assert rslt.has_valid_paths()
     assert rslt.business_phones == ['1234567890']
     assert not rslt.email
@@ -371,7 +348,7 @@ def test_validate_paths_with_blank_mobile_phone():
     con = {'mobilePhone': ''}
     validate_paths(con, rslt)
     assert rslt.errors == ['NoPathFound']
-    assert rslt.warnings == ['InvalidMobilePhone:']
+    assert rslt.warnings == ['NoUserPrincipalName','InvalidMobilePhone:']
     assert not rslt.has_valid_paths()
     assert rslt.business_phones == []
     assert not rslt.email
@@ -407,7 +384,7 @@ def test_validate_azure_contact_with_invalid_name():
     """
     # No valid name
     con = {'userPrincipalName': 'abcdef@test...com',
-           'displayName': 'abcdef',
+           'displayName': 'a',
            'businessPhones': ['1234567890', '1234567891'],
            'mobilePhone': '1234567892'}
     rslt = validate_azure_contact(con)
@@ -417,8 +394,8 @@ def test_validate_azure_contact_with_invalid_name():
     assert not rslt.email
     assert rslt.business_phones == ['1234567890', '1234567891']
     assert rslt.mobile_phone == '1234567892'
-    assert not rslt.first
-    assert not rslt.last
+    assert rslt.first == None
+    assert rslt.last == None
     assert not rslt.has_valid_name()
     assert rslt.has_valid_paths()
     # No valid name but valid as email
@@ -470,7 +447,7 @@ def test_validate_azure_contact_with_invalid_path():
            'mobilePhone': '1234567892'}
     rslt = validate_azure_contact(con)
     assert rslt.errors == []
-    assert rslt.warnings == ['InvalidBusinessPhone:123456789X', 'InvalidBusinessPhone:123456789Y']
+    assert rslt.warnings == ['NoUserPrincipalName','InvalidBusinessPhone:123456789X', 'InvalidBusinessPhone:123456789Y']
     assert rslt.has_valid_paths()
     assert not rslt.email
     assert rslt.business_phones == []

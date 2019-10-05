@@ -263,13 +263,13 @@ class Everbridge:
             raise exceptions.EverbridgeException('EVERBRIDGE.ADD_MEMBERS_TO_GROUP: Unexpected Response')
         return rslt
 
-    def add_group(self, group_name):
+    def add_group(self, group_name, parent_id=None):
         """
         Inserts new group into everbridge
         """
         if not group_name:
             raise exceptions.EverbridgeException('EVERBRIDGE.ADD_GROUP: No Group Name Provided')
-        data = {'name': group_name, 'organizationId': self.org}
+        data = {'name': group_name, 'organizationId': self.org, "parentId":parent_id}
         rslt = self._post(self.groups_url(''), data=data)
         if not rslt or 'message' not in rslt or rslt['message'] != 'OK':
             logging.error('EVERBRIDGE.ADD_GROUP: Unexpected Response')

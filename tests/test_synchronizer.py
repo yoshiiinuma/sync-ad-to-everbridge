@@ -77,7 +77,7 @@ def test_run_add_group():
     # Tests each method call
     azure.get_group_name.assert_called_with(gid)
     ever.get_group_id_by_name.assert_called_with('GROUP1')
-    ever.add_group.assert_called_with('GROUP1')
+    ever.add_group.assert_called_with('GROUP1', None)
     ever.delete_group.assert_not_called()
     ever.delete_members_from_group.assert_not_called()
     ever.delete_contacts.assert_not_called()

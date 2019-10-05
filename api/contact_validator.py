@@ -97,7 +97,14 @@ def normalize_phone(phone):
     else:
         phone = re.sub(r'x', '', str(phone))
     return phone
-
+def normalize_username(username):
+    """
+    Function for exception emails
+    """
+    user_split = username.split('#')
+    if len(user_split) > 1:
+        return user_split[0]
+    return username
 def is_valid_phone(phone):
     """
     Returns True if phone number is valid; False otherwise
@@ -179,30 +186,33 @@ def validate_paths(contact, rslt):
     Errors => Cannot insert into Everbridge contact
     Warnings => Can insert into Everbridge contact but needs to be updated
     """
-    if 'userPrincipalName' in contact:
+    #externalId has maximum length of 50
+    if 'userPrincipalName' in contact and len(contact['userPrincipalName']) < 50:
         if is_valid_email(contact['userPrincipalName']):
             rslt.set_email(contact['userPrincipalName'])
         else:
             rslt.append_warning('InvalidUserPrincipalName:' + contact['userPrincipalName'])
     else:
-        rslt.append_warning('No UserPrincipalName')
-        rslt.set_email(contact["mail"])
+        rslt.append_warning('NoUserPrincipalName')
+        if 'mail' in contact:
+            rslt.set_email(contact["mail"])
     if 'businessPhones' in contact and contact['businessPhones']:
-        for phone in contact['businessPhones']:
+        copy_phone_array = contact['businessPhones'].copy()
+        for phone in copy_phone_array:
             if is_valid_phone(phone):
                 rslt.append_business_phone(phone)
             else:
                 #Removes invalid phone numbers to allow insertion
-                contact['businessPhones'].remove(phone)
                 rslt.append_warning('InvalidBusinessPhone:' + phone)
+                contact['businessPhones'].remove(phone)
     if 'mobilePhone' in contact:
         if contact['mobilePhone'] and is_valid_phone(contact['mobilePhone']):
             rslt.set_mobile_phone(contact['mobilePhone'])
         else:
             #Removes invalid mobile phone numbers to allow insertion
+            rslt.append_warning('InvalidMobilePhone:' + str(contact['mobilePhone']))
             if contact["mobilePhone"] is not None:
                 contact["mobilePhone"] = None
-            rslt.append_warning('InvalidMobilePhone:' + str(contact['mobilePhone']))
     if not rslt.has_valid_paths():
         rslt.append_error('NoPathFound')
 

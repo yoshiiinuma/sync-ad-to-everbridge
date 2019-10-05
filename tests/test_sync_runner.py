@@ -36,7 +36,7 @@ def test_run(mock_sync, mock_ever, mock_azure):
                                  conf['everbridgeUsername'],
                                  conf['everbridgePassword'])
     mock_sync.Synchronizer.assert_called_with(azure, everbridge)
-    sync.run_with_map.assert_called_with(conf['adGroupId'])
+    sync.run_with_map.assert_called_with(conf['adGroupId'], conf["adMemberId"], conf["parentGroup"])
 
 def test_load_config():
     """
@@ -50,6 +50,7 @@ def test_load_config():
         'everbridgePassword':'EverBridge Password',
         'everbridgeOrg':'EverBridge Org',
         'adTenant':'Azure AD Tenant',
+        'parentGroup': 'Parent Group',
         'adMemberId':['Azure AD Member ID1', 'Azure AD Member ID2'],
         'adGroupId':['Azure AD Group ID1', 'Azure AD Group ID2'],
         'logFileName':'test.log',

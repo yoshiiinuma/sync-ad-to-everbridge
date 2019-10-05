@@ -421,7 +421,7 @@ def test_add_group(mock_session):
     mock_session.return_value = session
     ever = create_everbridge_instance()
     expected_url = ever.groups_url('')
-    data = {'name': 'xxxxx', 'organizationId': '1234567'}
+    data = {'name': 'xxxxx', 'organizationId': '1234567', 'parentId': None}
     # call add_group
     ever.add_group('xxxxx')
     # Check if correct arguments are passed to session functions

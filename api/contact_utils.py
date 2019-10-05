@@ -47,8 +47,9 @@ def create_everbridge_contact_paths(contact):
     https://api.everbridge.net/rest/contactPaths/org
     """
     paths = []
-    if 'userPrincipalName' in contact and contact['userPrincipalName']:
-        paths.append(create_email_path(contact['userPrincipalName']))
+    #Changed contact email to mail due to email being different than userprincipal name
+    if 'mail' in contact and contact['mail']:
+        paths.append(create_email_path(contact['mail']))
     if 'businessPhones' in contact and contact['businessPhones']:
         for phone in contact['businessPhones']:
             paths.append(create_business_phone_path(phone))

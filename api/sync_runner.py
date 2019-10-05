@@ -24,22 +24,15 @@ class SyncRunner:
         Runs Sync application
         """
         # pylint: disable=broad-except
-        try:
-            logger.setup_logger()
-            self.conf = SyncRunner.load_config(self.configfile)
-            SyncRunner.check_config(self.conf)
-            logger.setup_logger(self.conf.get('logFileName'), self.conf.get('logLevel'))
-            self._setup_azure_api()
-            self._setup_everbridge_api()
-            sync = Synchronizer.Synchronizer(self.azure, self.everbridge)
-            #sync.run(self.conf['adGroupId'])
-            sync.run_with_map(self.conf['adGroupId'])
-        except (exceptions.SyncRunnerException, exceptions.SynchronizerException, exceptions.AzureException,
-                exceptions.EverbridgeException, exceptions.ContactTrackerException):
-            logging.critical('SYNCRUNNER.RUN: Program Terminated Unexpectedly')
-        except Exception as err:
-            logging.critical('SYNCRUNNER.RUN: Unhandled Exception Found')
-            logging.critical(err)
+        logger.setup_logger()
+        self.conf = SyncRunner.load_config(self.configfile)
+        SyncRunner.check_config(self.conf)
+        logger.setup_logger(self.conf.get('logFileName'), self.conf.get('logLevel'))
+        self._setup_azure_api()
+        self._setup_everbridge_api()
+        sync = Synchronizer.Synchronizer(self.azure, self.everbridge)
+        #sync.run(self.conf['adGroupId'])
+        sync.run_with_map(self.conf['adGroupId'], self.conf['adMemberId'], self.conf['parentGroup'])
     @staticmethod
     def load_config(configfile):
         """

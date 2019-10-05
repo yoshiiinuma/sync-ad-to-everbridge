@@ -23,7 +23,8 @@ def test_convert_to_everbridge():
         'surname': 'BBB',
         'userPrincipalName': 'AAA.BBB@hawaii.gov',
         'businessPhones': ['8081112222x999', '8081113333x888'],
-        'mobilePhone': '8081114444'}
+        'mobilePhone': '8081114444',
+        'mail':'AAA.BBB@hawaii.gov'}
     exp = {
         'errors': False,
         'firstName': 'AAA',
@@ -67,7 +68,8 @@ def test_create_everbridge_contact_paths():
         'surname': 'BBB',
         'userPrincipalName': 'AAA.BBB@hawaii.gov',
         'businessPhones': ['8081112222x999', '8081113333x888'],
-        'mobilePhone': '8081114444'}
+        'mobilePhone': '8081114444',
+        'mail':'AAA.BBB@hawaii.gov'}
     exp = [
         {
             'waitTime': 0, 'status': 'A', 'pathId': 241901148045316,

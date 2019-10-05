@@ -260,7 +260,8 @@ class Azure:
         try:
             response = self.session.get(url)
             if response.status_code == 200:
-                return response.json()
+                contact = contact_validator.validate_and_fix_azure_contact(response.json())
+                return contact
         except Exception as err:
             logging.error(err)
             raise exceptions.AzureException() from err
