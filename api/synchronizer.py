@@ -8,7 +8,7 @@ from . import everbridge_group_member_iterator
 from . import contact_tracker 
 from . import contact_utils
 from . import exceptions 
-
+from . import contact_validator
 class AdContactMap:
     """
     AD group members dictionary wrapper
@@ -81,6 +81,10 @@ class Synchronizer:
         Syncs Azure AD contacts to Everbridge
         """
         self.report = {}
+            #Goes through shared mailboxe
+            #Each shared mailbox will have it's own group 
+            #There is a parent group defined in the config file that will hold all these groups
+            #If a group in everbridge exists but is not defined in the config, delete at everbridge group
         for gid_ad in ad_group_ids:
             name = self.azure.get_group_name(gid_ad)
             gid_ev = self.everbridge.get_group_id_by_name(name)
@@ -101,7 +105,7 @@ class Synchronizer:
             logging.info("Synched %s", name)
             logging.info(rslt)
         for uid_ad in ad_users_ids:
-            #Gets Azure User
+            #Gets Shared Mailbox
             user = self.azure.get_user(uid_ad)
             #Removes special characters from mail due to difficulty getting groups
             search_query = re.sub(r'@|\.', '', str(user['mail']))
