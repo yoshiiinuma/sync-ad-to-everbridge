@@ -9,6 +9,7 @@ from . import contact_tracker
 from . import contact_utils
 from . import exceptions 
 from . import contact_validator
+from . import everbridge_shared_mailbox
 class AdContactMap:
     """
     AD group members dictionary wrapper
@@ -104,19 +105,17 @@ class Synchronizer:
             self.report[name] = rslt
             logging.info("Synched %s", name)
             logging.info(rslt)
+
+        #Managed Shared Mailboxes from AD 
+        #Shared Mailboxes are user accounts in AD
+        #Shared Mailboxes will have their own group 
+        # Create Everbridge parent group if not exist
+        parent_group = everbridge_shared_mailbox.get_parent_group(ev_parent_name,self)
+        #Removes special characters from mail due to difficulty inserting groups with @ char
         for uid_ad in ad_users_ids:
-            #Gets Shared Mailbox
+            #Gets Shared Mailbox from AD
             user = self.azure.get_user(uid_ad)
-            #Removes special characters from mail due to difficulty getting groups
-            search_query = re.sub(r'@|\.', '', str(user['mail']))
-            gid_ev = self.everbridge.get_group_id_by_name(ev_parent_name)
-            # Create Everbridge parent group if not exist
-            if not gid_ev:
-                gid_ev = self._create_new_everbridge_group(ev_parent_name)
-            user_group = self.everbridge.get_group_id_by_name(search_query)
             # Create Everbridge child group if not exist
-            if not user_group:
-                user_group = self._create_new_everbridge_group(search_query,gid_ev)
             ev_user = self.everbridge.get_contacts_by_external_ids("&externalIds=" + user["userPrincipalName"])
             #Adds single user to group
             if len(ev_user) == 1:
@@ -124,7 +123,7 @@ class Synchronizer:
                 if new_user.get('errors') == False:
                     del new_user['errors']
                 self.everbridge.upsert_contacts([new_user])
-                self.everbridge.add_members_to_group(user_group, [ev_user[0]["id"]])
+                self.everbridge.add_members_to_group(parent_group, [ev_user[0]["id"]])
             # Creates everbridge user if not exist
             else:
                 new_user = contact_utils.convert_to_everbridge(user)
@@ -132,7 +131,7 @@ class Synchronizer:
                     del new_user['errors']
                 ev_user = self.everbridge.upsert_contacts([new_user])
                 ev_user = self.everbridge.get_contacts_by_external_ids("&externalIds=" + user["userPrincipalName"])
-                self.everbridge.add_members_to_group(user_group, [ev_user[0]['id']])
+                self.everbridge.add_members_to_group(parent_group, [ev_user[0]['id']])
         return self.report
 
     def sync_group(self, itr_ad, itr_ev):

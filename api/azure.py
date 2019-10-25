@@ -243,17 +243,25 @@ class Azure:
         """
         members = self.get_all_group_members(group_id)
         return sorted(members, key=(lambda con: con.get('userPrincipalName')))
+
     def user_url(self, user_id):
         """
         Returns group info api URL
         """
         return Azure.API_USERS + user_id + '/'
+
+    def user_filter_url(self, filter_string):
+        """
+        Returns group info api URL
+        """
+        return Azure.API_USERS + filter_string
+
     def get_user(self, user_id):
         """
         Fetches individual user
         """
         if not user_id:
-            logging.error('AZURE.get_group_name: Invalid User ID')
+            logging.error('AZURE.user: Invalid User ID')
             raise exceptions.AzureException('AZURE.GET_USER: Invalid User ID')
         self._check_setup()
         url = self.user_url(user_id)
@@ -267,3 +275,35 @@ class Azure:
             raise exceptions.AzureException() from err
         Azure._log_unexpected_response('get_user', response)
         raise exceptions.AzureException('AZURE.GET_USER: Unexpected Response')
+
+    def generate_email_filter_string(ad_user_emails):
+        if not ad_user_emails:
+            return ""
+        filter_string = "$filter="
+        count = 0
+        for email in ad_user_emails:
+            filter_string = filter_string + "startswith(mail, '" + email + "')"
+            count = count + 1
+    def get_users_with_filters(self, ad_user_emails):
+    """
+    Fetches multiple users by filtering using emails
+    """
+
+    if not ad_user_emails:
+        logging.error('AZURE.get_users_with_filters: No User Id Provided')
+        raise exceptions.AzureException('AZURE.GET_USERS_WITH_FILTERS: No User Id Provided')
+
+    filter_string = "$filter=startswith(mail, '" + str(ad_user_emails[0])
+    self._check_setup()
+    url = self.user_filter_url(ad_user_emails)
+    try:
+        response = self.session.get(url)
+        if response.status_code == 200:
+            for contact in response.json():
+                contact = contact_validator.validate_and_fix_azure_contact(contact)
+            return response.json()
+    except Exception as err:
+        logging.error(err)
+        raise exceptions.AzureException() from err
+    Azure._log_unexpected_response('get_users_with_filters', response)
+    raise exceptions.AzureException('AZURE.GET_USERS_WITH_FILTERS: Unexpected Response')
