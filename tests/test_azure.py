@@ -550,58 +550,85 @@ def test_get_sorted_group_members():
     azure.get_all_group_members = MagicMock(return_value=contacts)
     sorted_contacts = azure.get_sorted_group_members(123)
     assert sorted_contacts == expected
-def test_get_user_with_invalid_groupid():
+
+def test_get_users_with_filters_map():
     """
-    Should raise an exception with an empty parameter
+    Should raise an exception with an empty or invalid parameter
     """
     azure = create_azure_instance()
     with pytest.raises(AzureException):
-        azure.get_user(None)
+        azure.get_users_with_filters_map(None)
     with pytest.raises(AzureException):
-        azure.get_user('')
+        azure.get_users_with_filters_map('A')
+    with pytest.raises(AzureException):
+        azure.get_users_with_filters_map(1)
 
-def test_get_user_with_invalid_token():
+def test_get_users_with_filters_map_with_invalid_token():
     """
     Should raise an exception with an empty parameter
     """
     with pytest.raises(AzureException):
         azure = create_azure_instance_without_token('cid', 'secret', 'tenant')
-        azure.get_user('aaa')
+        azure.get_users_with_filters_map([])
     with pytest.raises(AzureException):
         azure = create_azure_instance('cid', 'secret', 'tenant', {})
-        azure.get_user('aaa')
+        azure.get_users_with_filters_map([])
     with pytest.raises(AzureException):
         azure = create_azure_instance('cid', 'secret', 'tenant', {'accessToken':None})
-        azure.get_user('aaa')
+        azure.get_users_with_filters_map([])
 
-def test_get_user_with_valid_params():
+def test_get_users_with_filters_map_valid_params():
     """
     Should return group member data
     """
     gid = "000abcde-f123-56gh-i789-000000000jkl"
-    raw = {
-        "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users/$entity",
-        "businessPhones": [],
-        "displayName": "TESTUSER",
-        "givenName": "",
-        "jobTitle": "",
-        "mail": "TESTUSER@hawaii.gov",
-        "mobilePhone": "",
-        "officeLocation": "",
-        "preferredLanguage": "",
-        "surname": "",
-        "userPrincipalName": "TESTUSER@hawaii.gov",
-        "id": "f12665e7-1ecf-4a3c-b3b0-59c0776251b2"
+    return_value = {
+        "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users",
+        "value": [
+            {
+                "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users/$entity",
+                "businessPhones": [],
+                "displayName": "TESTUSER",
+                "givenName": "",
+                "jobTitle": "",
+                "mail": "TESTUSER@hawaii.gov",
+                "mobilePhone": "",
+                "officeLocation": "",
+                "preferredLanguage": "",
+                "surname": "",
+                "userPrincipalName": "TESTUSER@hawaii.gov",
+                "id": "f12665e7-1ecf-4a3c-b3b0-59c0776251b2"
+            }
+        ]
     }
-    expected = json.loads(json.dumps(raw))
+    expected_value = {
+        "TESTUSER@hawaii.gov":
+        {
+            "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users/$entity",
+            "businessPhones": [],
+            "displayName": "TESTUSER",
+            "givenName": "TEST",
+            "jobTitle": "",
+            "mail": "TESTUSER@hawaii.gov",
+            "mobilePhone": None,
+            "officeLocation": "",
+            "preferredLanguage": "",
+            "surname": "USER",
+            "userPrincipalName": "TESTUSER@hawaii.gov",
+            "id": "f12665e7-1ecf-4a3c-b3b0-59c0776251b2",
+            'errors': False,
+            'fixed': True,
+        }
+    }
+    expected = json.loads(json.dumps(return_value))
     # Set up mocks
     mock = RequestsMock()
-    mock.setup(expected, 200)
+    mock.setup(expected , 200)
     # Call get_group_members
     azure = create_azure_instance()
     azure.setup()
-    data = azure.get_user(gid)
-    expected_url = azure.user_url(gid)
+    data = azure.get_users_with_filters_map(["TESTUSER@hawaii.gov"])
+    expected_url = azure.user_filter_url(azure.generate_email_filter_string(["TESTUSER@hawaii.gov"]))
     # Check if arguments passed to session.get are correct
     mock.access('session.get').assert_called_with(expected_url)
     mock.access('session.headers.update').assert_called_with({
@@ -610,6 +637,7 @@ def test_get_user_with_valid_params():
         'Content-Type': 'application/json',
         'return-client-request-id': 'true'
     })
-    assert data["displayName"] == expected["displayName"]
+    print(data)
+    assert data["TESTUSER@hawaii.gov"] == expected_value["TESTUSER@hawaii.gov"]
     # Reinstate mocked functions
     mock.restore()

@@ -10,6 +10,7 @@ from . import contact_utils
 from . import exceptions 
 from . import contact_validator
 from . import everbridge_shared_mailbox
+from . import everbridge_logic
 class AdContactMap:
     """
     AD group members dictionary wrapper
@@ -77,15 +78,11 @@ class Synchronizer:
             logging.info(rslt)
         return self.report
 
-    def run_with_map(self, ad_group_ids, ad_users_ids, ev_parent_name):
+    def run_with_map(self, ad_group_ids, ad_users_emails, ev_parent_name):
         """
         Syncs Azure AD contacts to Everbridge
         """
         self.report = {}
-            #Goes through shared mailboxe
-            #Each shared mailbox will have it's own group 
-            #There is a parent group defined in the config file that will hold all these groups
-            #If a group in everbridge exists but is not defined in the config, delete at everbridge group
         for gid_ad in ad_group_ids:
             name = self.azure.get_group_name(gid_ad)
             gid_ev = self.everbridge.get_group_id_by_name(name)
@@ -105,33 +102,23 @@ class Synchronizer:
             self.report[name] = rslt
             logging.info("Synched %s", name)
             logging.info(rslt)
-
         #Managed Shared Mailboxes from AD 
         #Shared Mailboxes are user accounts in AD
-        #Shared Mailboxes will have their own group 
-        # Create Everbridge parent group if not exist
+        #Shared Mailboxes will be in the specified parent group
+
+        # Create Everbridge parent group for shared mailboxes if not exist
         parent_group = everbridge_shared_mailbox.get_parent_group(ev_parent_name,self)
-        #Removes special characters from mail due to difficulty inserting groups with @ char
-        for uid_ad in ad_users_ids:
-            #Gets Shared Mailbox from AD
-            user = self.azure.get_user(uid_ad)
-            # Create Everbridge child group if not exist
-            ev_user = self.everbridge.get_contacts_by_external_ids("&externalIds=" + user["userPrincipalName"])
-            #Adds single user to group
-            if len(ev_user) == 1:
-                new_user = contact_utils.convert_to_everbridge(user , ev_user[0]["id"])
-                if new_user.get('errors') == False:
-                    del new_user['errors']
-                self.everbridge.upsert_contacts([new_user])
-                self.everbridge.add_members_to_group(parent_group, [ev_user[0]["id"]])
-            # Creates everbridge user if not exist
-            else:
-                new_user = contact_utils.convert_to_everbridge(user)
-                if new_user.get('errors') == False:
-                    del new_user['errors']
-                ev_user = self.everbridge.upsert_contacts([new_user])
-                ev_user = self.everbridge.get_contacts_by_external_ids("&externalIds=" + user["userPrincipalName"])
-                self.everbridge.add_members_to_group(parent_group, [ev_user[0]['id']])
+        #Gets individual users from AD. 
+        #Similar to azure.get_all_group_members but uses the $filter ODA query
+        ad_users_map = self.azure.get_users_with_filters_map(ad_users_emails)
+        # Create iterators
+        shared_mailbox_map = AdContactMap("",ad_users_map)
+        iter_mailbox =  everbridge_group_member_iterator.EverbridgeGroupMemberIterator(self.everbridge, parent_group)
+        # Sync Shared Mailbox group to Everbridge
+        rslt = self.sync_group_with_map(shared_mailbox_map, iter_mailbox)
+        self.report[ev_parent_name] = rslt
+        logging.info("Synched %s", ev_parent_name)
+        logging.info(rslt)
         return self.report
 
     def sync_group(self, itr_ad, itr_ev):
