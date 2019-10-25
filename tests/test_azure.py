@@ -637,7 +637,6 @@ def test_get_users_with_filters_map_valid_params():
         'Content-Type': 'application/json',
         'return-client-request-id': 'true'
     })
-    print(data)
     assert data["TESTUSER@hawaii.gov"] == expected_value["TESTUSER@hawaii.gov"]
     # Reinstate mocked functions
     mock.restore()

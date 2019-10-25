@@ -257,7 +257,6 @@ class Azure:
         """
         if not ad_user_emails or type(ad_user_emails) is not list:
             raise exceptions.AzureException('AZURE.GENERATE_EMAIL_FILTER_STRING: Invalid Type')
-        print(type(ad_user_emails))
         filter_string = "?$filter="
         count = 0
         for email in ad_user_emails:
