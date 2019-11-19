@@ -257,7 +257,7 @@ class Azure:
         """
         Generates string used for filter request
         """
-        if not ad_user_emails or isinstance(ad_user_emails) is not list:
+        if not ad_user_emails or isinstance(ad_user_emails, list) is False:
             raise exceptions.AzureException('AZURE.GENERATE_EMAIL_FILTER_STRING: Invalid Type')
         filter_string = "?$filter="
         count = 0
