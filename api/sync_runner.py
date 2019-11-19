@@ -19,7 +19,7 @@ class SyncRunner:
         self.azure = None
         self.everbridge = None
 
-    def run(self):
+    def run(self, groups_only=False):
         """
         Runs Sync application
         """
@@ -32,7 +32,11 @@ class SyncRunner:
         self._setup_everbridge_api()
         sync = Synchronizer.Synchronizer(self.azure, self.everbridge)
         #sync.run(self.conf['adGroupId'])
-        sync.run_with_map(self.conf['adGroupId'], self.conf['adMemberId'], self.conf['parentGroup'])
+        #Syncs whole group or group emails only based on boolean in argument
+        if groups_only:
+            sync.sync_only_group_emails(self.conf['adGroupId'], self.conf['adMemberId'], self.conf['parentGroup'])
+        else:
+            sync.run_with_map(self.conf['adGroupId'], self.conf['adMemberId'], self.conf['parentGroup'])
     @staticmethod
     def load_config(configfile):
         """
@@ -79,8 +83,8 @@ class SyncRunner:
         Sets up Azure API
         """
         self.azure = Azure.Azure(self.conf['clientId'],
-                           self.conf['clientSecret'],
-                           self.conf['adTenant'])
+                                 self.conf['clientSecret'],
+                                 self.conf['adTenant'])
         self.azure.setup() # Retrieves token; call once before any API calls
 
     def _setup_everbridge_api(self):
@@ -88,5 +92,5 @@ class SyncRunner:
         Sets up Everbridge API
         """
         self.everbridge = Everbridge.Everbridge(self.conf['everbridgeOrg'],
-                                     self.conf['everbridgeUsername'],
-                                     self.conf['everbridgePassword'])
+                                                self.conf['everbridgeUsername'],
+                                                self.conf['everbridgePassword'])

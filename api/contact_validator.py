@@ -192,10 +192,9 @@ def validate_paths(contact, rslt):
             rslt.set_email(contact['userPrincipalName'])
         else:
             rslt.append_warning('InvalidUserPrincipalName:' + contact['userPrincipalName'])
-    else:
+    elif 'mail' in contact:
         rslt.append_warning('NoUserPrincipalName')
-        if 'mail' in contact:
-            rslt.set_email(contact["mail"])
+        rslt.set_email(contact["mail"])
     if 'businessPhones' in contact and contact['businessPhones']:
         copy_phone_array = contact['businessPhones'].copy()
         for phone in copy_phone_array:
@@ -210,8 +209,8 @@ def validate_paths(contact, rslt):
             rslt.set_mobile_phone(contact['mobilePhone'])
         else:
             #Removes invalid mobile phone numbers to allow insertion
-            rslt.append_warning('InvalidMobilePhone:' + str(contact['mobilePhone']))
             if contact["mobilePhone"] is not None:
+                rslt.append_warning('InvalidMobilePhone:' + str(contact['mobilePhone']))
                 contact["mobilePhone"] = None
     if not rslt.has_valid_paths():
         rslt.append_error('NoPathFound')

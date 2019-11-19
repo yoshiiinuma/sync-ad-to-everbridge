@@ -191,7 +191,7 @@ class Azure:
         Azure._log_unexpected_response('get_group_members', response)
         raise exceptions.AzureException('AZURE.GET_GROUP_MEMBERS: Unexpected Response')
 
-    def get_group_name(self, group_id):
+    def get_group_name(self, group_id, return_json=False):
         """
         Fetches Azure AD Group Members
         """
@@ -203,7 +203,9 @@ class Azure:
         try:
             response = self.session.get(url)
             if response.status_code == 200:
-                return response.json()['displayName']
+                if return_json is False:
+                    return response.json()['displayName']
+                return response.json()
         except Exception as err:
             logging.error(err)
             raise exceptions.AzureException() from err
@@ -255,7 +257,7 @@ class Azure:
         """
         Generates string used for filter request
         """
-        if not ad_user_emails or type(ad_user_emails) is not list:
+        if not ad_user_emails or isinstance(ad_user_emails) is not list:
             raise exceptions.AzureException('AZURE.GENERATE_EMAIL_FILTER_STRING: Invalid Type')
         filter_string = "?$filter="
         count = 0
@@ -265,12 +267,15 @@ class Azure:
             if count != len(ad_user_emails):
                 filter_string = filter_string + " or "
         return filter_string
+
     def get_users_with_filters_map(self, ad_user_emails):
+        """
+        Get users specified in config file
+        """
         if not ad_user_emails:
             logging.error('AZURE.get_users_with_filters: No User Id Provided')
             raise exceptions.AzureException('AZURE.GET_USERS_WITH_FILTERS: No User Id Provided')
         dictionary = {}
-        
         filter_string = self.generate_email_filter_string(ad_user_emails)
         self._check_setup()
         url = self.user_filter_url(filter_string)
@@ -286,3 +291,16 @@ class Azure:
             raise exceptions.AzureException() from err
         Azure._log_unexpected_response('get_users_with_filters', response)
         raise exceptions.AzureException('AZURE.GET_USERS_WITH_FILTERS: Unexpected Response')
+
+    def get_group_emails(self, ad_users, ad_group_ids):
+        """
+        Get Group emails specified in the config file and adds them to the ad_users dictionary
+        """
+        if not ad_group_ids or  not ad_users:
+            logging.error('AZURE.get_group_emails: INVALID ARGUMENTS')
+            raise exceptions.AzureException('AZURE.GET_GROUP_EMAILS: INVALID ARGUMENTS')
+        for gid_ad in ad_group_ids:
+            group = self.get_group_name(gid_ad, True)
+            group = contact_validator.validate_and_fix_azure_contact(group)
+            ad_users[group["mail"]] = group
+        return ad_users

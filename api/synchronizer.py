@@ -2,15 +2,12 @@
 Syncs Azure AD contacts to Everbridge
 """
 import logging
-import re
 from . import azure_group_member_iterator
-from . import everbridge_group_member_iterator 
-from . import contact_tracker 
+from . import everbridge_group_member_iterator
+from . import contact_tracker
 from . import contact_utils
-from . import exceptions 
-from . import contact_validator
+from . import exceptions
 from . import everbridge_shared_mailbox
-from . import everbridge_logic
 class AdContactMap:
     """
     AD group members dictionary wrapper
@@ -78,6 +75,27 @@ class Synchronizer:
             logging.info(rslt)
         return self.report
 
+    def sync_only_group_emails(self, ad_group_ids, ad_users_emails, ev_parent_name):
+        """
+        Syncs Azure AD contacts to Everbridge
+        """
+        #Get Shared Mailboxes from Azure
+        ad_users = self.azure.get_users_with_filters_map(ad_users_emails)
+        #Get Group Emails from Azure
+        ad_users_and_groups = self.azure.get_group_emails(ad_users, ad_group_ids)
+        #Get  Parent Group to store all the contacts
+        parent_group = everbridge_shared_mailbox.get_parent_group(ev_parent_name, self)
+        #Map out the users and groups
+        shared_mailbox_map = AdContactMap("", ad_users_and_groups)
+        #Setup the iterator for everbridge group
+        iter_mailbox = everbridge_group_member_iterator.EverbridgeGroupMemberIterator(self.everbridge, parent_group)
+        # Sync Shared Mailbox and group to Everbridge
+        rslt = self.sync_group_with_map(shared_mailbox_map, iter_mailbox)
+        self.report[ev_parent_name] = rslt
+        logging.info("Synched %s", ev_parent_name)
+        logging.info(rslt)
+        return self.report
+
     def run_with_map(self, ad_group_ids, ad_users_emails, ev_parent_name):
         """
         Syncs Azure AD contacts to Everbridge
@@ -102,18 +120,16 @@ class Synchronizer:
             self.report[name] = rslt
             logging.info("Synched %s", name)
             logging.info(rslt)
-        #Managed Shared Mailboxes from AD 
+        #Managed Shared Mailboxes from AD
         #Shared Mailboxes are user accounts in AD
         #Shared Mailboxes will be in the specified parent group
-
-        # Create Everbridge parent group for shared mailboxes if not exist
-        parent_group = everbridge_shared_mailbox.get_parent_group(ev_parent_name,self)
-        #Gets individual users from AD. 
+        #Gets individual users from AD.
         #Similar to azure.get_all_group_members but uses the $filter ODA query
         ad_users_map = self.azure.get_users_with_filters_map(ad_users_emails)
         # Create iterators
-        shared_mailbox_map = AdContactMap("",ad_users_map)
-        iter_mailbox =  everbridge_group_member_iterator.EverbridgeGroupMemberIterator(self.everbridge, parent_group)
+        shared_mailbox_map = AdContactMap("", ad_users_map)
+        # Create Everbridge parent group for shared mailboxes if not exist
+        iter_mailbox =  everbridge_group_member_iterator.EverbridgeGroupMemberIterator(self.everbridge, everbridge_shared_mailbox.get_parent_group(ev_parent_name, self))
         # Sync Shared Mailbox group to Everbridge
         rslt = self.sync_group_with_map(shared_mailbox_map, iter_mailbox)
         self.report[ev_parent_name] = rslt

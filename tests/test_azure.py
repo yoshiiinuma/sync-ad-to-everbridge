@@ -8,6 +8,7 @@ from adal import AdalError
 from requests.exceptions import HTTPError, Timeout
 from api.exceptions import AzureException
 from api.azure import Azure
+from api.contact_validator import validate_and_fix_azure_contact
 from tests.mock_helper import AdalMock, RequestsMock
 from tests.azure_helper import create_azure_instance, \
                                create_azure_instance_without_token, \
@@ -640,3 +641,101 @@ def test_get_users_with_filters_map_valid_params():
     assert data["TESTUSER@hawaii.gov"] == expected_value["TESTUSER@hawaii.gov"]
     # Reinstate mocked functions
     mock.restore()
+
+def test_get_group_emails():
+    """
+    Should return new dictionary with added group data
+    """
+    inital_user_value = {
+        "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users",
+        "value": [
+            {
+                "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users/$entity",
+                "businessPhones": [],
+                "displayName": "TESTUSER",
+                "givenName": "",
+                "jobTitle": "",
+                "mail": "TESTUSER@hawaii.gov",
+                "mobilePhone": "",
+                "officeLocation": "",
+                "preferredLanguage": "",
+                "surname": "",
+                "userPrincipalName": "TESTUSER@hawaii.gov",
+                "id": "f12665e7-1ecf-4a3c-b3b0-59c0776251b2"
+            }
+        ]
+    }
+    return_group_value =  {
+        "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#groups/$entity",
+        "id": "111111111111111111111111111111",
+        "deletedDateTime": "",
+        "classification": "",
+        "createdDateTime": "2018-11-07T23:13:45Z",
+        "creationOptions": [],
+        "description": "Test",
+        "displayName": "ETest",
+        "groupTypes": [],
+        "mail": "testGroup@hawaii.gov",
+        "mailEnabled": "",
+        "mailNickname": "testGroup@hawaii.gov",
+        "onPremisesLastSyncDateTime": "2019-08-28T02:45:05Z",
+        "onPremisesSecurityIdentifier": "",
+        "onPremisesSyncEnabled": "",
+        "preferredDataLocation": "",
+        "proxyAddresses": [
+        ],
+        "renewedDateTime": "2018-11-07T23:13:45Z",
+        "resourceBehaviorOptions": [],
+        "resourceProvisioningOptions": [],
+        "securityEnabled": "",
+        "visibility": "",
+        "onPremisesProvisioningErrors": []
+    }
+    validated_user = validate_and_fix_azure_contact(inital_user_value)
+    validated_group = validate_and_fix_azure_contact(json.loads(json.dumps(return_group_value)))
+    print(validated_group)
+    expected_value = {
+        "TESTUSER@hawaii.gov": validated_user,
+        "testGroup@hawaii.gov" : validated_group
+    }
+
+    expected = json.loads(json.dumps(return_group_value))
+    # Set up mocks
+    mock = RequestsMock()
+    mock.setup(expected , 200)
+    # Call get_group_members
+    azure = create_azure_instance()
+    azure.setup()
+    initial_data = {
+        "TESTUSER@hawaii.gov": validated_user
+    }
+    data = azure.get_group_emails(initial_data, ["abcdefghijk"])
+    print(data["testGroup@hawaii.gov"])
+    # Check if arguments passed to session.get are correct
+    assert data == expected_value
+    # Reinstate mocked functions
+    mock.restore()
+
+def test_get_group_emails_invalid_groupid():
+    """
+    Should raise an exception with an empty parameter
+    """
+    azure = create_azure_instance()
+    with pytest.raises(AzureException):
+        azure.get_group_emails({}, ["abcdefghijk"])
+    with pytest.raises(AzureException):
+        azure.get_group_emails({"A":{}}, [])
+
+def test_get_group_emails_invalid_token():
+    """
+    Should raise an exception with an empty parameter
+    """
+    with pytest.raises(AzureException):
+        azure = create_azure_instance_without_token('cid', 'secret', 'tenant')
+        azure.get_group_emails({}, ["abcdefghijk"])
+    with pytest.raises(AzureException):
+        azure = create_azure_instance('cid', 'secret', 'tenant', {})
+        azure.get_group_emails({}, ["abcdefghijk"])
+    with pytest.raises(AzureException):
+        azure = create_azure_instance('cid', 'secret', 'tenant', {'accessToken':None})
+        azure.get_group_emails({}, ["abcdefghijk"])
